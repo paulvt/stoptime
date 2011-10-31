@@ -75,6 +75,63 @@ module StopTime::Controllers
       render :overview
     end
   end
+
+  class Customers
+    def get
+      @customers = Customer.all
+      render :customers
+    end
+
+    def post
+      return redirect R(Customers) if @input.cancel
+      @customer = Customer.create(
+        :name => @input.name,
+        :short_name => @input.short_name,
+        :address_street => @input.address_street,
+        :address_postal_code => @input.address_postal_code,
+        :address_city => @input.address_city,
+        :email => @input.email,
+        :phone => @input.phone)
+      @customer.save
+      if @customer.invalid?
+        @errors = @customer.errors
+        return render :customer_new
+      end
+      redirect R(Customers)
+    end
+  end
+
+  class CustomerN
+    def get(customer_id)
+      @customer = Customer.find(customer_id)
+      render :customer_edit
+    end
+
+    def post(customer_id)
+      return redirect R(Customers) if @input.cancel
+      @customer = Customer.find(customer_id)
+    end
+  end
+
+  class CustomerNew
+    def get
+      render :customer_edit
+    end
+  end
+
+  class Tasks
+    def get
+      @tasks = Tasks.all
+      render :tasks
+    end
+  end
+
+  class TimeEntries
+    def get
+      @time_entries = TimeEntry.all
+      render :time_entries
+    end
+  end
   
 end # module StopTime::Controllers
 
@@ -93,8 +150,74 @@ module StopTime::Views
     end
   end
 
+  def customers
+  end
+
   def overview
-    p "There should be an overview here!"
+    h1 "Stop… Camping Time!"
+
+    p "You can check out:"
+    ul do
+      li { a "Customers", :href => R(Customers) }
+      li { a "Task", :href=> R(Tasks) }
+      li { a "Time entries", :href => R(TimeEntries) }
+    end
+  end
+
+  def customers
+    h1 "List of customers"
+    table do
+       tr do
+         th "Name"
+         th "Short name"
+         th "Email"
+         th "Phone"
+         th "Address"
+       end
+      @customers.each do |customer|
+        tr do
+          td { customer.name }
+          td { customer.short_name }
+          td { customer.email }
+          td { customer.phone }
+          td { [customer.address_street,
+                customer.address_postal_code,
+                customer.address_city].join(", ") }
+          td { a "[edit]", :href => R(CustomerN, customer.id) }
+        end
+      end
+    end
+    p do
+      a "Add a new customer", :href=> R(CustomerNew)
+    end
   end
   
+  def customer_edit
+    if @customer
+      target = [CustomerN, @customer.id]
+    else
+      @customer = {}
+      target = [Customers]
+    end
+    form :action => R(*target), :method => :post do
+      ol do 
+        li { _labeled_input(@customer, "Name", "name", :text) }
+        li { _labeled_input(@customer, "Short name", "short_name", :text) }
+        li { _labeled_input(@customer, "Street address", "address_street", :text) }
+        li { _labeled_input(@customer, "Postal code", "adress_postal_code", :text) }
+        li { _labeled_input(@customer, "City/town", "adress_postal_city", :text) }
+        li { _labeled_input(@customer, "Email address", "email", :text) }
+        li { _labeled_input(@customer, "Phone number", "phone", :text) }
+      end
+      input :type => "submit", :name => "save", :value => "Save"
+      input :type => "submit", :name => "cancel", :value => "Cancel"
+    end
+  end
+
+  def _labeled_input(obj, label_name, input_name, type, options={})
+    label label_name, :for => input_name
+    input :type => type, :name => input_name, :id => input_name,
+          :value => @input[input_name] || obj[input_name]
+  end
+
 end # module StopTime::Views
