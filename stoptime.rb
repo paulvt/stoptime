@@ -111,21 +111,54 @@ module StopTime::Controllers
     end
   end
 
-  class CustomerN
+  class CustomersNew
+    def get
+      render :customer_form
+    end
+  end
+
+  class CustomersN
     def get(customer_id)
       @customer = Customer.find(customer_id)
-      render :customer_edit
+      render :customer_form
     end
 
     def post(customer_id)
       return redirect R(Customers) if @input.cancel
       @customer = Customer.find(customer_id)
+      if @input.has_key? "delete"
+        @customer.delete
+      elsif @input.has_key? "save"
+        attrs = ["name", "short_name",
+                 "address_street", "address_postal_code", "address_city",
+                 "email", "phone"]
+        attrs.each do |attr|
+          @customer[attr] = @input[attr] unless @input[attr].blank?
+        end
+        @customer.save
+        if @customer.invalid?
+          @errors = @customer.errors
+          return render :customer_form
+        end
+      end
+      redirect R(Customers)
     end
   end
 
-  class CustomerNew
-    def get
-      render :customer_edit
+  class CustomersNTasks
+    def post(customer_id)
+      if @input.has_key? "add"
+        @task = Task.create(
+          :customer_id => customer_id,
+          :name => @input.new_task)
+        @task.save
+        if @task.invalid?
+          @errors = @task.errors
+        end
+      elsif @input.has_key? "delete"
+        @input.tasks.each { |task_id| Task.find(task_id).delete }
+      end
+      redirect R(CustomersN, customer_id)
     end
   end
 
@@ -175,59 +208,80 @@ module StopTime::Views
   end
 
   def customers
-    h1 "List of customers"
+    h2 "List of customers"
     table do
        tr do
          th "Name"
          th "Short name"
+         th "Address"
          th "Email"
          th "Phone"
-         th "Address"
        end
       @customers.each do |customer|
         tr do
           td { customer.name }
           td { customer.short_name }
-          td { customer.email }
-          td { customer.phone }
           td { [customer.address_street,
                 customer.address_postal_code,
-                customer.address_city].join(", ") }
-          td { a "[edit]", :href => R(CustomerN, customer.id) }
+                customer.address_city].join(", ") unless customer.address_street.blank? }
+          td { customer.email }
+          td { customer.phone }
+          td do 
+            form :action => R(CustomersN, customer.id), :method => :get do
+              input :type => :submit, :value => "Edit"
+            end
+            form :action => R(CustomersN, customer.id), :method => :post do
+              input :type => :submit, :name => "delete", :value => "Delete"
+            end
+          end
         end
       end
     end
     p do
-      a "Add a new customer", :href=> R(CustomerNew)
+      a "Add a new customer", :href=> R(CustomersNew)
     end
   end
   
-  def customer_edit
+  def customer_form
     if @customer
-      target = [CustomerN, @customer.id]
+      @edit_task = true
+      target = [CustomersN, @customer.id]
     else
       @customer = {}
       target = [Customers]
     end
     form :action => R(*target), :method => :post do
       ol do 
-        li { _labeled_input(@customer, "Name", "name", :text) }
-        li { _labeled_input(@customer, "Short name", "short_name", :text) }
-        li { _labeled_input(@customer, "Street address", "address_street", :text) }
-        li { _labeled_input(@customer, "Postal code", "adress_postal_code", :text) }
-        li { _labeled_input(@customer, "City/town", "adress_postal_city", :text) }
-        li { _labeled_input(@customer, "Email address", "email", :text) }
-        li { _labeled_input(@customer, "Phone number", "phone", :text) }
+        li { _form_input(@customer, "Name", "name", :text) }
+        li { _form_input(@customer, "Short name", "short_name", :text) }
+        li { _form_input(@customer, "Street address", "address_street", :text) }
+        li { _form_input(@customer, "Postal code", "address_postal_code", :text) }
+        li { _form_input(@customer, "City/town", "address_city", :text) }
+        li { _form_input(@customer, "Email address", "email", :text) }
+        li { _form_input(@customer, "Phone number", "phone", :text) }
       end
       input :type => "submit", :name => "save", :value => "Save"
       input :type => "submit", :name => "cancel", :value => "Cancel"
     end
   end
 
-  def _labeled_input(obj, label_name, input_name, type, options={})
+  def _form_input(obj, label_name, input_name, type, options={})
     label label_name, :for => input_name
     input :type => type, :name => input_name, :id => input_name,
           :value => @input[input_name] || obj[input_name]
   end
+
+  def _form_select(name, options) 
+    select :name => name, :id => name do
+      options.each do |opt_val, opt_str|
+        if opt_val == @input[name]
+          option(:value => opt_val, :selected => "true") { opt_str }
+        else
+          option(:value => opt_val) { opt_str }
+        end
+      end
+    end
+  end
+
 
 end # module StopTime::Views
