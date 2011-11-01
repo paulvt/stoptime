@@ -43,6 +43,7 @@ module StopTime::Models
 
   class Task < Base
     has_many :time_entries
+    belongs_to :customer
   end
 
   class TimeEntry < Base
@@ -82,7 +83,7 @@ module StopTime::Controllers
 
   class Index
     def get
-      render :overview
+      redirect R(Timereg)
     end
   end
 
@@ -162,17 +163,44 @@ module StopTime::Controllers
     end
   end
 
-  class Tasks
+  class Timereg
     def get
-      @tasks = Tasks.all
-      render :tasks
+      @time_entries = TimeEntry.all
+      @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
+      @task_list = Task.all.map { |t| [t.id, t.name] }
+      render :time_entries
+    end
+
+    def post
+      if @input.has_key? "enter"
+        @entry = TimeEntry.create(
+          :task_id => @input.task,
+          :start => @input.start,
+          :end => @input.end)
+        @entry.save
+        if @entry.invalid?
+          @errors = @entry.errors
+        end
+      elsif @input.has_key? "delete"
+      end
+
+      @time_entries = TimeEntry.all
+      @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
+      @task_list = Task.all.map { |t| [t.id, t.name] }
+      render :time_entries
     end
   end
 
-  class TimeEntries
+  class TimeregN
+    def post(entry_id)
+      TimeEntry.find(entry_id).delete
+      redirect R(Timereg)
+    end
+  end
+
+  class Invoices
     def get
-      @time_entries = TimeEntry.all
-      render :time_entries
+      render :invoices
     end
   end
   
@@ -187,23 +215,61 @@ module StopTime::Views
       end
       body do
         div.wrapper! do
-          self << yield
+          h1 "Stop… Camping Time!"
+          _menu
+          div.content! do
+            self << yield
+          end
         end
       end
     end
   end
 
-  def customers
+  def _menu
+    ol.menu! do
+      li { a "Time Registration", :href => R(Timereg) }
+      li { a "Customers", :href => R(Customers) }
+      li { a "Invoices", :href => R(Invoices) }
+    end
   end
 
-  def overview
-    h1 "Stop… Camping Time!"
-
-    p "You can check out:"
-    ul do
-      li { a "Customers", :href => R(Customers) }
-      li { a "Task", :href=> R(Tasks) }
-      li { a "Time entries", :href => R(TimeEntries) }
+  def time_entries
+    h2 "List of time entries"
+    table do
+      tr do
+        th "Customer"
+        th "Project/task"
+        th "Start time"
+        th "End time"
+        th "Total"
+      end
+      form :action => R(Timereg), :method => :post do
+        tr do
+          td { _form_select("customer", @customer_list) }
+          td { _form_select("task", @task_list) }
+          td { input :type => :text, :name => "start" }
+          td { input :type => :text, :name => "end" }
+          td { "N/A" }
+          td do
+            input :type => :submit, :name => "enter", :value => "Enter"
+            input :type => :reset,  :name => "clear", :value => "Clear"
+          end
+        end
+      end
+      @time_entries.each do |entry|
+        tr do
+          td { entry.task.customer.short_name }
+          td { entry.task.name }
+          td { entry.start }
+          td { entry.end }
+          td { "%.2fh" % ((entry.end - entry.start)/3600.0) }
+          td do
+            form :action => R(TimeregN, entry.id), :method => :post do
+              input :type => :submit, :name => "delete", :value => "Delete"
+            end
+          end
+        end
+      end
     end
   end
 
@@ -263,6 +329,23 @@ module StopTime::Views
       input :type => "submit", :name => "save", :value => "Save"
       input :type => "submit", :name => "cancel", :value => "Cancel"
     end
+    if @edit_task
+      form :action => R(CustomersNTasks, @customer.id), :method => :post do
+        h2 "Projects & Tasks"
+        select :name => "tasks[]", :multiple => "multiple", :size => 6 do
+          @customer.tasks.each do |task|
+            option(:value => task.id) { task.name }
+          end
+        end
+        input :type => :text, :name => "new_task"
+        input :type => :submit, :name => "add", :value => "Add"
+        input :type => :submit, :name => "delete", :value => "Delete"
+      end
+    end
+  end
+
+  def invoices
+    h2 "List of invoices"
   end
 
   def _form_input(obj, label_name, input_name, type, options={})
