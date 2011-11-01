@@ -10,12 +10,22 @@
 # Free Software Foundation; either version 2 of the License, or (at your
 # option) any later version.
 
+require "active_support"
 require "camping"
 require "markaby"
 require "pathname"
 
 Markaby::Builder.set(:indent, 2)
 Camping.goes :StopTime
+
+unless defined? BASE_DIR
+  BASE_DIR = Pathname.new(__FILE__).dirname.expand_path + "public"
+  # Set the default date(/time) format.
+  ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.merge!(
+    :default => "%Y-%m-%d %H:%M")
+  ActiveSupport::CoreExtensions::Date::Conversions::DATE_FORMATS.merge!(
+    :default => "%Y-%m-%d")
+end
 
 module StopTime
 
