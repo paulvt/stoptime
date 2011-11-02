@@ -22,10 +22,15 @@ unless defined? BASE_DIR
   BASE_DIR = Pathname.new(__FILE__).dirname.expand_path + "public"
   # Set the default date(/time) format.
   ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.merge!(
-    :default => "%Y-%m-%d %H:%M")
+    :default => "%Y-%m-%d %H:%M",
+    :month_and_year => "%B %Y",
+    :month_code => "%Y%m")
   ActiveSupport::CoreExtensions::Date::Conversions::DATE_FORMATS.merge!(
-    :default => "%Y-%m-%d")
+    :default => "%Y-%m-%d",
+    :month_and_year => "%B %Y")
 end
+
+HourlyRate = 20.00
 
 module StopTime
 
@@ -39,6 +44,7 @@ module StopTime::Models
 
   class Customer < Base
     has_many :tasks
+    has_many :time_entries, :through => :tasks
   end
 
   class Task < Base
@@ -163,9 +169,32 @@ module StopTime::Controllers
     end
   end
 
+  class CustomersNInvoicesX
+    def get(customer_id, number)
+      @month = DateTime.new(number[0..3].to_i, number[4..5].to_i, 1)
+      @number = number[5..-1].to_i
+
+      @customer = Customer.find(customer_id)
+      time_entries = @customer.time_entries.all(:conditions => 
+        ["start > ? AND end < ?", @month, @month.at_end_of_month])
+      @tasks = time_entries.inject({}) do |tasks, entry|
+        time = (entry.end - entry.start)/1.hour
+        if tasks.has_key? entry.task
+          tasks[entry.task][0] += time
+          tasks[entry.task][2] += time * HourlyRate
+        else
+          tasks[entry.task] = [time, HourlyRate, time * HourlyRate]
+        end
+        tasks
+      end
+
+      render :invoice
+    end
+  end
+
   class Timereg
     def get
-      @time_entries = TimeEntry.all
+      @time_entries = TimeEntry.all(:order => "start DESC")
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
       @task_list = Task.all.map { |t| [t.id, t.name] }
       render :time_entries
@@ -184,7 +213,7 @@ module StopTime::Controllers
       elsif @input.has_key? "delete"
       end
 
-      @time_entries = TimeEntry.all
+      @time_entries = TimeEntry.all(:order => "start DESC")
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
       @task_list = Task.all.map { |t| [t.id, t.name] }
       render :time_entries
@@ -200,6 +229,16 @@ module StopTime::Controllers
 
   class Invoices
     def get
+      @time_entries = TimeEntry.all(:order => "start ASC")
+      @customers = Hash.new { |h, k| h[k] = Array.new }
+
+      @time_entries.each do |e|
+        month = e.start.at_beginning_of_month
+        customer = e.task.customer
+        unless @customers[month].include? customer
+          @customers[month] << customer
+        end
+      end
       render :invoices
     end
   end
@@ -247,8 +286,10 @@ module StopTime::Views
         tr do
           td { _form_select("customer", @customer_list) }
           td { _form_select("task", @task_list) }
-          td { input :type => :text, :name => "start" }
-          td { input :type => :text, :name => "end" }
+          td { input :type => :text, :name => "start", 
+                     :value => DateTime.now.to_date.to_formatted_s + " " }
+          td { input :type => :text, :name => "end",
+                     :value => DateTime.now.to_date.to_formatted_s + " " }
           td { "N/A" }
           td do
             input :type => :submit, :name => "enter", :value => "Enter"
@@ -346,6 +387,53 @@ module StopTime::Views
 
   def invoices
     h2 "List of invoices"
+
+    cmonth = Time.now
+    @customers.each do |month, custs|
+      unless month == cmonth
+        h3 { month.to_formatted_s(:month_and_year) }
+        cmonth = month
+      end
+      ol do
+        custs.each do |cust|
+          li do 
+            span { cust.name }
+            a "view", :href => R(CustomersNInvoicesX,
+                                 cust.id, month.to_formatted_s(:month_code))
+          end
+        end
+      end
+    end
+  end
+
+  def invoice
+    h2 { "Invoice for #{@customer.name}, month
+          #{@month.to_formatted_s(:month_and_year)}" }
+    
+    table do
+      tr do
+        th { "Description" }
+        th { "Number of hours" }
+        th { "Hourly rate" }
+        th { "Amount" }
+      end
+      total = 0.0
+      @tasks.each do |task, line|
+        tr do
+          td { task.name }
+          td { "%.2fh" % line[0] }
+          td { "€ %.2f" % line[1] }
+          td { "€ %.2f" % line[2] }
+        end
+        total += line[2]
+      end
+      tr do
+        td { b "Total amount" }
+        td ""
+        td ""
+        td { "€ %.2f" % total }
+      end
+    end
   end
 
   def _form_input(obj, label_name, input_name, type, options={})
@@ -365,6 +453,5 @@ module StopTime::Views
       end
     end
   end
-
 
 end # module StopTime::Views
