@@ -118,6 +118,16 @@ module StopTime::Models
     end
   end
 
+  class BilledFlagSupport < V 1.2
+    def self.up
+      add_column(TimeEntry.table_name, :bill, :boolean)
+    end
+
+    def self.down
+      remove_column(TimeEntry.table_name, :bill)
+    end
+  end
+
 end # StopTime::Models
 
 module StopTime::Controllers
@@ -257,7 +267,8 @@ module StopTime::Controllers
           :task_id => @input.task,
           :start => @input.start,
           :end => @input.end,
-          :comment => @input.comment)
+          :comment => @input.comment,
+          :bill => @input.has_key?("bill"))
         @entry.save
         if @entry.invalid?
           @errors = @entry.errors
@@ -347,6 +358,7 @@ module StopTime::Views
         th "End time"
         th "Comment"
         th "Total time"
+        th "Bill?"
       end
       form :action => R(Timereg), :method => :post do
         tr do
@@ -358,6 +370,8 @@ module StopTime::Views
                      :value => DateTime.now.to_date.to_formatted_s + " " }
           td { input :type => :text, :name => "comment" }
           td { "N/A" }
+          td { input :type => :checkbox, :name => "bill",
+                     :checked => "checked" }
           td do
             input :type => :submit, :name => "enter", :value => "Enter"
             input :type => :reset,  :name => "clear", :value => "Clear"
@@ -372,6 +386,15 @@ module StopTime::Views
           td { entry.end }
           td { entry.comment }
           td { "%.2fh" % ((entry.end - entry.start)/3600.0) }
+          td do
+            if entry.bill?
+              input :type => :checkbox, :name => "bill",
+                    :checked => "checked", :disabled => "disabled"
+            else
+              input :type => :checkbox, :name => "bill",
+                    :disabled => "disabled"
+            end
+          end
           td do
             form :action => R(TimeregN, entry.id), :method => :post do
               input :type => :submit, :name => "delete", :value => "Delete"
