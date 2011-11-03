@@ -3,12 +3,13 @@
 % rubber: clean <%= invoice_id %>.out
 
 \usepackage{array}
+\usepackage[utf8]{inputenc}
 \setupdocument{
-  % Language and style,
+  %% Language and style,
   dutch,
   fill,
   fontpackage=pxfonts,
-  % Company info.
+  %% Company info.
   company=,
   who=Foo Bedrijf,
   street=Zomaareenstraat 123,
@@ -21,14 +22,20 @@
                 \addresstext:   & \who\\
                                 & \street\\
                                 & \zip\ \city\\[.2em]
+                %\phonetext:     & \lead\phone\\
                 \cellphonetext: & \lead\cellphone\\
                 \emailtext:     & \email\\[.2em]
+                %\chambertext:   & \chamber\\
+                %\vatnotext:     & \vatno
                \end{tabular}},
-  % Footer.
+  %% Footer.
+  %footer,
   areacode=31,
+  %phone=12-3456789,
   cellphone=6-12345678,
   email=info@foobedrijf.nl,
-  % Addressee info.
+  %website=http://foobedrijf.nl,
+  %% Addressee info.
   %foreign,
   to={<%= customer.name %>\\<%= customer.address_street%>\\
       <%= customer.address_postal_code %> <%= customer.address_city %>},
@@ -37,10 +44,12 @@
   ourref=<%= invoice_id %>,
   subject=Factuur <%= month.to_formatted_s(:month_and_year) %>,
   yourref=,
-  % Payment data.
+  %% Payment data.
   term=30,
   accountno=12.34.567.890,
   accountname=Foo Bedrijf,
+  %vatno=\dots{}B01,
+  %chamber=\dots,
 }
 \newcommand{\addresstext}{adres}
 \renewcommand{\chambertext}{KvK-nr}
@@ -53,7 +62,6 @@
 \renewcommand{\websitetext}{website}
 
 \newenvironment{ihtable}%
- %{\vskip1em\tabularx{\linewidth}{@{}X@{\ \barsep\quad}|r@{\ \barsep\quad}r@{\ \barsep\quad}r@{}}
  {\vskip1em\tabularx{\linewidth}{@{}X|@{\quad}r|@{\quad}r|@{\quad}r@{}}
    \descriptiontext&Aantal uur&Uurtarief&\amounttext\ML}%
  {\endtabularx}

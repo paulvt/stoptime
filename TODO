@@ -7,11 +7,11 @@ ToDo
 * factuur vastleggen, met samenvatting commentaar
 * btw berekenen
 * uurtarief per project (inherit klant)
-* LaTeX in UTF-8
 * (configureerbare) factuurnummering (op jaarbasis)
 
 * afronden op tijdresolutie
-* factuur betaaldvlag
+* factuur-betaaldvlag
+* factuurversiebeheer
 * betere tijdinvoer-interface
 * entries spannen over een dag/over een maand goed afhandelen
 * data exporteren
