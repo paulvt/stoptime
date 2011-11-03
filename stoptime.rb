@@ -34,7 +34,7 @@ unless defined? PUBLIC_DIR
     :month_and_year => "%B %Y")
 
   # FIXME: this should be configurable.
-  HourlyRate = 20.00
+  HourlyRate = 20.0
   VATRate = 19.0
 end
 
@@ -61,9 +61,9 @@ module StopTime::Models
         time = (entry.end - entry.start)/1.hour
         if tasks.has_key? entry.task
           tasks[entry.task][0] += time
-          tasks[entry.task][2] += time * HourlyRate
+          tasks[entry.task][2] += time * self.hourly_rate
         else
-          tasks[entry.task] = [time, HourlyRate, time * HourlyRate]
+          tasks[entry.task] = [time, self.hourly_rate, time * self.hourly_rate]
         end
         tasks
       end
@@ -128,6 +128,17 @@ module StopTime::Models
     end
   end
 
+  class HourlyRateSupport < V 1.3
+    def self.up
+      add_column(Customer.table_name, :hourly_rate, :float,
+                                      :null => false, :default => HourlyRate)
+    end
+
+    def self.down
+      remove_column(Customer.table_name, :hourly_rate)
+    end
+  end
+
 end # StopTime::Models
 
 module StopTime::Controllers
@@ -153,11 +164,12 @@ module StopTime::Controllers
         :address_postal_code => @input.address_postal_code,
         :address_city => @input.address_city,
         :email => @input.email,
-        :phone => @input.phone)
+        :phone => @input.phone,
+        :hourly_rate => @input.hourly_rate)
       @customer.save
       if @customer.invalid?
         @errors = @customer.errors
-        return render :customer_new
+        return render :customer_form
       end
       redirect R(Customers)
     end
@@ -183,7 +195,7 @@ module StopTime::Controllers
       elsif @input.has_key? "save"
         attrs = ["name", "short_name",
                  "address_street", "address_postal_code", "address_city",
-                 "email", "phone"]
+                 "email", "phone", "hourly_rate"]
         attrs.each do |attr|
           @customer[attr] = @input[attr] unless @input[attr].blank?
         end
@@ -457,6 +469,7 @@ module StopTime::Views
         li { _form_input(@customer, "City/town", "address_city", :text) }
         li { _form_input(@customer, "Email address", "email", :text) }
         li { _form_input(@customer, "Phone number", "phone", :text) }
+        li { _form_input(@customer, "Hourly rate", "hourly_rate", :text) }
       end
       input :type => "submit", :name => "save", :value => "Save"
       input :type => "submit", :name => "cancel", :value => "Cancel"
