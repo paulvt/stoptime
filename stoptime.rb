@@ -13,6 +13,7 @@
 require "active_support"
 require "camping"
 require "markaby"
+require "mime/types"
 require "pathname"
 
 Markaby::Builder.set(:indent, 2)
@@ -254,7 +255,20 @@ module StopTime::Controllers
       render :invoices
     end
   end
-  
+
+  class StaticX
+    def get(path)
+      mime_type = MIME::Types.type_for(path).first
+      @headers['Content-Type'] = mime_type.nil? ? "text/plain" : mime_type.to_s
+      unless path.include? ".."
+        @headers['X-Sendfile'] = (BASE_DIR + path).to_s
+      else
+        @status = "403"
+        "Error 403: Invalid path: #{path}"
+      end
+    end
+  end
+
 end # module StopTime::Controllers
 
 module StopTime::Views
