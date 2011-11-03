@@ -69,7 +69,7 @@
 \newcommand{\ihsubtotal}[1]{\cmidrule[.0em]{4-4}%
   \textit{Subtotaal}&&&\currency~#1\\}
 \newcommand{\inosubtotal}{&&&\\}
-\newcommand{\ihvat}[1]{\textit{Btw-heffing 19\%}&&&\currency~#1\\}
+\newcommand{\ihvat}[1]{\textit{Btw-heffing <%= VATRate %>\%}&&&\currency~#1\\}
 \newcommand{\ihtotal}[1]{\cmidrule[.05em]{4-4}%
   \textbf{\Totaltext}&&&\textbf{\currency~#1}}
 
@@ -79,16 +79,17 @@
  \hypersetup{pdftitle=\invoicetext\ naar\ \toname\ gedateerd \date\ (\ourref)}
 
  \begin{ihtable}
-  <% total = 0.0 %>
+  <% subtotal = 0.0 %>
   <% tasks.each do |task, line| %>
   \ihitem{<%= task.name %>}{<%= "%.2f" % line[0] %>}%
          {<%= "%.2f" % line[1] %>}{<%= "%.2f" % line[2] %>}
-  <% total += line[2] %>
+  <% subtotal += line[2] %>
   <% end %>
-  %\ihsubtotal{...}
-  \inosubtotal
-  %\ihvat{...}
-  \ihtotal{<%= "%.2f" % total %>}
+  \ihsubtotal{<%= "%.2f" % subtotal %>}
+  %\inosubtotal
+  <% vat = subtotal * VATRate/100 %>
+  \ihvat{<%= "%.2f" % vat %>}
+  \ihtotal{<%= "%.2f" % (subtotal + vat) %>}
  \end{ihtable}
  \vspace{2em}
 

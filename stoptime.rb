@@ -35,8 +35,8 @@ unless defined? PUBLIC_DIR
 
   # FIXME: this should be configurable.
   HourlyRate = 20.00
+  VATRate = 19.0
 end
-
 
 module StopTime
 
@@ -476,7 +476,7 @@ module StopTime::Views
         th { "Hourly rate" }
         th { "Amount" }
       end
-      total = 0.0
+      subtotal = 0.0
       @tasks.each do |task, line|
         tr do
           td { task.name }
@@ -484,13 +484,26 @@ module StopTime::Views
           td { "€ %.2f" % line[1] }
           td { "€ %.2f" % line[2] }
         end
-        total += line[2]
+        subtotal += line[2]
+      end
+      tr do
+        td { i "Sub-total" }
+        td ""
+        td ""
+        td { "€ %.2f" % subtotal }
+      end
+      vat = subtotal * VATRate/100
+      tr do
+        td { i "VAT #{VATRate}%" }
+        td ""
+        td ""
+        td { "€ %.2f" % vat }
       end
       tr do
         td { b "Total amount" }
         td ""
         td ""
-        td { "€ %.2f" % total }
+        td { "€ %.2f" % (subtotal + vat) }
       end
     end
   end
