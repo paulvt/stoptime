@@ -27,7 +27,8 @@ unless defined? PUBLIC_DIR
   ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.merge!(
     :default => "%Y-%m-%d %H:%M",
     :month_and_year => "%B %Y",
-    :month_code => "%Y%m")
+    :month_code => "%Y%m",
+    :day_code => "%Y%m%d")
   ActiveSupport::CoreExtensions::Date::Conversions::DATE_FORMATS.merge!(
     :default => "%Y-%m-%d",
     :month_and_year => "%B %Y")
@@ -195,14 +196,41 @@ module StopTime::Controllers
   end
 
   class CustomersNInvoicesX
-    def get(customer_id, number)
-      @month = DateTime.new(number[0..3].to_i, number[4..5].to_i, 1)
-      @number = number[5..-1].to_i
+    def get(customer_id, invoice_id)
+      @month = DateTime.new(invoice_id[0..3].to_i, invoice_id[4..5].to_i, 1)
+      @number = invoice_id[6..-1]
+      # FIXME: make this (much) nicer!
+      invoice_id.gsub!(/\.pdf$/, '')
+      if m = @number.match(/(\d+)\.(\w+)$/)
+        @number = m[1].to_i
+        @format = m[2]
+      else
+        @number = @number.to_i
+        @format = "html"
+      end
 
       @customer = Customer.find(customer_id)
       @tasks = @customer.task_summary(@month)
 
-      render :invoice
+      if @format == "html"
+        render :invoice
+      elsif @format == "pdf"
+        pdf_file = PUBLIC_DIR + "#{invoice_id}.pdf"
+        unless pdf_file.exist?
+          _generate_invoice_pdf(@customer, @tasks, @month, invoice_id)
+        end
+        redirect(StaticX, pdf_file.basename)
+      end
+    end
+
+    def _generate_invoice_pdf(customer, tasks, month, invoice_id)
+      template = TEMPLATE_DIR + "invoice.tex.erb"
+      tex_file = PUBLIC_DIR + "#{invoice_id}.tex"
+
+      erb = ERB.new(File.read(template))
+      File.open(tex_file, "w") { |f| f.write(erb.result(binding)) }
+      system("rubber --pdf --inplace #{tex_file}")
+      system("rubber --clean --inplace #{tex_file}")
     end
   end
 
