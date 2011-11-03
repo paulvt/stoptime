@@ -73,7 +73,7 @@
  \begin{ihtable}
   <% total = 0.0 %>
   <% tasks.each do |task, line| %>
-  \ihitem{<%= task.name %>}{<% "%.2f" % line[0] %>}%
+  \ihitem{<%= task.name %>}{<%= "%.2f" % line[0] %>}%
          {<%= "%.2f" % line[1] %>}{<%= "%.2f" % line[2] %>}
   <% total += line[2] %>
   <% end %>
