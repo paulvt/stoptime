@@ -1,0 +1,18 @@
+ToDo
+====
+
+* commentaar bij entries
+* handmatige entries (gekocht item/opdrachtbasis) op factuur
+* factureervlag per entry
+* factuur vastleggen, met samenvatting commentaar
+* btw berekenen
+* uurtarief per project (inherit klant)
+* LaTeX in UTF-8
+* (configureerbare) factuurnummering (op jaarbasis)
+
+* afronden op tijdresolutie
+* factuur betaaldvlag
+* betere tijdinvoer-interface
+* entries spannen over een dag/over een maand goed afhandelen
+* data exporteren
+* foutafhandeling
