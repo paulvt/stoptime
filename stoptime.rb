@@ -415,18 +415,22 @@ module StopTime::Views
     h2 "List of invoices"
 
     cmonth = Time.now
+    ccnt = 1
     @customers.each do |month, custs|
       unless month == cmonth
         h3 { month.to_formatted_s(:month_and_year) }
         cmonth = month
+        ccnt = 1
       end
       ol do
         custs.each do |cust|
           li do 
             span { cust.name }
             a "view", :href => R(CustomersNInvoicesX,
-                                 cust.id, month.to_formatted_s(:month_code))
+                                 cust.id, month.to_formatted_s(:month_code) +
+                                          "%02d" % ccnt)
           end
+          ccnt = ccnt + 1
         end
       end
     end
