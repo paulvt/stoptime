@@ -19,8 +19,9 @@ require "pathname"
 Markaby::Builder.set(:indent, 2)
 Camping.goes :StopTime
 
-unless defined? BASE_DIR
-  BASE_DIR = Pathname.new(__FILE__).dirname.expand_path + "public"
+unless defined? PUBLIC_DIR
+  PUBLIC_DIR = Pathname.new(__FILE__).dirname.expand_path + "public"
+  TEMPLATE_DIR = Pathname.new(__FILE__).dirname.expand_path + "templates"
 
   # Set the default date(/time) format.
   ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.merge!(
@@ -261,7 +262,7 @@ module StopTime::Controllers
       mime_type = MIME::Types.type_for(path).first
       @headers['Content-Type'] = mime_type.nil? ? "text/plain" : mime_type.to_s
       unless path.include? ".."
-        @headers['X-Sendfile'] = (BASE_DIR + path).to_s
+        @headers['X-Sendfile'] = (PUBLIC_DIR + path).to_s
       else
         @status = "403"
         "Error 403: Invalid path: #{path}"
