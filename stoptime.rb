@@ -20,6 +20,7 @@ Camping.goes :StopTime
 
 unless defined? BASE_DIR
   BASE_DIR = Pathname.new(__FILE__).dirname.expand_path + "public"
+
   # Set the default date(/time) format.
   ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.merge!(
     :default => "%Y-%m-%d %H:%M",
@@ -28,9 +29,11 @@ unless defined? BASE_DIR
   ActiveSupport::CoreExtensions::Date::Conversions::DATE_FORMATS.merge!(
     :default => "%Y-%m-%d",
     :month_and_year => "%B %Y")
+
+  # FIXME: this should be configurable.
+  HourlyRate = 20.00
 end
 
-HourlyRate = 20.00
 
 module StopTime
 
@@ -45,6 +48,25 @@ module StopTime::Models
   class Customer < Base
     has_many :tasks
     has_many :time_entries, :through => :tasks
+
+    def task_summary(month)
+      # FIXME: ensure that month is a DateTime/Time object.
+      time_entries = self.time_entries.all(:conditions => 
+        ["start > ? AND end < ?", month, month.at_end_of_month])
+
+      tasks = time_entries.inject({}) do |tasks, entry|
+        time = (entry.end - entry.start)/1.hour
+        if tasks.has_key? entry.task
+          tasks[entry.task][0] += time
+          tasks[entry.task][2] += time * HourlyRate
+        else
+          tasks[entry.task] = [time, HourlyRate, time * HourlyRate]
+        end
+        tasks
+      end
+
+      return tasks
+    end
   end
 
   class Task < Base
@@ -54,6 +76,7 @@ module StopTime::Models
 
   class TimeEntry < Base
     belongs_to :task
+    
   end
 
   class StopTimeTables < V 1.0
@@ -175,18 +198,7 @@ module StopTime::Controllers
       @number = number[5..-1].to_i
 
       @customer = Customer.find(customer_id)
-      time_entries = @customer.time_entries.all(:conditions => 
-        ["start > ? AND end < ?", @month, @month.at_end_of_month])
-      @tasks = time_entries.inject({}) do |tasks, entry|
-        time = (entry.end - entry.start)/1.hour
-        if tasks.has_key? entry.task
-          tasks[entry.task][0] += time
-          tasks[entry.task][2] += time * HourlyRate
-        else
-          tasks[entry.task] = [time, HourlyRate, time * HourlyRate]
-        end
-        tasks
-      end
+      @tasks = @customer.task_summary(@month)
 
       render :invoice
     end
