@@ -79,7 +79,6 @@ module StopTime::Models
 
   class TimeEntry < Base
     belongs_to :task
-    
   end
 
   class StopTimeTables < V 1.0
@@ -109,7 +108,17 @@ module StopTime::Models
     end
   end
 
-end # module StopTime::Models
+  class CommentSupport < V 1.1
+    def self.up
+      add_column(TimeEntry.table_name, :comment, :string)
+    end
+
+    def self.down
+      remove_column(TimeEntry.table_name, :comment)
+    end
+  end
+
+end # StopTime::Models
 
 module StopTime::Controllers
 
@@ -247,7 +256,8 @@ module StopTime::Controllers
         @entry = TimeEntry.create(
           :task_id => @input.task,
           :start => @input.start,
-          :end => @input.end)
+          :end => @input.end,
+          :comment => @input.comment)
         @entry.save
         if @entry.invalid?
           @errors = @entry.errors
@@ -335,7 +345,8 @@ module StopTime::Views
         th "Project/task"
         th "Start time"
         th "End time"
-        th "Total"
+        th "Comment"
+        th "Total time"
       end
       form :action => R(Timereg), :method => :post do
         tr do
@@ -345,6 +356,7 @@ module StopTime::Views
                      :value => DateTime.now.to_date.to_formatted_s + " " }
           td { input :type => :text, :name => "end",
                      :value => DateTime.now.to_date.to_formatted_s + " " }
+          td { input :type => :text, :name => "comment" }
           td { "N/A" }
           td do
             input :type => :submit, :name => "enter", :value => "Enter"
@@ -358,6 +370,7 @@ module StopTime::Views
           td { entry.task.name }
           td { entry.start }
           td { entry.end }
+          td { entry.comment }
           td { "%.2fh" % ((entry.end - entry.start)/3600.0) }
           td do
             form :action => R(TimeregN, entry.id), :method => :post do
