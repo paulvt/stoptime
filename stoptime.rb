@@ -600,19 +600,39 @@ module StopTime::Views
     end
   end
 
-  def _form_input(obj, label_name, input_name, type, options={})
+  def _form_input(obj, label_name, input_name, type)
     label label_name, :for => input_name
     input :type => type, :name => input_name, :id => input_name,
-          :value => @input[input_name] || obj[input_name]
+          :value => @input[input_name]
   end
 
-  def _form_select(name, options) 
+  def _form_input_radio(name, value, default=false)
+    if @input[name] == value or (@input[name].blank? and default)
+      input :type => "radio", :id => "#{name}_#{value}",
+            :name => name, :value => value, :checked => true
+    else
+      input :type => "radio", :id => "#{name}_#{value}",
+            :name => name, :value => value
+    end
+  end
+
+  def _form_input_checkbox(name, value="true")
+    if @input[name] == value
+      input :type => "checkbox", :id => name, :name => name,
+            :value => value, :checked => true
+    else
+      input :type => "checkbox", :id => name, :name => name, 
+            :value => value
+    end
+  end
+
+  def _form_select(name, opts_list) 
     select :name => name, :id => name do
-      options.each do |opt_val, opt_str|
+      opts_list.each do |opt_val, opt_str|
         if opt_val == @input[name]
-          option(:value => opt_val, :selected => "true") { opt_str }
+          option opt_str, :value => opt_val, :selected => true
         else
-          option(:value => opt_val) { opt_str }
+          option opt_str, :value => opt_val
         end
       end
     end
