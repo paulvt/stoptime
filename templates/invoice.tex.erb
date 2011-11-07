@@ -1,6 +1,6 @@
 \documentclass[a4paper,12pt,oneside,dutch]{isodoc}
 
-% rubber: clean <%= invoice_id %>.out
+% rubber: clean <%= number %>.out
 
 \usepackage{array}
 \usepackage[utf8]{inputenc}
@@ -19,7 +19,7 @@
   countrycode=<%= @company.country_code %>,
   logoaddress={\hspace{-4.4em}
                \begin{tabular}{l@{\ }l}
-<% if @company.name.blank? %>                     \addresstext:    & \who\\
+<% if @company.name.blank? %>                \addresstext:    & \who\\
 <% else %>                \addresstext:    & \company \\
 <% unless @company.contact_name.blank? %>                \addresswhotext: & \who \\
 <% end %><% end %>                                 & \street\\
@@ -43,8 +43,8 @@
       <%= customer.address_postal_code %> <%= customer.address_city %>},
   % Headlines.
   date=<%= DateTime.now.to_formatted_s(:day_code) %>,
-  ourref=<%= invoice_id %>,
-  subject=Factuur <%= month.to_formatted_s(:month_and_year) %>,
+  ourref=<%= number %>,
+  subject=Factuur <%= @month.to_formatted_s(:month_and_year) %>,
   yourref=,
   %% Payment data.
   term=30,
