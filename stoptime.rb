@@ -97,6 +97,9 @@ module StopTime::Models
     belongs_to :customer
   end
 
+  class CompanyInfo < Base
+  end
+
   class StopTimeTables < V 1.0
     def self.up
       create_table Customer.table_name do |t|
@@ -185,6 +188,30 @@ module StopTime::Models
     end
   end
 
+  class CompanyInfoSupport < V 1.6
+    def self.up
+      create_table CompanyInfo.table_name do |t|
+        t.string :name, :contact_name,
+                 :address_street, :address_postal_code, :address_city,
+                 :country, :country_code,
+                 :phone, :cell, :email, :website,
+                 :chamber, :vatno, :accountname, :accountno
+        t.timestamps
+     end
+
+     # Add company info record with defaults.
+     cinfo = CompanyInfo.create(:name => "My Company",
+                                :contact_name => "Me",
+                                :country => "The Netherlands",
+                                :country_code => "NL")
+     cinfo.save
+   end
+
+   def self.down
+     drop_table CompanyInfo.table_name
+   end
+  end
+
 end # StopTime::Models
 
 module StopTime::Controllers
@@ -224,7 +251,7 @@ module StopTime::Controllers
   class CustomersNew
     def get
       # FIXME: set other defaults?
-      @customer = Customer.create(:hourly_rate => HourlyRate)
+      @customer = Customer.new(:hourly_rate => HourlyRate)
       @target = [Customers]
       render :customer_form
     end
@@ -249,7 +276,7 @@ module StopTime::Controllers
                  "address_street", "address_postal_code", "address_city",
                  "email", "phone", "hourly_rate"]
         attrs.each do |attr|
-          @customer[attr] = @input[attr] unless @input[attr].blank?
+          @customer[attr] = @input[attr]
         end
         @customer.save
         if @customer.invalid?
@@ -297,7 +324,7 @@ module StopTime::Controllers
   class CustomersNTasksNew
     def get(customer_id)
       @customer = Customer.find(customer_id)
-      @task = Task.create(:hourly_rate => @customer.hourly_rate)
+      @task = Task.new(:hourly_rate => @customer.hourly_rate)
       @target = [CustomersNTasks, customer_id]
       @method = "create"
       @input = @task
@@ -357,6 +384,7 @@ module StopTime::Controllers
         @format = "html"
       end
 
+      @company = CompanyInfo.first
       @customer = Customer.find(customer_id)
       @tasks = @customer.task_summary(@month)
 
@@ -435,6 +463,31 @@ module StopTime::Controllers
     end
   end
 
+  class Company
+    def get
+      @company = CompanyInfo.first
+      @input = @company
+      render :company_form
+    end
+
+    def post
+      @company = CompanyInfo.first
+      attrs = ["name", "contact_name",
+               "address_street", "address_postal_code", "address_city",
+               "country", "country_code",
+               "phone", "cell", "email", "website",
+               "chamber", "vatno", "accountname", "accountno"]
+      attrs.each do |attr|
+        @company[attr] = @input[attr]
+      end
+      @company.save
+      if @company.invalid?
+        @errors = @company.errors
+      end
+      render :company_form
+    end
+  end
+
   class StaticX
     def get(path)
       mime_type = MIME::Types.type_for(path).first
@@ -471,9 +524,11 @@ module StopTime::Views
 
   def _menu
     ol.menu! do
+      li { a "Overview", :href => R(Index) }
       li { a "Time Registration", :href => R(Timereg) }
       li { a "Customers", :href => R(Customers) }
       li { a "Invoices", :href => R(Invoices) }
+      li { a "Company", :href => R(Company) }
     end
   end
 
@@ -570,14 +625,14 @@ module StopTime::Views
   def customer_form
     form :action => R(*@target), :method => :post do
       ol do 
-        li { _form_input(@customer, "Name", "name", :text) }
-        li { _form_input(@customer, "Short name", "short_name", :text) }
-        li { _form_input(@customer, "Street address", "address_street", :text) }
-        li { _form_input(@customer, "Postal code", "address_postal_code", :text) }
-        li { _form_input(@customer, "City/town", "address_city", :text) }
-        li { _form_input(@customer, "Email address", "email", :text) }
-        li { _form_input(@customer, "Phone number", "phone", :text) }
-        li { _form_input(@customer, "Hourly rate", "hourly_rate", :text) }
+        li { _form_input_with_label("Name", "name", :text) }
+        li { _form_input_with_label("Short name", "short_name", :text) }
+        li { _form_input_with_label("Street address", "address_street", :text) }
+        li { _form_input_with_label("Postal code", "address_postal_code", :text) }
+        li { _form_input_with_label("City/town", "address_city", :text) }
+        li { _form_input_with_label("Email address", "email", :text) }
+        li { _form_input_with_label("Phone number", "phone", :text) }
+        li { _form_input_with_label("Hourly rate", "hourly_rate", :text) }
       end
       input :type => "submit", :name => "update", :value => "Update"
       input :type => "submit", :name => "cancel", :value => "Cancel"
@@ -602,16 +657,16 @@ module StopTime::Views
     h2 "New task for #{@customer.name}"
     form :action => R(*@target), :method => :post do
       ul do 
-        li { _form_input(@task, "Name", "name", :text) }
+        li { _form_input_with_label("Name", "name", :text) }
         li do
           ol.radio do
             li do 
               _form_input_radio("task_type", "hourly_rate", default=true)
-              _form_input(@task, "Hourly rate", "hourly_rate", :text)
+              _form_input_with_label("Hourly rate", "hourly_rate", :text)
             end
             li do
               _form_input_radio("task_type", "fixed_cost")
-              _form_input(@task, "Fixed cost", "fixed_cost", :text)
+              _form_input_with_label("Fixed cost", "fixed_cost", :text)
             end
           end
         end 
@@ -697,7 +752,40 @@ module StopTime::Views
     end
   end
 
-  def _form_input(obj, label_name, input_name, type)
+  def company_form
+    h2 "Company Information"
+
+    if @errors
+      div.form_errors do
+        h3 "There were #{@errors.count} errors in the form!"
+        ul do
+          @errors.each do |attrib, msg|
+            li "#{attrib.to_s.capitalize} #{msg}"
+          end
+        end
+      end
+    end
+    form :action => R(Company), :method => :post do
+      ol do 
+        li { _form_input_with_label("Name", "name", :text) }
+        li { _form_input_with_label("Contact name", "contact_name", :text) }
+        li { _form_input_with_label("Street address", "address_street", :text) }
+        li { _form_input_with_label("Postal code", "address_postal_code", :text) }
+        li { _form_input_with_label("City/town", "address_city", :text) }
+        li { _form_input_with_label("Phone number", "phone", :text) }
+        li { _form_input_with_label("Cellular number", "cell", :text) }
+        li { _form_input_with_label("Email address", "email", :text) }
+        li { _form_input_with_label("Web address", "website", :text) }
+        li { _form_input_with_label("Chamber number", "chamber", :text) }
+        li { _form_input_with_label("VAT number", "vatno", :text) }
+        li { _form_input_with_label("Account name", "accountname", :text) }
+        li { _form_input_with_label("Account number", "accountno", :text) }
+      end
+      input :type => "submit", :name => "update", :value => "Update"
+    end
+  end
+
+  def _form_input_with_label(label_name, input_name, type)
     label label_name, :for => input_name
     input :type => type, :name => input_name, :id => input_name,
           :value => @input[input_name]

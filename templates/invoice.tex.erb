@@ -10,31 +10,33 @@
   fill,
   fontpackage=pxfonts,
   %% Company info.
-  company=,
-  who=Foo Bedrijf,
-  street=Zomaareenstraat 123,
-  city=Ergens,
-  zip=1234~ZZ,
-  country=The Netherlands,
-  countrycode=NL,
+  company=<%= @company.name %>,
+  who=<%= @company.contact_name %>,
+  street=<%= @company.address_street %>,
+  zip=<%= @company.address_postal_code %>,
+  city=<%= @company.address_city %>,
+  country=<%= @company.country %>,
+  countrycode=<%= @company.country_code %>,
   logoaddress={\hspace{-4.4em}
                \begin{tabular}{l@{\ }l}
-                \addresstext:   & \who\\
-                                & \street\\
-                                & \zip\ \city\\[.2em]
-                %\phonetext:     & \lead\phone\\
-                \cellphonetext: & \lead\cellphone\\
-                \emailtext:     & \email\\[.2em]
-                %\chambertext:   & \chamber\\
-                %\vatnotext:     & \vatno
-               \end{tabular}},
+<% if @company.name.blank? %>                     \addresstext:    & \who\\
+<% else %>                \addresstext:    & \company \\
+<% unless @company.contact_name.blank? %>                \addresswhotext: & \who \\
+<% end %><% end %>                                 & \street\\
+                                 & \zip\ \city\\[.2em]
+<% unless @company.phone.blank? %>          \phonetext:      & \lead\phone\\
+<% end %><% unless @company.cell.blank? %>                \cellphonetext:  & \lead\cellphone\\
+<% end %><% unless @company.email.blank? %>                \emailtext:      & \email\\[.2em]
+<% end %><% unless @company.chamber.blank? %>                \chambertext:    & \chamber\\
+<% end %><% unless @company.vatno.blank? %>                \vatnotext:      & \vatno
+<% end %>               \end{tabular}},
   %% Footer.
-  %footer,
+<% unless @company.website.blank? %>  footer,<% end %>
   areacode=31,
-  %phone=12-3456789,
-  cellphone=6-12345678,
-  email=info@foobedrijf.nl,
-  %website=http://foobedrijf.nl,
+  phone=<%= @company.phone %>,
+  cellphone=<%= @company.cell %>,
+  email=<%= @company.email %>,
+  website=<%= @company.website %>,
   %% Addressee info.
   %foreign,
   to={<%= customer.name %>\\<%= customer.address_street%>\\
@@ -46,12 +48,14 @@
   yourref=,
   %% Payment data.
   term=30,
-  accountno=12.34.567.890,
-  accountname=Foo Bedrijf,
-  %vatno=\dots{}B01,
-  %chamber=\dots,
-}
+  accountno=<%= @company.accountno %>,
+  accountname=<%= @company.accountname %>,
+<% unless @company.vatno.blank? %>  vatno=<%= @company.vatno %>,
+<% end %><% unless @company.chamber.blank? %>  chamber=<%= @company.chamber %>
+<% end %>}
+
 \newcommand{\addresstext}{adres}
+\newcommand{\addresswhotext}{t.n.v.}
 \renewcommand{\chambertext}{KvK-nr}
 \renewcommand{\datetext}{Factuurdatum}
 \renewcommand{\emailtext}{e-mail}
