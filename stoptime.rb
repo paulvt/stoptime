@@ -234,7 +234,7 @@ module StopTime::Controllers
       @customer = Customer.find(customer_id)
       if @input.has_key? "delete"
         @customer.delete
-      elsif @input.has_key? "save"
+      elsif @input.has_key? "update"
         attrs = ["name", "short_name",
                  "address_street", "address_postal_code", "address_city",
                  "email", "phone", "hourly_rate"]
@@ -506,7 +506,7 @@ module StopTime::Views
         li { _form_input(@customer, "Phone number", "phone", :text) }
         li { _form_input(@customer, "Hourly rate", "hourly_rate", :text) }
       end
-      input :type => "submit", :name => "save", :value => "Save"
+      input :type => "submit", :name => "update", :value => "Update"
       input :type => "submit", :name => "cancel", :value => "Cancel"
     end
     if @edit_task
