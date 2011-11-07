@@ -51,25 +51,6 @@ module StopTime::Models
   class Customer < Base
     has_many :tasks
     has_many :time_entries, :through => :tasks
-
-    def task_summary(month)
-      # FIXME: ensure that month is a DateTime/Time object.
-      time_entries = self.time_entries.all(:conditions => 
-        ["start > ? AND end < ?", month, month.at_end_of_month])
-
-      tasks = time_entries.inject({}) do |tasks, entry|
-        time = (entry.end - entry.start)/1.hour
-        if tasks.has_key? entry.task
-          tasks[entry.task][0] += time
-          tasks[entry.task][2] += time * self.hourly_rate
-        else
-          tasks[entry.task] = [time, self.hourly_rate, time * self.hourly_rate]
-        end
-        tasks
-      end
-
-      return tasks
-    end
   end
 
   class Task < Base
@@ -87,14 +68,36 @@ module StopTime::Models
 
   class TimeEntry < Base
     belongs_to :task
+    belongs_to :invoice
     has_one :customer, :through => :task
-    has_one :invoice
+
+    def total
+      (self.end - self.start) / 1.hour
+    end
   end
 
   class Invoice < Base
     has_many :time_entries
-    has_many :tasks, :through => :time_entries
     belongs_to :customer
+
+    def summary
+      # FIXME: ensure that month is a DateTime/Time object.
+      time_entries = self.time_entries.all
+
+      tasks = time_entries.inject({}) do |tasks, entry|
+        time = entry.total
+        if tasks.has_key? entry.task
+          tasks[entry.task][0] += time
+          tasks[entry.task][2] += time * entry.task.hourly_rate
+        else
+          tasks[entry.task] = [time, entry.task.hourly_rate, 
+                                     time * entry.task.hourly_rate]
+        end
+        tasks
+      end
+
+      return tasks
+    end
   end
 
   class CompanyInfo < Base
