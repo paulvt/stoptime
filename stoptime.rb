@@ -352,9 +352,11 @@ module StopTime::Controllers
         @task["name"] = @input["name"] unless @input["name"].blank?
         case @input.task_type
         when "fixed_cost"
-          @task["fixed_cost"] = @input.fixed_cost unless @input.fixed_cost.blank?
+          @task.fixed_cost = @input.fixed_cost
+          @task.hourly_rate = nil
         when "hourly_rate"
-          @task["hourly_rate"] = @input.fixed_cost unless @input.fixed_cost.blank?
+          @task.fixed_cost = nil
+          @task.hourly_rate = @input.hourly_rate
         end
         @task["billed"] = @input.has_key? "billed"
         @task.save
@@ -654,7 +656,9 @@ module StopTime::Views
   end
 
   def task_form
+    # FIXME: it's not always new
     h2 "New task for #{@customer.name}"
+
     form :action => R(*@target), :method => :post do
       ul do 
         li { _form_input_with_label("Name", "name", :text) }
@@ -788,11 +792,12 @@ module StopTime::Views
   def _form_input_with_label(label_name, input_name, type)
     label label_name, :for => input_name
     input :type => type, :name => input_name, :id => input_name,
-          :value => @input[input_name]
+          :value => @input.send(input_name)
   end
 
   def _form_input_radio(name, value, default=false)
-    if @input[name] == value or (@input[name].blank? and default)
+    input_val = @input.send(name)
+    if input_val == value or (input_val.blank? and default)
       input :type => "radio", :id => "#{name}_#{value}",
             :name => name, :value => value, :checked => true
     else
@@ -802,7 +807,7 @@ module StopTime::Views
   end
 
   def _form_input_checkbox(name, value="true")
-    if @input[name] == value
+    if @input.send(name) == value
       input :type => "checkbox", :id => name, :name => name,
             :value => value, :checked => true
     else
@@ -814,7 +819,7 @@ module StopTime::Views
   def _form_select(name, opts_list) 
     select :name => name, :id => name do
       opts_list.each do |opt_val, opt_str|
-        if opt_val == @input[name]
+        if @input.send(name) == opt_val
           option opt_str, :value => opt_val, :selected => true
         else
           option opt_str, :value => opt_val
