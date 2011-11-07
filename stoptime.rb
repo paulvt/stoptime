@@ -265,7 +265,7 @@ module StopTime::Controllers
       @customer = Customer.find(customer_id)
       @edit_task = true
       @target = [CustomersN, @customer.id]
-      @input = @customer
+      @input = @customer.attributes
       render :customer_form
     end
 
@@ -330,7 +330,8 @@ module StopTime::Controllers
       @task = Task.new(:hourly_rate => @customer.hourly_rate)
       @target = [CustomersNTasks, customer_id]
       @method = "create"
-      @input = @task
+      @input = @task.attributes
+      @input["task_type"] = @task.task_type # FIXME: find nicer way!
       render :task_form
     end
   end
@@ -341,7 +342,8 @@ module StopTime::Controllers
       @task = Task.find(task_id)
       @target = [CustomersNTasksN,  customer_id, task_id]
       @method = "update"
-      @input = @task
+      @input = @task.attributes
+      @input["task_type"] = @task.task_type
       # FIXME: Check that task is of that customer.
       render :task_form
     end
@@ -367,7 +369,8 @@ module StopTime::Controllers
           @errors = @task.errors
           @target = [CustomersNTasksN,  customer_id, task_id]
           @method = "update"
-          @input = @task
+          @input = @task.attributes
+          @input["task_type"] = @input.task_type
           return render :task_form
         end
       end
@@ -471,7 +474,7 @@ module StopTime::Controllers
   class Company
     def get
       @company = CompanyInfo.first
-      @input = @company
+      @input = @company.attributes
       render :company_form
     end
 
@@ -559,23 +562,24 @@ module StopTime::Views
                      :value => DateTime.now.to_date.to_formatted_s + " " }
           td { input :type => :text, :name => "comment" }
           td { "N/A" }
-          td { _form_input_checkbox("bill", "bill") }
+          td { _form_input_checkbox("bill") }
           td do
             input :type => :submit, :name => "enter", :value => "Enter"
             input :type => :reset,  :name => "clear", :value => "Clear"
           end
         end
       end
-      @time_entries.each do |entry|
+      @entries.each do |entry|
         tr do
           td { a entry.customer.short_name, 
                  :href => R(CustomersN, entry.customer.id) }
           td { a entry.task.name,
                  :href => R(CustomersNTasksN, entry.customer.id, entry.task.id) }
-          td { entry.start }
+          td { a entry.start,
+                 :href => R(TimeregN, entry.id) }
           td { entry.end }
           td { entry.comment }
-          td { "%.2fh" % ((entry.end - entry.start)/3600.0) }
+          td { "%.2fh" % entry.total }
           td do 
             if entry.bill
               input :type => "checkbox", :name => "bill_#{entry.id}",
@@ -677,13 +681,9 @@ module StopTime::Views
             end
           end
         end 
-        li do
-          if @input.billed?
-            input :type => :checkbox, :name => "billed", :checked => true
-          else
-            input :type => :checkbox, :name => "billed"
-          end
-          span "Billed"
+        li do 
+          _form_input_checkbox("billed")
+          label "Billed!", :for => "billed"
         end
       end
       input :type => "submit", :name => @method, :value => @method.capitalize
@@ -795,11 +795,11 @@ module StopTime::Views
   def _form_input_with_label(label_name, input_name, type)
     label label_name, :for => input_name
     input :type => type, :name => input_name, :id => input_name,
-          :value => @input.send(input_name)
+          :value => @input[input_name]
   end
 
   def _form_input_radio(name, value, default=false)
-    input_val = @input.send(name)
+    input_val = @input[name]
     if input_val == value or (input_val.blank? and default)
       input :type => "radio", :id => "#{name}_#{value}",
             :name => name, :value => value, :checked => true
@@ -809,12 +809,12 @@ module StopTime::Views
     end
   end
 
-  def _form_input_checkbox(name, value="true")
-    if @input.send(name) == value
-      input :type => "checkbox", :id => name, :name => name,
+  def _form_input_checkbox(name, value=true)
+    if @input[name] == value
+      input :type => "checkbox", :id => "#{name}_#{value}", :name => name,
             :value => value, :checked => true
     else
-      input :type => "checkbox", :id => name, :name => name, 
+      input :type => "checkbox", :id => "#{name}_#{value}", :name => name, 
             :value => value
     end
   end
@@ -822,7 +822,7 @@ module StopTime::Views
   def _form_select(name, opts_list) 
     select :name => name, :id => name do
       opts_list.each do |opt_val, opt_str|
-        if @input.send(name) == opt_val
+        if @input[name] == opt_val
           option opt_str, :value => opt_val, :selected => true
         else
           option opt_str, :value => opt_val
