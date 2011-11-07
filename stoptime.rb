@@ -152,10 +152,12 @@ module StopTime::Models
   class FixedCostTaskSupport < V 1.4
     def self.up
       add_column(Task.table_name, :billed, :boolean)
+      add_column(Task.table_name, :fixed_cost, :float)
     end
 
     def self.down
-      add_column(Task.table_name, :billed)
+      remove_column(Task.table_name, :billed)
+      remove_column(Task.table_name, :fixed_cost)
     end
   end
 
@@ -213,6 +215,8 @@ module StopTime::Controllers
 
   class CustomersNew
     def get
+      @customer = {}
+      @target = [Customers]
       render :customer_form
     end
   end
@@ -220,6 +224,8 @@ module StopTime::Controllers
   class CustomersN
     def get(customer_id)
       @customer = Customer.find(customer_id)
+      @edit_task = true
+      @target = [CustomersN, @customer.id]
       render :customer_form
     end
 
@@ -489,14 +495,7 @@ module StopTime::Views
   end
   
   def customer_form
-    if @customer
-      @edit_task = true
-      target = [CustomersN, @customer.id]
-    else
-      @customer = {}
-      target = [Customers]
-    end
-    form :action => R(*target), :method => :post do
+    form :action => R(*@target), :method => :post do
       ol do 
         li { _form_input(@customer, "Name", "name", :text) }
         li { _form_input(@customer, "Short name", "short_name", :text) }
