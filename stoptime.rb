@@ -75,10 +75,20 @@ module StopTime::Models
   class Task < Base
     has_many :time_entries
     belongs_to :customer
+
+    def fixed_cost?
+      not self.fixed_cost.blank?
+    end
   end
 
   class TimeEntry < Base
     belongs_to :task
+    has_one :invoice
+  end
+
+  class Invoice < Base
+    has_many :time_entries
+    belongs_to :customer
   end
 
   class StopTimeTables < V 1.0
@@ -95,7 +105,7 @@ module StopTime::Models
         t.timestamps
       end
       create_table TimeEntry.table_name do |t|
-        t.integer :task_id
+        t.integer :task_id, :invoice_id
         t.datetime :start, :end
         t.timestamps
       end
@@ -136,6 +146,32 @@ module StopTime::Models
 
     def self.down
       remove_column(Customer.table_name, :hourly_rate)
+    end
+  end
+
+  class FixedCostTaskSupport < V 1.4
+    def self.up
+      add_column(Task.table_name, :billed, :boolean)
+    end
+
+    def self.down
+      add_column(Task.table_name, :billed)
+    end
+  end
+
+  class InvoiceSupport < V 1.5
+    def self.up
+      create_table Invoice.table_name do |t|
+        t.integer :number, :customer_id
+        t.boolean :payed
+        t.timestamps
+      end
+      add_column(TimeEntry.table_name, :invoice_id, :integer)
+    end
+
+    def self.down
+      drop_table Invoice.table_name
+      remove_column(TimeEntry.table_name, :invoice_id)
     end
   end
 
