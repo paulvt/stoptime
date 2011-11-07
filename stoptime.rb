@@ -454,9 +454,10 @@ module StopTime::Controllers
 
   class Timereg
     def get
-      @time_entries = TimeEntry.all(:order => "start DESC")
+      @entries = TimeEntry.all(:order => "start DESC")
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
       @task_list = Task.all.map { |t| [t.id, t.name] }
+      @input["bill"] = true # Bill by default.
       render :time_entries
     end
 
@@ -475,7 +476,7 @@ module StopTime::Controllers
       elsif @input.has_key? "delete"
       end
 
-      @time_entries = TimeEntry.all(:order => "start DESC")
+      @entries = TimeEntry.all(:order => "start DESC")
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
       @task_list = Task.all.map { |t| [t.id, t.name] }
       render :time_entries
@@ -483,8 +484,34 @@ module StopTime::Controllers
   end
 
   class TimeregN
+    def get(entry_id)
+      @entry = TimeEntry.find(entry_id)
+      @input = @entry.attributes
+      @input["customer"] = @entry.task.customer.id
+      @input["task"] = @entry.task.id
+      @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
+      @task_list = Task.all.map { |t| [t.id, t.name] }
+      render :time_entry_form
+    end
+
     def post(entry_id)
-      TimeEntry.find(entry_id).delete
+      return redirect R(Timereg) if @input.cancel
+      @entry = TimeEntry.find(entry_id)
+      if @input.has_key? "delete"
+        @entry.delete
+      elsif @input.has_key? "update"
+        attrs = ["start", "end", "comment"]
+        attrs.each do |attr|
+          @entry[attr] = @input[attr]
+        end
+        @entry.task = Task.find(@input.task)
+        @entry.bill = @input.has_key? "bill"
+        @entry.save
+        if @entry.invalid?
+          @errors = @entry.errors
+          return render :time_entry_form
+        end
+      end
       redirect R(Timereg)
     end
   end
@@ -621,6 +648,31 @@ module StopTime::Views
           end
         end
       end
+    end
+  end
+
+  def time_entry_form
+    form :action => R(TimeregN, @entry.id), :method => :post do
+      ol do
+        li do
+          label "Customer", :for => "customer"
+          _form_select("customer", @customer_list)
+        end
+        li do
+          label "Task", :for => "task"
+          _form_select("task", @task_list)
+        end
+        li { _form_input_with_label("Start Time", "start", :text) }
+        li { _form_input_with_label("End Time", "end", :text) }
+        li { _form_input_with_label("Comment", "comment", :text) }
+        li do
+          _form_input_checkbox("bill")
+          label "Bill?", :for => "bill"
+        end
+        # FIXME: link to invoice if any
+      end
+      input :type => "submit", :name => "update", :value => "Update"
+      input :type => "submit", :name => "cancel", :value => "Cancel"
     end
   end
 
