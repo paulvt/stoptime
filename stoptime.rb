@@ -79,15 +79,21 @@ module StopTime::Models
     def fixed_cost?
       not self.fixed_cost.blank?
     end
+
+    def task_type
+      fixed_cost? ? "fixed_cost" : "hourly_rate"
+    end
   end
 
   class TimeEntry < Base
     belongs_to :task
+    has_one :customer, :through => :task
     has_one :invoice
   end
 
   class Invoice < Base
     has_many :time_entries
+    has_many :tasks, :through => :time_entries
     belongs_to :customer
   end
 
@@ -153,11 +159,13 @@ module StopTime::Models
     def self.up
       add_column(Task.table_name, :billed, :boolean)
       add_column(Task.table_name, :fixed_cost, :float)
+      add_column(Task.table_name, :hourly_rate, :float)
     end
 
     def self.down
       remove_column(Task.table_name, :billed)
       remove_column(Task.table_name, :fixed_cost)
+      remove_column(Task.table_name, :hourly_rate, :float)
     end
   end
 
