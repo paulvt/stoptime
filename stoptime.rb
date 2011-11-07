@@ -223,7 +223,8 @@ module StopTime::Controllers
 
   class CustomersNew
     def get
-      @customer = {}
+      # FIXME: set other defaults?
+      @customer = Customer.create(:hourly_rate => HourlyRate)
       @target = [Customers]
       render :customer_form
     end
@@ -234,6 +235,7 @@ module StopTime::Controllers
       @customer = Customer.find(customer_id)
       @edit_task = true
       @target = [CustomersN, @customer.id]
+      @input = @customer
       render :customer_form
     end
 
@@ -432,8 +434,7 @@ module StopTime::Views
                      :value => DateTime.now.to_date.to_formatted_s + " " }
           td { input :type => :text, :name => "comment" }
           td { "N/A" }
-          td { input :type => :checkbox, :name => "bill",
-                     :checked => "checked" }
+          td { _form_input_checkbox("bill", "bill") }
           td do
             input :type => :submit, :name => "enter", :value => "Enter"
             input :type => :reset,  :name => "clear", :value => "Clear"
@@ -442,19 +443,21 @@ module StopTime::Views
       end
       @time_entries.each do |entry|
         tr do
-          td { entry.task.customer.short_name }
-          td { entry.task.name }
+          td { a entry.customer.short_name, 
+                 :href => R(CustomersN, entry.customer.id) }
+          td { a entry.task.name,
+                 :href => R(CustomersNTasksN, entry.customer.id, entry.task.id) }
           td { entry.start }
           td { entry.end }
           td { entry.comment }
           td { "%.2fh" % ((entry.end - entry.start)/3600.0) }
-          td do
-            if entry.bill?
-              input :type => :checkbox, :name => "bill",
-                    :checked => "checked", :disabled => "disabled"
+          td do 
+            if entry.bill
+              input :type => "checkbox", :name => "bill_#{entry.id}",
+                    :checked => true, :disabled => true
             else
-              input :type => :checkbox, :name => "bill",
-                    :disabled => "disabled"
+              input :type => "checkbox", :name => "bill_#{entry.id}",
+                    :disabled => true
             end
           end
           td do
@@ -479,17 +482,14 @@ module StopTime::Views
        end
       @customers.each do |customer|
         tr do
-          td { customer.name }
+          td { a customer.name, :href => R(CustomersN, customer.id) }
           td { customer.short_name }
           td { [customer.address_street,
                 customer.address_postal_code,
                 customer.address_city].join(", ") unless customer.address_street.blank? }
-          td { customer.email }
+          td { a customer.email, :href => "mailto:#{customer.email}" }
           td { customer.phone }
           td do 
-            form :action => R(CustomersN, customer.id), :method => :get do
-              input :type => :submit, :value => "Edit"
-            end
             form :action => R(CustomersN, customer.id), :method => :post do
               input :type => :submit, :name => "delete", :value => "Delete"
             end
@@ -525,8 +525,7 @@ module StopTime::Views
             option(:value => task.id) { task.name }
           end
         end
-        input :type => :text, :name => "new_task"
-        input :type => :submit, :name => "add", :value => "Add"
+        input :type => :submit, :name => "edit", :value => "Edit"
         input :type => :submit, :name => "delete", :value => "Delete"
       end
     end
