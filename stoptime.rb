@@ -378,38 +378,72 @@ module StopTime::Controllers
     end
   end
 
+  class CustomersNInvoices
+    def post(customer_id)
+      return redirect R(CustomersN, customer_id) if @input.cancel
+
+      # Create the invoice.
+      last_id = Invoice.last ? Invoice.last.id : 0
+      number = ("%d%02d" % [Time.now.year, last_id + 1])
+      invoice = Invoice.create(:number => number)
+
+      invoice.time_entry_ids = @input["entries"]
+      @input["tasks"].each do |task|
+        task = Task.find(task)
+        task.billed = true
+        task.save
+        invoice.time_entries << task.time_entries
+      end
+      invoice.save
+
+      redirect R(CustomersNInvoicesX, customer_id, number)
+    end
+  end
+
+  class CustomersNInvoicesNew
+    def get(customer_id)
+      @customer = Customer.find(customer_id)
+      @entries = @customer.time_entries.all(:order => "start ASC",
+        :conditions => ["invoice_id IS NULL"])
+      @fixed_cost_tasks = @customer.tasks.all(:order => "updated_at ASC",
+        :conditions => ["fixed_cost IS NOT NULL AND billed = ?", 'f'])
+      p @entries, @fixed_cost_tasks
+      render :invoice_select_form
+    end
+  end
+
   class CustomersNInvoicesX
-    def get(customer_id, invoice_id)
-      @month = DateTime.new(invoice_id[0..3].to_i, invoice_id[4..5].to_i, 1)
-      @number = invoice_id[6..-1]
+    def get(customer_id, invoice_number)
       # FIXME: make this (much) nicer!
-      invoice_id.gsub!(/\.pdf$/, '')
-      if m = @number.match(/(\d+)\.(\w+)$/)
+      if m = invoice_number.match(/(\d+)\.(\w+)$/)
         @number = m[1].to_i
         @format = m[2]
       else
-        @number = @number.to_i
+        @number = invoice_number.to_i
         @format = "html"
       end
+      @invoice = Invoice.find_by_number(@number)
 
       @company = CompanyInfo.first
       @customer = Customer.find(customer_id)
-      @tasks = @customer.task_summary(@month)
+      @tasks = @invoice.summary
+      # FIXME: dirty hack!
+      @month = @invoice.time_entries.first.start
 
       if @format == "html"
         render :invoice
       elsif @format == "pdf"
-        pdf_file = PUBLIC_DIR + "#{invoice_id}.pdf"
+        pdf_file = PUBLIC_DIR + "#{@number}.pdf"
         unless pdf_file.exist?
-          _generate_invoice_pdf(@customer, @tasks, @month, invoice_id)
+          _generate_invoice_pdf(@customer, @tasks, @number)
         end
         redirect(StaticX, pdf_file.basename)
       end
     end
 
-    def _generate_invoice_pdf(customer, tasks, month, invoice_id)
+    def _generate_invoice_pdf(customer, tasks, number)
       template = TEMPLATE_DIR + "invoice.tex.erb"
-      tex_file = PUBLIC_DIR + "#{invoice_id}.tex"
+      tex_file = PUBLIC_DIR + "#{number}.tex"
 
       erb = ERB.new(File.read(template))
       File.open(tex_file, "w") { |f| f.write(erb.result(binding)) }
@@ -457,16 +491,7 @@ module StopTime::Controllers
 
   class Invoices
     def get
-      @time_entries = TimeEntry.all(:order => "start ASC")
-      @customers = Hash.new { |h, k| h[k] = Array.new }
-
-      @time_entries.each do |e|
-        month = e.start.at_beginning_of_month
-        customer = e.task.customer
-        unless @customers[month].include? customer
-          @customers[month] << customer
-        end
-      end
+      # FIXME: set up a new overview per month/year
       render :invoices
     end
   end
@@ -659,6 +684,8 @@ module StopTime::Views
         input :type => :submit, :name => "delete", :value => "Delete"
       end
       a "Add a new project/task", :href => R(CustomersNTasksNew, @customer.id)
+
+      a "Create a new invoice", :href => R(CustomersNInvoicesNew, @customer.id)
     end
   end
 
@@ -693,32 +720,12 @@ module StopTime::Views
 
   def invoices
     h2 "List of invoices"
-
-    cmonth = Time.now
-    ccnt = 1
-    @customers.each do |month, custs|
-      unless month == cmonth
-        h3 { month.to_formatted_s(:month_and_year) }
-        cmonth = month
-        ccnt = 1
-      end
-      ol do
-        custs.each do |cust|
-          li do 
-            span { cust.name }
-            a "view", :href => R(CustomersNInvoicesX,
-                                 cust.id, month.to_formatted_s(:month_code) +
-                                          "%02d" % ccnt)
-          end
-          ccnt = ccnt + 1
-        end
-      end
-    end
+  
+    p "N/A"
   end
 
   def invoice
-    h2 { "Invoice for #{@customer.name}, month
-          #{@month.to_formatted_s(:month_and_year)}" }
+    h2 { "Invoice for #{@customer.name}, period N/A" }
     
     table do
       tr do
@@ -756,6 +763,55 @@ module StopTime::Views
         td ""
         td { "€ %.2f" % (subtotal + vat) }
       end
+    end
+  end
+
+  def invoice_select_form
+    form :action => R(CustomersNInvoices, @customer.id), :method => :post do
+      h2 "Registered time"
+      table do
+        tr do
+          th ""
+          th "Task"
+          th "Start"
+          th "End"
+          th "Comment"
+          th "Total"
+          th "Amount"
+        end
+        @entries.each do |entry|
+          tr do
+            td { _form_input_checkbox("entries[]", entry.id) }
+            td { entry.task.name }
+            td { label entry.start, :for => "entries[]_#{entry.id}" }
+            td { entry.end }
+            td { entry.comment }
+            td { entry.total }
+            td { entry.total * entry.task.hourly_rate }
+          end
+        end
+      end
+
+      h2 "Fixed cost tasks"
+      table do
+        tr do
+          th ""
+          th "Task"
+          th "Registered time"
+          th "Amount"
+        end
+        @fixed_cost_tasks.each do |task|
+          tr do
+            td { _form_input_checkbox("tasks[]", task.id) }
+            td { label task.name, :for => "tasks[]_#{task.id}" }
+            td ""  # FIXME!
+            td { task.fixed_cost }
+          end
+        end
+      end
+
+      input :type => :submit, :name => "create", :value => "Create invoice"
+      input :type => "submit", :name => "cancel", :value => "Cancel"
     end
   end
 
