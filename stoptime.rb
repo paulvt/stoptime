@@ -742,9 +742,6 @@ module StopTime::Views
   end
 
   def task_form
-    # FIXME: it's not always new
-    h2 "New task for #{@customer.name}"
-
     form :action => R(*@target), :method => :post do
       ul do 
         li { _form_input_with_label("Name", "name", :text) }
