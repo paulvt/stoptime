@@ -263,16 +263,81 @@ module StopTime::Controllers
 
   class CustomersNTasks
     def post(customer_id)
-      if @input.has_key? "add"
+      if @input.has_key? "delete"
+        @task = Task.find(@input.task_id)
+        @task.delete
+      elsif @input.has_key? "edit"
+        return redirect R(CustomersNTasksN, customer_id, @input.task_id)
+      else
         @task = Task.create(
           :customer_id => customer_id,
-          :name => @input.new_task)
+          :name => @input.name)
+        case @input.task_type
+        when "fixed_cost"
+          @task.fixed_cost = @input.fixed_cost
+          @task.hourly_rate = nil
+        when "hourly_rate"
+          @task.fixed_cost = nil
+          @task.hourly_rate = @input.hourly_rate
+        # FIXME: catch invalid task types!
+        end
         @task.save
         if @task.invalid?
           @errors = @task.errors
+          @customer = Customer.find(customer_id)
+          @target = [CustomersNTasks, customer_id]
+          @method = "create"
+          return render :task_form
         end
-      elsif @input.has_key? "delete"
-        @input.tasks.each { |task_id| Task.find(task_id).delete }
+      end
+      redirect R(CustomersN, customer_id)
+    end
+  end
+
+  class CustomersNTasksNew
+    def get(customer_id)
+      @customer = Customer.find(customer_id)
+      @task = Task.create(:hourly_rate => @customer.hourly_rate)
+      @target = [CustomersNTasks, customer_id]
+      @method = "create"
+      @input = @task
+      render :task_form
+    end
+  end
+
+  class CustomersNTasksN
+    def get(customer_id, task_id)
+      @customer = Customer.find(customer_id)
+      @task = Task.find(task_id)
+      @target = [CustomersNTasksN,  customer_id, task_id]
+      @method = "update"
+      @input = @task
+      # FIXME: Check that task is of that customer.
+      render :task_form
+    end
+
+    def post(customer_id, task_id)
+      return redirect R(CustomersN, customer_id) if @input.cancel
+      @customer = Customer.find(customer_id)
+      @task = Task.find(task_id)
+      if @input.has_key? "update"
+        # FIXME: task should be cloned/dupped as to prevent rewriting history!
+        @task["name"] = @input["name"] unless @input["name"].blank?
+        case @input.task_type
+        when "fixed_cost"
+          @task["fixed_cost"] = @input.fixed_cost unless @input.fixed_cost.blank?
+        when "hourly_rate"
+          @task["hourly_rate"] = @input.fixed_cost unless @input.fixed_cost.blank?
+        end
+        @task["billed"] = @input.has_key? "billed"
+        @task.save
+        if @task.invalid?
+          @errors = @task.errors
+          @target = [CustomersNTasksN,  customer_id, task_id]
+          @method = "update"
+          @input = @task
+          return render :task_form
+        end
       end
       redirect R(CustomersN, customer_id)
     end
@@ -518,9 +583,10 @@ module StopTime::Views
       input :type => "submit", :name => "cancel", :value => "Cancel"
     end
     if @edit_task
+      # FXIME: the following is not very RESTful!
       form :action => R(CustomersNTasks, @customer.id), :method => :post do
         h2 "Projects & Tasks"
-        select :name => "tasks[]", :multiple => "multiple", :size => 6 do
+        select :name => "task_id", :size => 6 do
           @customer.tasks.each do |task|
             option(:value => task.id) { task.name }
           end
@@ -528,6 +594,38 @@ module StopTime::Views
         input :type => :submit, :name => "edit", :value => "Edit"
         input :type => :submit, :name => "delete", :value => "Delete"
       end
+      a "Add a new project/task", :href => R(CustomersNTasksNew, @customer.id)
+    end
+  end
+
+  def task_form
+    h2 "New task for #{@customer.name}"
+    form :action => R(*@target), :method => :post do
+      ul do 
+        li { _form_input(@task, "Name", "name", :text) }
+        li do
+          ol.radio do
+            li do 
+              _form_input_radio("task_type", "hourly_rate", default=true)
+              _form_input(@task, "Hourly rate", "hourly_rate", :text)
+            end
+            li do
+              _form_input_radio("task_type", "fixed_cost")
+              _form_input(@task, "Fixed cost", "fixed_cost", :text)
+            end
+          end
+        end 
+        li do
+          if @input.billed?
+            input :type => :checkbox, :name => "billed", :checked => true
+          else
+            input :type => :checkbox, :name => "billed"
+          end
+          span "Billed"
+        end
+      end
+      input :type => "submit", :name => @method, :value => @method.capitalize
+      input :type => "submit", :name => "cancel", :value => "Cancel"
     end
   end
 
