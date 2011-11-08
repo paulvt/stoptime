@@ -400,18 +400,6 @@ module StopTime::Controllers
     end
   end
 
-  class CustomersNInvoicesNew
-    def get(customer_id)
-      @customer = Customer.find(customer_id)
-      @entries = @customer.time_entries.all(:order => "start ASC",
-        :conditions => ["invoice_id IS NULL"])
-      @fixed_cost_tasks = @customer.tasks.all(:order => "updated_at ASC",
-        :conditions => ["fixed_cost IS NOT NULL AND billed = ?", 'f'])
-      p @entries, @fixed_cost_tasks
-      render :invoice_select_form
-    end
-  end
-
   class CustomersNInvoicesX
     def get(customer_id, invoice_number)
       # FIXME: make this (much) nicer!
@@ -449,6 +437,18 @@ module StopTime::Controllers
       File.open(tex_file, "w") { |f| f.write(erb.result(binding)) }
       system("rubber --pdf --inplace #{tex_file}")
       system("rubber --clean --inplace #{tex_file}")
+    end
+  end
+
+  class CustomersNInvoicesNew
+    def get(customer_id)
+      @customer = Customer.find(customer_id)
+      @entries = @customer.time_entries.all(:order => "start ASC",
+        :conditions => ["invoice_id IS NULL"])
+      @fixed_cost_tasks = @customer.tasks.all(:order => "updated_at ASC",
+        :conditions => ["fixed_cost IS NOT NULL AND billed = ?", 'f'])
+      p @entries, @fixed_cost_tasks
+      render :invoice_select_form
     end
   end
 
