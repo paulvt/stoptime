@@ -221,7 +221,7 @@ module StopTime::Controllers
 
   class Index
     def get
-      redirect R(Timereg)
+      redirect R(Timeline)
     end
   end
 
@@ -452,7 +452,7 @@ module StopTime::Controllers
     end
   end
 
-  class Timereg
+  class Timeline
     def get
       @entries = TimeEntry.all(:order => "start DESC")
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
@@ -483,7 +483,7 @@ module StopTime::Controllers
     end
   end
 
-  class TimeregN
+  class TimelineN
     def get(entry_id)
       @entry = TimeEntry.find(entry_id)
       @input = @entry.attributes
@@ -495,7 +495,7 @@ module StopTime::Controllers
     end
 
     def post(entry_id)
-      return redirect R(Timereg) if @input.cancel
+      return redirect R(Timeline) if @input.cancel
       @entry = TimeEntry.find(entry_id)
       if @input.has_key? "delete"
         @entry.delete
@@ -512,7 +512,7 @@ module StopTime::Controllers
           return render :time_entry_form
         end
       end
-      redirect R(Timereg)
+      redirect R(Timeline)
     end
   end
 
@@ -585,7 +585,7 @@ module StopTime::Views
   def _menu
     ol.menu! do
       li { a "Overview", :href => R(Index) }
-      li { a "Time Registration", :href => R(Timereg) }
+      li { a "Timeline", :href => R(Timeline) }
       li { a "Customers", :href => R(Customers) }
       li { a "Invoices", :href => R(Invoices) }
       li { a "Company", :href => R(Company) }
@@ -593,7 +593,7 @@ module StopTime::Views
   end
 
   def time_entries
-    h2 "List of time entries"
+    h2 "Timeline"
     table do
       tr do
         th "Customer"
@@ -604,7 +604,7 @@ module StopTime::Views
         th "Total time"
         th "Bill?"
       end
-      form :action => R(Timereg), :method => :post do
+      form :action => R(Timeline), :method => :post do
         tr do
           td { _form_select("customer", @customer_list) }
           td { _form_select("task", @task_list) }
@@ -628,7 +628,7 @@ module StopTime::Views
           td { a entry.task.name,
                  :href => R(CustomersNTasksN, entry.customer.id, entry.task.id) }
           td { a entry.start,
-                 :href => R(TimeregN, entry.id) }
+                 :href => R(TimelineN, entry.id) }
           td { entry.end }
           td { entry.comment }
           td { "%.2fh" % entry.total }
@@ -642,7 +642,7 @@ module StopTime::Views
             end
           end
           td do
-            form :action => R(TimeregN, entry.id), :method => :post do
+            form :action => R(TimelineN, entry.id), :method => :post do
               input :type => :submit, :name => "delete", :value => "Delete"
             end
           end
@@ -652,7 +652,7 @@ module StopTime::Views
   end
 
   def time_entry_form
-    form :action => R(TimeregN, @entry.id), :method => :post do
+    form :action => R(TimelineN, @entry.id), :method => :post do
       ol do
         li do
           label "Customer", :for => "customer"
