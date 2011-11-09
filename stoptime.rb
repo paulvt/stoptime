@@ -48,6 +48,8 @@ end
 
 module StopTime
 
+  use Sass::Plugin::Rack
+
   def self.create
     StopTime::Models.create_schema
   end
@@ -632,7 +634,7 @@ module StopTime::Controllers
       @input["customer"] = @time_entry.task.customer.id
       @input["task"] = @time_entry.task.id
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
-      @task_list = Task.all.reject { |t| t.billed? }.map do |t| 
+      @task_list = Task.all.reject { |t| t.billed? }.map do |t|
         [t.id, t.name]
       end
 
@@ -747,11 +749,20 @@ module StopTime::Views
 
   def _menu
     ol.menu! do
-      li { a "Overview", :href => R(Index) }
-      li { a "Timeline", :href => R(Timeline) }
-      li { a "Customers", :href => R(Customers) }
-      li { a "Invoices", :href => R(Invoices) }
-      li { a "Company", :href => R(Company) }
+      [["Overview", Index],
+       ["Timeline", Timeline],
+       ["Customers", Customers],
+       ["Invoices", Invoices],
+       ["Company", Company]].each { |label, ctrl| _menu_link(label, ctrl) }
+    end
+  end
+
+  def _menu_link(label, ctrl)
+    # FIXME: this should not be hardcoded!
+    if ctrl == Index
+      li.selected { a label, :href => R(ctrl) }
+    else
+      li { a label, :href => R(ctrl) }
     end
   end
 
@@ -818,7 +829,6 @@ module StopTime::Views
       end
       form :action => R(Timeline), :method => :post do
         tr do
-          td { _form_select("customer", @customer_list) }
           td { _form_select("task", @task_list) }
           td { input :type => :text, :name => "start",
                      :value => DateTime.now.to_date.to_formatted_s + " " }
@@ -835,8 +845,6 @@ module StopTime::Views
       end
       @time_entries.each do |entry|
         tr do
-          td { a entry.customer.short_name,
-                 :href => R(CustomersN, entry.customer.id) }
           td { a entry.task.name,
                  :href => R(CustomersNTasksN, entry.customer.id, entry.task.id) }
           td { a entry.start,
@@ -935,7 +943,7 @@ module StopTime::Views
         li { _form_input_with_label("City/town", "address_city", :text) }
         li { _form_input_with_label("Email address", "email", :text) }
         li { _form_input_with_label("Phone number", "phone", :text) }
-        li { _form_input_with_label("Hourly rate", "hourly_rate", :text) }
+        li { _form_input_with_label("Default hourly rate", "hourly_rate", :text) }
       end
       input :type => "submit", :name => @button, :value => @button.capitalize
       input :type => "submit", :name => "cancel", :value => "Cancel"
@@ -944,10 +952,10 @@ module StopTime::Views
       # FXIME: the following is not very RESTful!
       form :action => R(CustomersNTasks, @customer.id), :method => :post do
         h2 "Projects & Tasks"
-        select :name => "task_id", :size => 6 do
+        select :name => "task_id", :size => 10 do
           @customer.tasks.each do |task|
             if task.billed?
-              option(:value => task.id, 
+              option(:value => task.id,
                      :disabled => true) { task.name + " (#{task.invoice.number})" }
             else
               option(:value => task.id) { task.name }
@@ -1124,9 +1132,9 @@ module StopTime::Views
       end
     end
 
-    a "Download PDF", 
+    a "Download PDF",
       :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.pdf")
-    a "Download Latex source", 
+    a "Download Latex source",
       :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.tex")
   end
 
