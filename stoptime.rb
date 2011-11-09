@@ -299,6 +299,8 @@ module StopTime::Controllers
       @customer.save
       if @customer.invalid?
         @errors = @customer.errors
+        @target = [Customer]
+        @button = "create"
         return render :customer_form
       end
       redirect R(Customers)
@@ -309,7 +311,10 @@ module StopTime::Controllers
     def get
       # FIXME: set other defaults?
       @customer = Customer.new(:hourly_rate => HourlyRate)
+      @input = @customer.attributes
+
       @target = [Customers]
+      @button = "create"
       render :customer_form
     end
   end
@@ -321,6 +326,7 @@ module StopTime::Controllers
       @input = @customer.attributes
 
       @target = [CustomersN, @customer.id]
+      @button = "update"
       @edit_task = true
       render :customer_form
     end
@@ -566,8 +572,8 @@ module StopTime::Controllers
     def get
       @time_entries = TimeEntry.all(:order => "start DESC")
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
-      @task_list = Task.all(:conditions => ['invoice_id IS NULL']).map do
-        |t| [t.id, t.name]
+      @task_list = Task.all.reject { |t| t.billed? }.map do |t|
+        [t.id, t.name]
       end
       @input["bill"] = true # Bill by default.
       render :time_entries
@@ -585,14 +591,24 @@ module StopTime::Controllers
         if @time_entry.invalid?
           @errors = @time_entry.errors
         end
-      elsif @input.has_key? "delete"
       end
+      redirect R(Timeline)
+    end
+  end
 
-      @time_entries = TimeEntry.all(:order => "start DESC")
+  class TimelineNew
+    def get
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
-      @task_list = Task.all.map { |t| [t.id, t.name] }
-      @input["bill"] = true # Bill by default.
-      render :time_entries
+      @task_list = Task.all.reject { |t| t.billed? }.map do |t|
+        [t.id, t.name]
+      end
+      @input["bill"] = true
+      @input["start"] = DateTime.now.to_formatted_s
+      @input["end"] = DateTime.now.to_date.to_formatted_s + " "
+
+      @target = [Timeline]
+      @button = "enter"
+      render :time_entry_form
     end
   end
 
@@ -603,7 +619,12 @@ module StopTime::Controllers
       @input["customer"] = @time_entry.task.customer.id
       @input["task"] = @time_entry.task.id
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
-      @task_list = Task.all.map { |t| [t.id, t.name] }
+      @task_list = Task.all.reject { |t| t.billed? }.map do |t| 
+        [t.id, t.name]
+      end
+
+      @target = [TimelineN, entry_id]
+      @button = "update"
       render :time_entry_form
     end
 
@@ -820,7 +841,7 @@ module StopTime::Views
   end
 
   def time_entry_form
-    form :action => R(TimelineN, @time_entry.id), :method => :post do
+    form :action => R(*target), :method => :post do
       ol do
         li do
           label "Customer", :for => "customer"
@@ -839,7 +860,7 @@ module StopTime::Views
         end
         # FIXME: link to invoice if any
       end
-      input :type => "submit", :name => "update", :value => "Update"
+      input :type => "submit", :name => @button, :value => @button.capitalize
       input :type => "submit", :name => "cancel", :value => "Cancel"
     end
   end
@@ -888,7 +909,7 @@ module StopTime::Views
         li { _form_input_with_label("Phone number", "phone", :text) }
         li { _form_input_with_label("Hourly rate", "hourly_rate", :text) }
       end
-      input :type => "submit", :name => "update", :value => "Update"
+      input :type => "submit", :name => @button, :value => @button.capitalize
       input :type => "submit", :name => "cancel", :value => "Cancel"
     end
     if @edit_task
