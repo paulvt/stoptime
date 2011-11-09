@@ -136,7 +136,7 @@ module StopTime::Models
   class StopTimeTables < V 1.0
     def self.up
       create_table Customer.table_name do |t|
-        t.string :name, :short_name, 
+        t.string :name, :short_name,
           :address_street, :address_postal_code, :address_city,
           :email, :phone
         t.timestamps
@@ -439,7 +439,7 @@ module StopTime::Controllers
                  if Time.now.year > last_year
                    number = ("%d%02d" % [Time.now.year, 1])
                  else
-                   number = last.number.succ 
+                   number = last.number.succ
                  end
                else
                  number = ("%d%02d" % [Time.now.year, 1])
@@ -696,7 +696,7 @@ module StopTime::Views
         tr do
           td { _form_select("customer", @customer_list) }
           td { _form_select("task", @task_list) }
-          td { input :type => :text, :name => "start", 
+          td { input :type => :text, :name => "start",
                      :value => DateTime.now.to_date.to_formatted_s + " " }
           td { input :type => :text, :name => "end",
                      :value => DateTime.now.to_date.to_formatted_s + " " }
@@ -711,7 +711,7 @@ module StopTime::Views
       end
       @time_entries.each do |entry|
         tr do
-          td { a entry.customer.short_name, 
+          td { a entry.customer.short_name,
                  :href => R(CustomersN, entry.customer.id) }
           td { a entry.task.name,
                  :href => R(CustomersNTasksN, entry.customer.id, entry.task.id) }
@@ -720,7 +720,7 @@ module StopTime::Views
           td { entry.end }
           td { entry.comment }
           td { "%.2fh" % entry.hours_total }
-          td do 
+          td do
             if entry.bill
               input :type => "checkbox", :name => "bill_#{entry.id}",
                     :checked => true, :disabled => true
@@ -783,7 +783,7 @@ module StopTime::Views
                 customer.address_city].join(", ") unless customer.address_street.blank? }
           td { a customer.email, :href => "mailto:#{customer.email}" }
           td { customer.phone }
-          td do 
+          td do
             form :action => R(CustomersN, customer.id), :method => :post do
               input :type => :submit, :name => "delete", :value => "Delete"
             end
@@ -795,10 +795,10 @@ module StopTime::Views
       a "Add a new customer", :href=> R(CustomersNew)
     end
   end
-  
+
   def customer_form
     form :action => R(*@target), :method => :post do
-      ol do 
+      ol do
         li { _form_input_with_label("Name", "name", :text) }
         li { _form_input_with_label("Short name", "short_name", :text) }
         li { _form_input_with_label("Street address", "address_street", :text) }
@@ -846,7 +846,7 @@ module StopTime::Views
         invoices.each do |invoice|
           tr do
             td do
-              a invoice.number, 
+              a invoice.number,
                 :href => R(CustomersNInvoicesX, @customer.id, invoice.number)
             end
             td { invoice.updated_at }
@@ -869,11 +869,11 @@ module StopTime::Views
 
   def task_form
     form :action => R(*@target), :method => :post do
-      ul do 
+      ul do
         li { _form_input_with_label("Name", "name", :text) }
         li do
           ol.radio do
-            li do 
+            li do
               _form_input_radio("type", "hourly_rate", default=true)
               _form_input_with_label("Hourly rate", "hourly_rate", :text)
             end
@@ -882,7 +882,7 @@ module StopTime::Views
               _form_input_with_label("Fixed cost", "fixed_cost", :text)
             end
           end
-        end 
+        end
         # FIXME: add link(s) to related invoice(s)
       end
       input :type => "submit", :name => @method, :value => @method.capitalize
@@ -892,7 +892,7 @@ module StopTime::Views
 
   def invoices
     h2 "List of invoices"
-  
+
     p "N/A"
   end
 
@@ -926,7 +926,7 @@ module StopTime::Views
         end
       end
     end
-    
+
     table do
       tr do
         th { "Description" }
@@ -1046,7 +1046,7 @@ module StopTime::Views
       end
     end
     form :action => R(Company), :method => :post do
-      ol do 
+      ol do
         li { _form_input_with_label("Name", "name", :text) }
         li { _form_input_with_label("Contact name", "contact_name", :text) }
         li { _form_input_with_label("Street address", "address_street", :text) }
@@ -1087,12 +1087,12 @@ module StopTime::Views
       input :type => "checkbox", :id => "#{name}_#{value}", :name => name,
             :value => value, :checked => true
     else
-      input :type => "checkbox", :id => "#{name}_#{value}", :name => name, 
+      input :type => "checkbox", :id => "#{name}_#{value}", :name => name,
             :value => value
     end
   end
 
-  def _form_select(name, opts_list) 
+  def _form_select(name, opts_list)
     select :name => name, :id => name do
       opts_list.each do |opt_val, opt_str|
         if @input[name] == opt_val
