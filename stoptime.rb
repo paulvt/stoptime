@@ -502,11 +502,13 @@ module StopTime::Controllers
       if @format == "html"
         @input = @invoice.attributes
         render :invoice
+      elsif @format == "tex"
+        tex_file = PUBLIC_DIR + "#{@number}.tex"
+        _generate_invoice_tex(@number) unless tex_file.exist?
+        redirect(StaticX, tex_file.basename)
       elsif @format == "pdf"
         pdf_file = PUBLIC_DIR + "#{@number}.pdf"
-        unless pdf_file.exist?
-          _generate_invoice_pdf(@number)
-        end
+        _generate_invoice_pdf(@number) unless pdf_file.exist?
         redirect(StaticX, pdf_file.basename)
       end
     end
@@ -519,12 +521,19 @@ module StopTime::Controllers
       redirect R(CustomersNInvoicesX, customer_id, invoice_number)
     end
 
-    def _generate_invoice_pdf(number)
+    def _generate_invoice_tex(number)
       template = TEMPLATE_DIR + "invoice.tex.erb"
       tex_file = PUBLIC_DIR + "#{number}.tex"
 
       erb = ERB.new(File.read(template))
       File.open(tex_file, "w") { |f| f.write(erb.result(binding)) }
+    end
+
+    def _generate_invoice_pdf(number)
+      tex_file = PUBLIC_DIR + "#{@number}.tex"
+      _generate_invoice_tex(number) unless tex_file.exist?
+
+      # FIXME: remove rubber depend, use pdflatex directly
       system("rubber --pdf --inplace #{tex_file}")
       system("rubber --clean --inplace #{tex_file}")
     end
@@ -1042,6 +1051,11 @@ module StopTime::Views
         td { "€ %.2f" % (subtotal + vat) }
       end
     end
+
+    a "Download PDF", 
+      :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.pdf")
+    a "Download Latex source", 
+      :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.tex")
   end
 
   def invoice_select_form
