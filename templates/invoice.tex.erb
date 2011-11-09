@@ -82,17 +82,28 @@
 \invoice{
  \hypersetup{pdftitle=\invoicetext\ naar\ \toname\ gedateerd \date\ (\ourref)}
 
+ % FIXME: localise the dot/comma stuff in numbers.
  \begin{ihtable}
-  <% subtotal = 0.0 %>
-  <% tasks.each do |task, line| %>
-  \ihitem{<%= task.name %>}{<%= "%.2f" % line[0] %>}%
-         {<%= "%.2f" % line[1] %>}{<%= "%.2f" % line[2] %>}
-  <% subtotal += line[2] %>
-  <% end %>
+<% subtotal = 0.0
+   @tasks.each do |task, line|
+     if line[0].nil? and line[1].nil?
+%>  \ifcitem{<%= task %>}%
+          {<%= "%.2f" % line[2] %>}<%
+     else
+%>  \ihitem{<%= task %>}%
+         {<%= "%.2f" % line[0] %>}{<%= "%.2f" % line[1] %>}%
+         {<%= "%.2f" % line[2] %>}<%
+     end 
+     subtotal += line[2]
+   end
+   if VATRate.zero?
+     vat = 0 %>
+  \ihnosubtotal{} <%
+   else
+     vat = subtotal * VATRate/100 %>
   \ihsubtotal{<%= "%.2f" % subtotal %>}
-  %\inosubtotal
-  <% vat = subtotal * VATRate/100 %>
-  \ihvat{<%= "%.2f" % vat %>}
+  \ihvat{<%= "%.2f" % vat %>} <%
+   end %>
   \ihtotal{<%= "%.2f" % (subtotal + vat) %>}
  \end{ihtable}
  \vspace{2em}

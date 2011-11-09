@@ -35,7 +35,7 @@ unless defined? PUBLIC_DIR
 
   # FIXME: this should be configurable.
   HourlyRate = 20.0
-  VATRate = 19.0
+  VATRate = 0.0
 end
 
 module StopTime
@@ -872,18 +872,22 @@ module StopTime::Views
         end
         subtotal += line[2]
       end
-      tr do
-        td { i "Sub-total" }
-        td ""
-        td ""
-        td { "€ %.2f" % subtotal }
-      end
-      vat = subtotal * VATRate/100
-      tr do
-        td { i "VAT #{VATRate}%" }
-        td ""
-        td ""
-        td { "€ %.2f" % vat }
+      if VATRate.zero?
+        vat = 0
+      else
+        tr do
+          td { i "Sub-total" }
+          td ""
+          td ""
+          td { "€ %.2f" % subtotal }
+        end
+        vat = subtotal * VATRate/100
+        tr do
+          td { i "VAT #{VATRate}%" }
+          td ""
+          td ""
+          td { "€ %.2f" % vat }
+        end
       end
       tr do
         td { b "Total amount" }
