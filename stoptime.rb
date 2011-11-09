@@ -267,7 +267,11 @@ module StopTime::Controllers
 
   class Index
     def get
-      redirect R(Timeline)
+      @tasks = {}
+      Customer.all.each do |customer|
+        @tasks[customer] = customer.unbilled_tasks
+      end
+      render :overview
     end
   end
 
@@ -679,6 +683,47 @@ module StopTime::Views
       li { a "Customers", :href => R(Customers) }
       li { a "Invoices", :href => R(Invoices) }
       li { a "Company", :href => R(Company) }
+    end
+  end
+
+  def overview
+    h2 "Overview"
+
+    if @tasks.empty?
+      p do
+        text "No customers found! Create one "
+        a "here", :href => R(CustomersNew)
+      end
+    else
+      @tasks.keys.sort_by { |c| c.name }.each do |customer|
+        h3 { a customer.name, :href => R(CustomersN, customer.id) }
+        if @tasks[customer].empty?
+          p do
+            text "No projects/tasks found! Create one "
+            a "here", :href => R(CustomersNTasksNew, customer.id)
+          end
+        else
+          table do
+            @tasks[customer].each do |task|
+              tr do
+                td do
+                  a task.name,
+                    :href => R(CustomersNTasksN, customer.id, task.id)
+                end
+                summary = task.summary
+                case task.type
+                when "fixed_rate"
+                  td ""
+                  td { "€ %.2f" % summary[2] }
+                when "hourly_rate"
+                  td { "%.2fh" % summary[0] }
+                  td { "€ %.2f" % summary[2] }
+                end
+              end
+            end
+          end
+        end
+      end
     end
   end
 
