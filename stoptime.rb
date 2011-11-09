@@ -50,12 +50,18 @@ module StopTime::Models
 
   class Customer < Base
     has_many :tasks
+    has_many :invoices
     has_many :time_entries, :through => :tasks
+
+    def unbilled_tasks
+      tasks.all(:conditions => ["invoice_id IS NULL"])
+    end
   end
 
   class Task < Base
     has_many :time_entries
     belongs_to :customer
+    belongs_to :invoice
 
     def fixed_cost?
       not self.fixed_cost.blank?
@@ -64,11 +70,36 @@ module StopTime::Models
     def task_type
       fixed_cost? ? "fixed_cost" : "hourly_rate"
     end
+
+    def billable_time_entries
+      time_entries.all(:conditions => ["bill = 't'"], :order => "start ASC")
+    end
+
+    def bill_period
+      bte = billable_time_entries
+      if bte.empty?
+        [nil, nil]
+      else
+        [bte.first.start, bte.last.end]
+      end
+    end
+
+    def summary
+      case type
+      when "fixed_cost"
+        [nil, nil, fixed_cost]
+      when "hourly_rate"
+        time_entries.inject([0.0, hourly_rate, 0.0]) do |summ, te|
+          summ[0] += te.total
+          summ[2] += te.total * hourly_rate
+          summ
+        end
+      end
+    end
   end
 
   class TimeEntry < Base
     belongs_to :task
-    belongs_to :invoice
     has_one :customer, :through => :task
 
     def total
@@ -77,26 +108,26 @@ module StopTime::Models
   end
 
   class Invoice < Base
-    has_many :time_entries
+    has_many :tasks
+    has_many :time_entries, :through => :tasks
     belongs_to :customer
 
     def summary
       # FIXME: ensure that month is a DateTime/Time object.
-      time_entries = self.time_entries.all
+      summ = {}
+      tasks.each { |task| summ[task.name] = task.summary }
+      return summ
+    end
 
-      tasks = time_entries.inject({}) do |tasks, entry|
-        time = entry.total
-        if tasks.has_key? entry.task
-          tasks[entry.task][0] += time
-          tasks[entry.task][2] += time * entry.task.hourly_rate
-        else
-          tasks[entry.task] = [time, entry.task.hourly_rate, 
-                                     time * entry.task.hourly_rate]
-        end
-        tasks
+    def period
+      p = [Time.now, Time.now]
+      tasks.each do |task|
+        tp = task.bill_period
+        p tp
+        p[0] = tp[0] if !tp[0].nil? and tp[0] < p[0]
+        p[1] = tp[1] if !tp[1].nil? and tp[1] > p[1]
       end
-
-      return tasks
+      return p
     end
   end
 
@@ -213,6 +244,20 @@ module StopTime::Models
    def self.down
      drop_table CompanyInfo.table_name
    end
+  end
+
+  class ImprovedInvoiceSupport < V 1.7
+    def self.up
+      add_column(Task.table_name, :invoice_id, :integer)
+      remove_column(Task.table_name, :billed)
+      remove_column(TimeEntry.table_name, :invoice_id)
+    end
+
+    def self.down
+      remove_column(Task.table_name, :invoice_id, :integer)
+      add_column(Task.table_name, :billed, :boolean)
+      add_column(TimeEntry.table_name, :invoice_id)
+    end
   end
 
 end # StopTime::Models
@@ -363,7 +408,6 @@ module StopTime::Controllers
           @task.fixed_cost = nil
           @task.hourly_rate = @input.hourly_rate
         end
-        @task["billed"] = @input.has_key? "billed"
         @task.save
         if @task.invalid?
           @errors = @task.errors
@@ -379,21 +423,48 @@ module StopTime::Controllers
   end
 
   class CustomersNInvoices
+    def get
+      render :invoices
+    end
+
     def post(customer_id)
       return redirect R(CustomersN, customer_id) if @input.cancel
 
       # Create the invoice.
-      last_id = Invoice.last ? Invoice.last.id : 0
-      number = ("%d%02d" % [Time.now.year, last_id + 1])
+      # FIXME: make the sequence number reset on a new year.
+      last = Invoice.last
+      number = if last
+                 last_year = last.number.to_s[0..3].to_i
+                 if Time.now.year > last_year
+                   number = ("%d%02d" % [Time.now.year, 1])
+                 else
+                   number = last.number.succ 
+                 end
+               else
+                 number = ("%d%02d" % [Time.now.year, 1])
+               end
       invoice = Invoice.create(:number => number)
+      invoice.customer = Customer.find(customer_id)
 
-      invoice.time_entry_ids = @input["entries"]
-      @input["tasks"].each do |task|
-        task = Task.find(task)
-        task.billed = true
+      # Handle the hourly rated tasks first.
+      tasks = Hash.new { |h, k| h[k] = Array.new }
+      @input["time_entries"].each do |entry|
+        time_entry = TimeEntry.find(entry)
+        tasks[time_entry.task] << time_entry
+      end unless @input["time_entries"].blank?
+      tasks.each_key do |task|
+        bill_task = task.clone # FIXME: depends on rails version!
+        task.time_entries = task.time_entries - tasks[task]
         task.save
-        invoice.time_entries << task.time_entries
+        bill_task.time_entries = tasks[task]
+        bill_task.save
+        invoice.tasks << bill_task
       end
+
+      # Then, handle the fixed cost tasks.
+      @input["tasks"].each do |task|
+        invoice.tasks << Task.find(task)
+      end unless @input["tasks"].blank?
       invoice.save
 
       redirect R(CustomersNInvoicesX, customer_id, number)
@@ -415,21 +486,20 @@ module StopTime::Controllers
       @company = CompanyInfo.first
       @customer = Customer.find(customer_id)
       @tasks = @invoice.summary
-      # FIXME: dirty hack!
-      @month = @invoice.time_entries.first.start
+      @period = @invoice.period
 
       if @format == "html"
         render :invoice
       elsif @format == "pdf"
         pdf_file = PUBLIC_DIR + "#{@number}.pdf"
         unless pdf_file.exist?
-          _generate_invoice_pdf(@customer, @tasks, @number)
+          _generate_invoice_pdf(@number)
         end
         redirect(StaticX, pdf_file.basename)
       end
     end
 
-    def _generate_invoice_pdf(customer, tasks, number)
+    def _generate_invoice_pdf(number)
       template = TEMPLATE_DIR + "invoice.tex.erb"
       tex_file = PUBLIC_DIR + "#{number}.tex"
 
@@ -443,11 +513,18 @@ module StopTime::Controllers
   class CustomersNInvoicesNew
     def get(customer_id)
       @customer = Customer.find(customer_id)
-      @entries = @customer.time_entries.all(:order => "start ASC",
-        :conditions => ["invoice_id IS NULL"])
-      @fixed_cost_tasks = @customer.tasks.all(:order => "updated_at ASC",
-        :conditions => ["fixed_cost IS NOT NULL AND billed = ?", 'f'])
-      p @entries, @fixed_cost_tasks
+      @hourly_rate_tasks = {}
+      @fixed_cost_tasks = {}
+      @customer.unbilled_tasks.each do |task|
+        case task.type
+        when "fixed_cost"
+          total = task.time_entries.inject(0.0) { |s, te| s + te.total }
+          @fixed_cost_tasks[task] = total
+        when "hourly_rate"
+          time_entries = task.billable_time_entries
+          @hourly_rate_tasks[task] = time_entries
+        end
+      end
       render :invoice_select_form
     end
   end
@@ -757,10 +834,7 @@ module StopTime::Views
             end
           end
         end 
-        li do 
-          _form_input_checkbox("billed")
-          label "Billed!", :for => "billed"
-        end
+        # FIXME: add link(s) to related invoice(s)
       end
       input :type => "submit", :name => @method, :value => @method.capitalize
       input :type => "submit", :name => "cancel", :value => "Cancel"
@@ -786,9 +860,14 @@ module StopTime::Views
       subtotal = 0.0
       @tasks.each do |task, line|
         tr do
-          td { task.name }
-          td { "%.2fh" % line[0] }
-          td { "€ %.2f" % line[1] }
+          td { task }
+          if line[0].nil? and line[1].nil?
+            td "–"
+            td "–"
+          else
+            td { "%.2fh" % line[0] }
+            td { "€ %.2f" % line[1] }
+          end
           td { "€ %.2f" % line[2] }
         end
         subtotal += line[2]
@@ -821,22 +900,26 @@ module StopTime::Views
       table do
         tr do
           th ""
-          th "Task"
           th "Start"
           th "End"
           th "Comment"
           th "Total"
           th "Amount"
         end
-        @entries.each do |entry|
+        @hourly_rate_tasks.keys.each do |task|
           tr do
-            td { _form_input_checkbox("entries[]", entry.id) }
-            td { entry.task.name }
-            td { label entry.start, :for => "entries[]_#{entry.id}" }
-            td { entry.end }
-            td { entry.comment }
-            td { entry.total }
-            td { entry.total * entry.task.hourly_rate }
+            td { _form_input_checkbox("tasks[]", task.id) }
+            td task.name, :colspan => 5
+          end
+          @hourly_rate_tasks[task].each do |entry|
+            tr do
+              td { _form_input_checkbox("time_entries[]", entry.id) }
+              td { label entry.start, :for => "time_entries[]_#{entry.id}" }
+              td { entry.end }
+              td { entry.comment }
+              td { entry.total }
+              td { entry.total * entry.task.hourly_rate }
+            end
           end
         end
       end
@@ -849,11 +932,11 @@ module StopTime::Views
           th "Registered time"
           th "Amount"
         end
-        @fixed_cost_tasks.each do |task|
+        @fixed_cost_tasks.keys.each do |task|
           tr do
             td { _form_input_checkbox("tasks[]", task.id) }
             td { label task.name, :for => "tasks[]_#{task.id}" }
-            td ""  # FIXME!
+            td { "%.2fh" % @fixed_cost_tasks[task] }
             td { task.fixed_cost }
           end
         end
