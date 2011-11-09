@@ -542,7 +542,7 @@ module StopTime::Controllers
       template = TEMPLATE_DIR + "invoice.tex.erb"
       tex_file = PUBLIC_DIR + "#{number}.tex"
 
-      with_locale :nl do
+      I18n.with_locale :nl do
         erb = ERB.new(File.read(template))
         File.open(tex_file, "w") { |f| f.write(erb.result(binding)) }
       end
