@@ -27,7 +27,7 @@ unless defined? PUBLIC_DIR
   ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.merge!(
     :default => "%Y-%m-%d %H:%M",
     :month_and_year => "%B %Y",
-    :month_code => "%Y%m",
+    :date_only => "%Y-%m-%d",
     :day_code => "%Y%m%d")
   ActiveSupport::CoreExtensions::Date::Conversions::DATE_FORMATS.merge!(
     :default => "%Y-%m-%d",
@@ -308,9 +308,11 @@ module StopTime::Controllers
   class CustomersN
     def get(customer_id)
       @customer = Customer.find(customer_id)
-      @edit_task = true
-      @target = [CustomersN, @customer.id]
+      @invoices = @customer.invoices
       @input = @customer.attributes
+
+      @target = [CustomersN, @customer.id]
+      @edit_task = true
       render :customer_form
     end
 
@@ -489,6 +491,7 @@ module StopTime::Controllers
       @period = @invoice.period
 
       if @format == "html"
+        @input = @invoice.attributes
         render :invoice
       elsif @format == "pdf"
         pdf_file = PUBLIC_DIR + "#{@number}.pdf"
@@ -497,6 +500,14 @@ module StopTime::Controllers
         end
         redirect(StaticX, pdf_file.basename)
       end
+    end
+
+    def post(customer_id, invoice_number)
+      invoice = Invoice.find_by_number(invoice_number)
+      invoice.payed = @input.has_key? "payed"
+      invoice.save
+
+      redirect R(CustomersNInvoicesX, customer_id, invoice_number)
     end
 
     def _generate_invoice_pdf(number)
@@ -815,7 +826,45 @@ module StopTime::Views
       end
       a "Add a new project/task", :href => R(CustomersNTasksNew, @customer.id)
 
+
+      h2 "Invoices"
+      _invoice_list(@invoices)
       a "Create a new invoice", :href => R(CustomersNInvoicesNew, @customer.id)
+    end
+  end
+
+  def _invoice_list(invoices)
+    if invoices.empty?
+      p "None!"
+    else
+      table do
+        tr do
+          th "Number"
+          th "Date"
+          th "Period"
+          th "Payed"
+        end
+        invoices.each do |invoice|
+          tr do
+            td do
+              a invoice.number, 
+                :href => R(CustomersNInvoicesX, @customer.id, invoice.number)
+            end
+            td { invoice.updated_at }
+            td { _format_period(invoice.period) }
+            # FIXME: really retrieve the payed flag.
+            td { _form_input_checkbox("payed_#{invoice.number}") }
+          end
+        end
+      end
+    end
+  end
+
+  def _format_period(period)
+    period = period.map { |m| m.to_formatted_s(:month_and_year) }.uniq
+    case period.length
+    when 1: period.first
+    when 2: period.join("–")
     end
   end
 
@@ -849,7 +898,35 @@ module StopTime::Views
   end
 
   def invoice
-    h2 { "Invoice for #{@customer.name}, period N/A" }
+    h2 do
+      span "Invoice for "
+      a @customer.name, :href => R(CustomersN, @customer.id)
+    end
+
+    form :action => R(CustomersNInvoicesX, @customer.id, @invoice.number),
+         :method => :post do
+      table do
+        tr do
+          td { b "Number" }
+          td { @invoice.number }
+        end
+        tr do
+          td { b "Date" }
+          td { @invoice.updated_at.to_formatted_s(:date_only) }
+        end
+        tr do
+          td { b "Period" }
+          td { _format_period(@invoice.period) }
+        end
+        tr do
+          td { b "Payed" }
+          td do
+            _form_input_checkbox("payed")
+            input :type => :submit, :name => "update", :value => "Update"
+          end
+        end
+      end
+    end
     
     table do
       tr do
@@ -901,54 +978,58 @@ module StopTime::Views
 
   def invoice_select_form
     form :action => R(CustomersNInvoices, @customer.id), :method => :post do
-      h2 "Registered time"
-      table do
-        tr do
-          th ""
-          th "Start"
-          th "End"
-          th "Comment"
-          th "Total"
-          th "Amount"
-        end
-        @hourly_rate_tasks.keys.each do |task|
+      unless @hourly_rate_tasks.empty?
+        h2 "Registered time"
+        table do
           tr do
-            td { _form_input_checkbox("tasks[]", task.id) }
-            td task.name, :colspan => 5
+            th ""
+            th "Start"
+            th "End"
+            th "Comment"
+            th "Total"
+            th "Amount"
           end
-          @hourly_rate_tasks[task].each do |entry|
-            tr do
-              td { _form_input_checkbox("time_entries[]", entry.id) }
-              td { label entry.start, :for => "time_entries[]_#{entry.id}" }
-              td { entry.end }
-              td { entry.comment }
-              td { entry.total }
-              td { entry.total * entry.task.hourly_rate }
+          @hourly_rate_tasks.keys.each do |task|
+            tr.task do
+              td { _form_input_checkbox("tasks[]", task.id) }
+              td task.name, :colspan => 5
+            end
+            @hourly_rate_tasks[task].each do |entry|
+              tr do
+                td { _form_input_checkbox("time_entries[]", entry.id) }
+                td { label entry.start, :for => "time_entries[]_#{entry.id}" }
+                td { entry.end }
+                td { entry.comment }
+                td { "%.2fh" % entry.hours_total }
+                td { "€ %.2f" % (entry.hours_total * entry.task.hourly_rate) }
+              end
             end
           end
         end
       end
 
-      h2 "Fixed cost tasks"
-      table do
-        tr do
-          th ""
-          th "Task"
-          th "Registered time"
-          th "Amount"
-        end
-        @fixed_cost_tasks.keys.each do |task|
+      unless @fixed_cost_tasks.empty?
+        h2 "Fixed cost tasks"
+        table do
           tr do
-            td { _form_input_checkbox("tasks[]", task.id) }
-            td { label task.name, :for => "tasks[]_#{task.id}" }
-            td { "%.2fh" % @fixed_cost_tasks[task] }
-            td { task.fixed_cost }
+            th ""
+            th "Task"
+            th "Registered time"
+            th "Amount"
+          end
+          @fixed_cost_tasks.keys.each do |task|
+            tr do
+              td { _form_input_checkbox("tasks[]", task.id) }
+              td { label task.name, :for => "tasks[]_#{task.id}" }
+              td { "%.2fh" % @fixed_cost_tasks[task] }
+              td { task.fixed_cost }
+            end
           end
         end
       end
 
       input :type => :submit, :name => "create", :value => "Create invoice"
-      input :type => "submit", :name => "cancel", :value => "Cancel"
+      input :type => :submit, :name => "cancel", :value => "Cancel"
     end
   end
 
