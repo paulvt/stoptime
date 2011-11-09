@@ -90,8 +90,8 @@ module StopTime::Models
         [nil, nil, fixed_cost]
       when "hourly_rate"
         time_entries.inject([0.0, hourly_rate, 0.0]) do |summ, te|
-          summ[0] += te.total
-          summ[2] += te.total * hourly_rate
+          summ[0] += te.hours_total
+          summ[2] += te.hours_total * hourly_rate
           summ
         end
       end
@@ -102,7 +102,7 @@ module StopTime::Models
     belongs_to :task
     has_one :customer, :through => :task
 
-    def total
+    def hours_total
       (self.end - self.start) / 1.hour
     end
   end
@@ -518,7 +518,7 @@ module StopTime::Controllers
       @customer.unbilled_tasks.each do |task|
         case task.type
         when "fixed_cost"
-          total = task.time_entries.inject(0.0) { |s, te| s + te.total }
+          total = task.time_entries.inject(0.0) { |s, te| s + te.hours_total }
           @fixed_cost_tasks[task] = total
         when "hourly_rate"
           time_entries = task.billable_time_entries
@@ -540,15 +540,15 @@ module StopTime::Controllers
 
     def post
       if @input.has_key? "enter"
-        @entry = TimeEntry.create(
+        @time_entry = TimeEntry.create(
           :task_id => @input.task,
           :start => @input.start,
           :end => @input.end,
           :comment => @input.comment,
           :bill => @input.has_key?("bill"))
-        @entry.save
-        if @entry.invalid?
-          @errors = @entry.errors
+        @time_entry.save
+        if @time_entry.invalid?
+          @errors = @time_entry.errors
         end
       elsif @input.has_key? "delete"
       end
@@ -563,10 +563,10 @@ module StopTime::Controllers
 
   class TimelineN
     def get(entry_id)
-      @entry = TimeEntry.find(entry_id)
-      @input = @entry.attributes
-      @input["customer"] = @entry.task.customer.id
-      @input["task"] = @entry.task.id
+      @time_entry = TimeEntry.find(entry_id)
+      @input = @time_entry.attributes
+      @input["customer"] = @time_entry.task.customer.id
+      @input["task"] = @time_entry.task.id
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
       @task_list = Task.all.map { |t| [t.id, t.name] }
       render :time_entry_form
@@ -574,19 +574,19 @@ module StopTime::Controllers
 
     def post(entry_id)
       return redirect R(Timeline) if @input.cancel
-      @entry = TimeEntry.find(entry_id)
+      @time_entry = TimeEntry.find(entry_id)
       if @input.has_key? "delete"
-        @entry.delete
+        @time_entry.delete
       elsif @input.has_key? "update"
         attrs = ["start", "end", "comment"]
         attrs.each do |attr|
-          @entry[attr] = @input[attr]
+          @time_entry[attr] = @input[attr]
         end
-        @entry.task = Task.find(@input.task)
-        @entry.bill = @input.has_key? "bill"
-        @entry.save
-        if @entry.invalid?
-          @errors = @entry.errors
+        @time_entry.task = Task.find(@input.task)
+        @time_entry.bill = @input.has_key? "bill"
+        @time_entry.save
+        if @time_entry.invalid?
+          @errors = @time_entry.errors
           return render :time_entry_form
         end
       end
@@ -709,7 +709,7 @@ module StopTime::Views
                  :href => R(TimelineN, entry.id) }
           td { entry.end }
           td { entry.comment }
-          td { "%.2fh" % entry.total }
+          td { "%.2fh" % entry.hours_total }
           td do 
             if entry.bill
               input :type => "checkbox", :name => "bill_#{entry.id}",
@@ -730,7 +730,7 @@ module StopTime::Views
   end
 
   def time_entry_form
-    form :action => R(TimelineN, @entry.id), :method => :post do
+    form :action => R(TimelineN, @time_entry.id), :method => :post do
       ol do
         li do
           label "Customer", :for => "customer"
