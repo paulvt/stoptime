@@ -78,7 +78,7 @@ module StopTime::Models
     def bill_period
       bte = billable_time_entries
       if bte.empty?
-        [nil, nil]
+        [updated_at, updated_at]
       else
         [bte.first.start, bte.last.end]
       end
@@ -113,19 +113,18 @@ module StopTime::Models
     belongs_to :customer
 
     def summary
-      # FIXME: ensure that month is a DateTime/Time object.
       summ = {}
       tasks.each { |task| summ[task.name] = task.summary }
       return summ
     end
 
     def period
-      p = [Time.now, Time.now]
+      return [updated_at, updated_at] if tasks.empty?
+      p = tasks.first.bill_period
       tasks.each do |task|
         tp = task.bill_period
-        p tp
-        p[0] = tp[0] if !tp[0].nil? and tp[0] < p[0]
-        p[1] = tp[1] if !tp[1].nil? and tp[1] > p[1]
+        p[0] = tp[0] if tp[0] < p[0]
+        p[1] = tp[1] if tp[1] > p[1]
       end
       return p
     end
