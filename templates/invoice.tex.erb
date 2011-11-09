@@ -1,6 +1,6 @@
 \documentclass[a4paper,12pt,oneside,dutch]{isodoc}
 
-% rubber: clean <%= number %>.out
+% rubber: clean <%= @number %>.out
 
 \usepackage{array}
 \usepackage[utf8]{inputenc}
@@ -31,20 +31,24 @@
 <% end %><% unless @company.vatno.blank? %>                \vatnotext:      & \vatno
 <% end %>               \end{tabular}},
   %% Footer.
-<% unless @company.website.blank? %>  footer,<% end %>
-  areacode=31,
+<% unless @company.website.blank? %>  footer,<%
+   end %>  areacode=31,
   phone=<%= @company.phone %>,
   cellphone=<%= @company.cell %>,
   email=<%= @company.email %>,
   website=<%= @company.website %>,
   %% Addressee info.
   %foreign,
-  to={<%= customer.name %>\\<%= customer.address_street%>\\
-      <%= customer.address_postal_code %> <%= customer.address_city %>},
+  to={<%= @customer.name %>\\<%= @customer.address_street%>\\
+      <%= @customer.address_postal_code %> <%= @customer.address_city %>},
   % Headlines.
-  date=<%= DateTime.now.to_formatted_s(:day_code) %>,
-  ourref=<%= number %>,
-  subject=Factuur <%= @month.to_formatted_s(:month_and_year) %>,
+  date=<%= @invoice.updated_at.to_formatted_s(:day_code) %>,
+  ourref=<%= @number %>,
+<% period = @period.map { |m| m.to_formatted_s(:month_and_year) }.uniq
+   case period.length
+   when 1 %>  subject=Factuur <%= period.first %>,<%
+   when 2 %>  subject=Factuur <%= period.join(" t/m ") %>,<%
+   end %>
   yourref=,
   %% Payment data.
   term=30,
@@ -70,9 +74,10 @@
    \descriptiontext&Aantal uur&Uurtarief&\amounttext\ML}%
  {\endtabularx}
 \newcommand{\ihitem}[4]{#1&#2&\currency~#3&\currency~#4\\}
+\newcommand{\ifcitem}[2]{#1&--&--&\currency~#2\\}
 \newcommand{\ihsubtotal}[1]{\cmidrule[.0em]{4-4}%
   \textit{Subtotaal}&&&\currency~#1\\}
-\newcommand{\inosubtotal}{&&&\\}
+\newcommand{\ihnosubtotal}[1]{\cmidrule[.0em]{4-4}&&&\\}
 \newcommand{\ihvat}[1]{\textit{Btw-heffing <%= VATRate %>\%}&&&\currency~#1\\}
 \newcommand{\ihtotal}[1]{\cmidrule[.05em]{4-4}%
   \textbf{\Totaltext}&&&\textbf{\currency~#1}}
