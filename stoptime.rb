@@ -430,7 +430,11 @@ module StopTime::Controllers
   end
 
   class CustomersNInvoices
-    def get
+    def get(customer_id)
+      # FIXME: quick hack! is this URL even used?
+      @invoices = {}
+      customer = Customer.find(customer_id)
+      @invoices[customer.name] = customer.invoices
       render :invoices
     end
 
@@ -612,7 +616,21 @@ module StopTime::Controllers
 
   class Invoices
     def get
-      # FIXME: set up a new overview per month/year
+      @invoices = {}
+      Customer.all.each do |customer|
+        @invoices[customer.name] = customer.invoices
+      end
+      render :invoices
+    end
+  end
+
+  class InvoicesPeriod
+    def get
+      @invoices = Hash.new { |h, k| h[k] = Array.new }
+      Invoice.all.each do |invoice|
+        # FIXME: this is an unformatted key!
+        @invoices[invoice.period.first.at_beginning_of_month] << invoice
+      end
       render :invoices
     end
   end
@@ -940,7 +958,11 @@ module StopTime::Views
   def invoices
     h2 "List of invoices"
 
-    p "N/A"
+    @invoices.keys.sort.each do |key|
+      next if @invoices[key].empty?
+      h3 { key }
+      _invoice_list(@invoices[key])
+    end
   end
 
   def invoice
