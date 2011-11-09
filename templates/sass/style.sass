@@ -1,0 +1,145 @@
+/* CSS file for Stop… Camping Time! */
+
+// Colours
+$light-grey: #efefef
+$dark-grey: #9f9f9f
+$dark-red: #990000
+
+/* General classes */
+.right
+  text-align: right
+
+.float_left
+  float: left
+  margin-right: 50px
+
+.clear
+  clear: both
+  padding-top: 10px
+
+/* Basic elements */
+a
+  text-decoration: none
+  color: $dark-red
+
+  &:hover
+    text-decoration: underline
+
+body
+  font-family: sans-serif
+  font-size: 13px
+  margin: 0px
+
+/* Main layout */
+#wrapper
+  width: auto
+  height: auto
+  margin: 10px 10px
+
+#content
+  padding: 10px
+  border: 1px solid
+  background: $light-grey
+
+ol#menu
+  list-style: none
+  padding: 0px
+  margin: 5px
+
+  li
+    display: inline
+    border: solid black
+    border-width: 1px 1px 0 1px
+    padding: 5px 10px
+    margin: 0px 0.5em 0px 0px
+
+    &.selected
+      padding-bottom: 6px
+      background: $light-grey
+
+/* Table layout */   
+table
+  padding: 3px 0px
+  border-spacing: 0px 4px
+
+  col.amount, col.hours, col.hourly_rate
+    width: 15%
+  col.flag
+    width: 3%
+  col.start_time, col.end_time
+    width: 15%
+  col.comment
+    width: 30%
+  col.task
+    width: 25%
+  col.name, col.period
+    width: 25%
+  col.short_name
+    width: 20%
+  col.address
+    width: 20%
+  col.email, col.phone, col.date
+    width: 15%
+  col.number
+    width: 7%
+
+  &.overview
+    width: 50%
+
+  &.timeline
+    width: 100%
+
+  &.tasks
+    width: 60%
+
+  &.customers
+    width: 75%
+
+  &.invoices
+    width: 50%
+
+  td
+    vertical-align: top
+
+  th
+    text-align: left
+    background: $dark-grey
+
+  tr.total
+    border-top: solid black
+
+  td.key
+    font-weight: bold
+    width: 80px
+    padding-bottom: 5px
+
+/* Form layout */
+form 
+  ol
+    list-style: none
+    padding: 10px
+
+    label
+      width: 180px
+      margin: 5px
+      margin-right: 10px
+      float: left
+
+    input, select
+      width: 250px
+
+  ol.radio
+    margin-left: 195px
+    padding: 0px
+
+    label
+      float: none
+
+    input
+      width: auto
+
+  select
+    width: 300px
+
+  input[type="submit"], input[type="reset"]
+    width: auto

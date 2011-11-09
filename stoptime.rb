@@ -16,6 +16,7 @@ require "camping"
 require "markaby"
 require "mime/types"
 require "pathname"
+require "sass/plugin/rack"
 
 Markaby::Builder.set(:indent, 2)
 Camping.goes :StopTime
@@ -26,6 +27,9 @@ unless defined? PUBLIC_DIR
 
   # Set up the locales.
   I18n.load_path += Dir[ File.join('locale', '*.yml') ]
+
+  # Set up SASS.
+  Sass::Plugin.options[:template_location] = "templates/sass"
 
   # Set the default date(/time) format.
   ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.merge!(
@@ -522,11 +526,11 @@ module StopTime::Controllers
       elsif @format == "tex"
         tex_file = PUBLIC_DIR + "#{@number}.tex"
         _generate_invoice_tex(@number) unless tex_file.exist?
-        redirect(StaticX, tex_file.basename)
+        redirect(Static, tex_file.basename)
       elsif @format == "pdf"
         pdf_file = PUBLIC_DIR + "#{@number}.pdf"
         _generate_invoice_pdf(@number) unless pdf_file.exist?
-        redirect(StaticX, pdf_file.basename)
+        redirect(Static, pdf_file.basename)
       end
     end
 
@@ -705,7 +709,7 @@ module StopTime::Controllers
     end
   end
 
-  class StaticX
+  class Static < R '/static/(.+)'
     def get(path)
       mime_type = MIME::Types.type_for(path).first
       @headers['Content-Type'] = mime_type.nil? ? "text/plain" : mime_type.to_s
@@ -726,6 +730,8 @@ module StopTime::Views
     xhtml_strict do
       head do
         title "Stop… Camping Time!"
+        link :rel => "stylesheet", :type => "text/css",
+             :media => "screen", :href => R(Static, "stylesheets/style.css")
       end
       body do
         div.wrapper! do
@@ -766,8 +772,11 @@ module StopTime::Views
             a "here", :href => R(CustomersNTasksNew, customer.id)
           end
         else
-          table do
+          table.overview do
             @tasks[customer].each do |task|
+              col.task {}
+              col.hours {}
+              col.amount {}
               tr do
                 td do
                   a task.name,
@@ -777,10 +786,10 @@ module StopTime::Views
                 case task.type
                 when "fixed_rate"
                   td ""
-                  td { "€ %.2f" % summary[2] }
+                  td.right { "€ %.2f" % summary[2] }
                 when "hourly_rate"
-                  td { "%.2fh" % summary[0] }
-                  td { "€ %.2f" % summary[2] }
+                  td.right { "%.2fh" % summary[0] }
+                  td.right { "€ %.2f" % summary[2] }
                 end
               end
             end
@@ -792,10 +801,15 @@ module StopTime::Views
 
   def time_entries
     h2 "Timeline"
-    table do
+    table.timeline do
+      col.task {}
+      col.start_time {}
+      col.end_time {}
+      col.comment {}
+      col.hours {}
+      col.flag {}
       tr do
-        th "Customer"
-        th "Project/task"
+        th "Project/Task"
         th "Start time"
         th "End time"
         th "Comment"
@@ -875,8 +889,13 @@ module StopTime::Views
   end
 
   def customers
-    h2 "List of customers"
-    table do
+    h2 "Customers"
+    table.customers do
+       col.name {}
+       col.short_name {}
+       col.address {}
+       col.email {}
+       col.phone {}
        tr do
          th "Name"
          th "Short name"
@@ -901,13 +920,13 @@ module StopTime::Views
         end
       end
     end
-    p do
-      a "Add a new customer", :href=> R(CustomersNew)
-    end
+
+    a "Add a new customer", :href=> R(CustomersNew)
   end
 
   def customer_form
-    form :action => R(*@target), :method => :post do
+    form.float_left :action => R(*@target), :method => :post do
+      h2 "Customer information"
       ol do
         li { _form_input_with_label("Name", "name", :text) }
         li { _form_input_with_label("Short name", "short_name", :text) }
@@ -935,15 +954,18 @@ module StopTime::Views
             end
           end
         end
-        input :type => :submit, :name => "edit", :value => "Edit"
-        input :type => :submit, :name => "delete", :value => "Delete"
+        div do
+          input :type => :submit, :name => "edit", :value => "Edit"
+          input :type => :submit, :name => "delete", :value => "Delete"
+          a "Add a new project/task", :href => R(CustomersNTasksNew, @customer.id)
+        end
       end
-      a "Add a new project/task", :href => R(CustomersNTasksNew, @customer.id)
 
-
-      h2 "Invoices"
-      _invoice_list(@invoices)
-      a "Create a new invoice", :href => R(CustomersNInvoicesNew, @customer.id)
+      div.clear do
+        h2 "Invoices"
+        _invoice_list(@invoices)
+        a "Create a new invoice", :href => R(CustomersNInvoicesNew, @customer.id)
+      end
     end
   end
 
@@ -951,7 +973,11 @@ module StopTime::Views
     if invoices.empty?
       p "None!"
     else
-      table do
+      table.invoices do
+        col.number {}
+        col.date {}
+        col.period {}
+        col.flag {}
         tr do
           th "Number"
           th "Date"
@@ -964,7 +990,7 @@ module StopTime::Views
               a invoice.number,
                 :href => R(CustomersNInvoicesX, @customer.id, invoice.number)
             end
-            td { invoice.created_at }
+            td { invoice.created_at.to_formatted_s(:date_only) }
             td { _format_period(invoice.period) }
             # FIXME: really retrieve the payed flag.
             td { _form_input_checkbox("payed_#{invoice.number}") }
@@ -984,9 +1010,10 @@ module StopTime::Views
 
   def task_form
     form :action => R(*@target), :method => :post do
-      ul do
+      ol do
         li { _form_input_with_label("Name", "name", :text) }
         li do
+          label "Project/Task type"
           ol.radio do
             li do
               _form_input_radio("type", "hourly_rate", default=true)
@@ -1025,20 +1052,20 @@ module StopTime::Views
          :method => :post do
       table do
         tr do
-          td { b "Number" }
-          td { @invoice.number }
+          td.key { b "Number" }
+          td.val { @invoice.number }
         end
         tr do
-          td { b "Date" }
-          td { @invoice.created_at.to_formatted_s(:date_only) }
+          td.key { b "Date" }
+          td.val { @invoice.created_at.to_formatted_s(:date_only) }
         end
         tr do
-          td { b "Period" }
-          td { _format_period(@invoice.period) }
+          td.key { b "Period" }
+          td.val { _format_period(@invoice.period) }
         end
         tr do
-          td { b "Payed" }
-          td do
+          td.key { b "Payed" }
+          td.val do
             _form_input_checkbox("payed")
             input :type => :submit, :name => "update", :value => "Update"
           end
@@ -1046,25 +1073,29 @@ module StopTime::Views
       end
     end
 
-    table do
+    table.tasks do
+      col.task {}
+      col.hours {}
+      col.hourly_rate {}
+      col.amount {}
       tr do
-        th { "Description" }
-        th { "Number of hours" }
-        th { "Hourly rate" }
-        th { "Amount" }
+        th { "Project/Task" }
+        th.right { "Registered time" }
+        th.right { "Hourly rate" }
+        th.right { "Amount" }
       end
       subtotal = 0.0
       @tasks.each do |task, line|
         tr do
           td { task }
           if line[0].nil? and line[1].nil?
-            td "–"
-            td "–"
+            td.right "–"
+            td.right "–"
           else
-            td { "%.2fh" % line[0] }
-            td { "€ %.2f" % line[1] }
+            td.right { "%.2fh" % line[0] }
+            td.right { "€ %.2f" % line[1] }
           end
-          td { "€ %.2f" % line[2] }
+          td.right { "€ %.2f" % line[2] }
         end
         subtotal += line[2]
       end
@@ -1075,21 +1106,21 @@ module StopTime::Views
           td { i "Sub-total" }
           td ""
           td ""
-          td { "€ %.2f" % subtotal }
+          td.right { "€ %.2f" % subtotal }
         end
         vat = subtotal * VATRate/100
         tr do
           td { i "VAT #{VATRate}%" }
           td ""
           td ""
-          td { "€ %.2f" % vat }
+          td.right { "€ %.2f" % vat }
         end
       end
-      tr do
+      tr.total do
         td { b "Total amount" }
         td ""
         td ""
-        td { "€ %.2f" % (subtotal + vat) }
+        td.right { "€ %.2f" % (subtotal + vat) }
       end
     end
 
@@ -1103,14 +1134,20 @@ module StopTime::Views
     form :action => R(CustomersNInvoices, @customer.id), :method => :post do
       unless @hourly_rate_tasks.empty?
         h2 "Registered time"
-        table do
+        table.time_entries do
+          col.flag {}
+          col.start_time {}
+          col.end_time {}
+          col.comment {}
+          col.hours {}
+          col.amount {}
           tr do
             th ""
-            th "Start"
-            th "End"
+            th "Start time"
+            th "End time"
             th "Comment"
-            th "Total"
-            th "Amount"
+            th.right "Total time"
+            th.right "Amount"
           end
           @hourly_rate_tasks.keys.each do |task|
             tr.task do
@@ -1123,8 +1160,8 @@ module StopTime::Views
                 td { label entry.start, :for => "time_entries[]_#{entry.id}" }
                 td { entry.end }
                 td { entry.comment }
-                td { "%.2fh" % entry.hours_total }
-                td { "€ %.2f" % (entry.hours_total * entry.task.hourly_rate) }
+                td.right { "%.2fh" % entry.hours_total }
+                td.right { "€ %.2f" % (entry.hours_total * entry.task.hourly_rate) }
               end
             end
           end
@@ -1133,10 +1170,14 @@ module StopTime::Views
 
       unless @fixed_cost_tasks.empty?
         h2 "Fixed cost tasks"
-        table do
+        table.tasks do
+          col.flag {}
+          col.task {}
+          col.hours {}
+          col.amount {}
           tr do
             th ""
-            th "Task"
+            th "Project/Task"
             th "Registered time"
             th "Amount"
           end
@@ -1144,8 +1185,8 @@ module StopTime::Views
             tr do
               td { _form_input_checkbox("tasks[]", task.id) }
               td { label task.name, :for => "tasks[]_#{task.id}" }
-              td { "%.2fh" % @fixed_cost_tasks[task] }
-              td { task.fixed_cost }
+              td.right { "%.2fh" % @fixed_cost_tasks[task] }
+              td.right { task.fixed_cost }
             end
           end
         end
