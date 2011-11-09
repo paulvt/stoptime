@@ -42,9 +42,9 @@
   to={<%= @customer.name %>\\<%= @customer.address_street%>\\
       <%= @customer.address_postal_code %> <%= @customer.address_city %>},
   % Headlines.
-  date=<%= @invoice.updated_at.to_formatted_s(:day_code) %>,
+  date=<%= @invoice.created_at.to_formatted_s(:day_code) %>,
   ourref=<%= @number %>,
-<% period = @period.map { |m| m.to_formatted_s(:month_and_year) }.uniq
+<% period = @period.map { |p| I18n.l p, :format => :month_and_year }.uniq
    case period.length
    when 1 %>  subject=Factuur <%= period.first %>,<%
    when 2 %>  subject=Factuur <%= period.join(" t/m ") %>,<%
@@ -93,11 +93,11 @@
    @tasks.each do |task, line|
      if line[0].nil? and line[1].nil?
 %>  \ifcitem{<%= task %>}%
-          {<%= "%.2f" % line[2] %>}<%
+          {<%= number_with_precision(line[2]) %>}<%
      else
 %>  \ihitem{<%= task %>}%
-         {<%= "%.2f" % line[0] %>}{<%= "%.2f" % line[1] %>}%
-         {<%= "%.2f" % line[2] %>}<%
+         {<%= number_with_precision(line[0]) %>}{<%= number_with_precision(line[1]) %>}%
+         {<%= number_with_precision(line[2]) %>}<%
      end 
      subtotal += line[2]
    end
@@ -106,10 +106,10 @@
   \ihnosubtotal{} <%
    else
      vat = subtotal * VATRate/100 %>
-  \ihsubtotal{<%= "%.2f" % subtotal %>}
-  \ihvat{<%= "%.2f" % vat %>} <%
+  \ihsubtotal{<%= number_with_precision(subtotal) %>}
+  \ihvat{<%= number_with_precision(vat) %>}<%
    end %>
-  \ihtotal{<%= "%.2f" % (subtotal + vat) %>}
+  \ihtotal{<%= number_with_precision(subtotal + vat) %>}
  \end{ihtable}
  \vspace{2em}
 

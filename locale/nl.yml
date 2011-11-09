@@ -1,0 +1,131 @@
+nl:
+  date:
+    formats:
+      default: "%Y-%m-%d"
+      short: "%b %d"
+      long: "%d %B  %Y"
+      month_and_year: "%B %Y"
+      
+    day_names: [zondag, maandag, dinsdag, woensdag, donderdag, vrijdag, zaterdag]
+    abbr_day_names: [zon, maa, din, woe, don, vrij, zat]
+      
+    # Don't forget the nil at the beginning; there's no such thing as a 0th month
+    month_names: [~, januari, februari, maart, april, mei, juni, juli, augustus, september, oktober, november, december]
+    abbr_month_names: [~, jan, feb, mar, apr, mei, jun, jul, aug, sep, okt, nov, dec]
+    order:
+      - :year
+      - :month
+      - :day
+
+  time:
+    formats:
+      default: "%a %d %b %Y %H:%M:%S %z"
+      short: "%d %b %H:%M"
+      long: "%d %B %Y %H:%M"
+      date_only: "%Y-%m-%d"
+      month_and_year: "%B %Y"
+    am: "am"
+    pm: "pm"
+      
+# Used in array.to_sentence.
+  support:
+    array:
+      words_connector: ", "
+      two_words_connector: " en "
+      last_word_connector: " en "
+
+  number:
+    format:
+      separator: ","
+      delimiter: "."
+      precision: 2
+      significant: false
+      strip_insignificant_zeros: false
+
+    currency:
+      format:
+        format: "%u%n"
+        unit: "€"
+        separator: ","
+        delimiter: "."
+        precision: 2
+        significant: false
+        strip_insignificant_zeros: false
+
+    percentage:
+      format:
+        delimiter: ""
+
+    precision:
+      format:
+        delimiter: ""
+
+    human:
+      format:
+        delimiter: ""
+        precision: 3
+        significant: true
+        strip_insignificant_zeros: true
+      storage_units:
+        format: "%n %u"
+        units:
+          byte:
+            one:   "Byte"
+            other: "Bytes"
+          kb: "KB"
+          mb: "MB"
+          gb: "GB"
+          tb: "TB"
+      decimal_units:
+        format: "%n %u"
+        units:
+          unit: ""
+          thousand: duizend
+          million: millioen
+          billion: miljard
+          trillion: biljoen
+          quadrillion: biljard
+
+  datetime:
+    distance_in_words:
+      half_a_minute: "een halve minuut"
+      less_than_x_seconds:
+        one:   "minder dan 1 seconde"
+        other: "minder dan %{count} seconden"
+      x_seconds:
+        one:   "1 seconde"
+        other: "%{count} seconden"
+      less_than_x_minutes:
+        one:   "minder dan 1 minuut"
+        other: "minder dan %{count} minuten"
+      x_minutes:
+        one:   "1 minuut"
+        other: "%{count} minuten"
+      about_x_hours:
+        one:   "ongeveer 1 uur"
+        other: "ongeveer %{count} uren"
+      x_days:
+        one:   "1 dag"
+        other: "%{count} dagen"
+      about_x_months:
+        one:   "ongeveer 1 maand"
+        other: "ongeveer %{count} maanden"
+      x_months:
+        one:   "1 maand"
+        other: "%{count} maanden"
+      about_x_years:
+        one:   "ongeveer 1 jaar"
+        other: "ongeveer %{count} jaren"
+      over_x_years:
+        one:   "maar dan 1 jaarj"
+        other: "meer dan %{count} jaren"
+      almost_x_years:
+        one:   "bijna 1 jaar"
+        other: "bijna %{count} jaren"
+    prompts:
+      year:   "Jaar"
+      month:  "Maand"
+      day:    "Dag"
+      hour:   "Uur"
+      minute: "Minuut"
+      second: "Seconden"

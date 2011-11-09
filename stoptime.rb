@@ -10,6 +10,7 @@
 # Free Software Foundation; either version 2 of the License, or (at your
 # option) any later version.
 
+require "action_view"
 require "active_support"
 require "camping"
 require "markaby"
@@ -22,6 +23,9 @@ Camping.goes :StopTime
 unless defined? PUBLIC_DIR
   PUBLIC_DIR = Pathname.new(__FILE__).dirname.expand_path + "public"
   TEMPLATE_DIR = Pathname.new(__FILE__).dirname.expand_path + "templates"
+
+  # Set up the locales.
+  I18n.load_path += Dir[ File.join('locale', '*.yml') ]
 
   # Set the default date(/time) format.
   ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.merge!(
@@ -493,6 +497,9 @@ module StopTime::Controllers
   end
 
   class CustomersNInvoicesX
+    include ActionView::Helpers::NumberHelper
+    include I18n
+
     def get(customer_id, invoice_number)
       # FIXME: make this (much) nicer!
       if m = invoice_number.match(/(\d+)\.(\w+)$/)
@@ -535,8 +542,10 @@ module StopTime::Controllers
       template = TEMPLATE_DIR + "invoice.tex.erb"
       tex_file = PUBLIC_DIR + "#{number}.tex"
 
-      erb = ERB.new(File.read(template))
-      File.open(tex_file, "w") { |f| f.write(erb.result(binding)) }
+      with_locale :nl do
+        erb = ERB.new(File.read(template))
+        File.open(tex_file, "w") { |f| f.write(erb.result(binding)) }
+      end
     end
 
     def _generate_invoice_pdf(number)
