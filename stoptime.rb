@@ -78,6 +78,7 @@ module StopTime::Models
     def bill_period
       bte = billable_time_entries
       if bte.empty?
+        # FIXME: better defaults?
         [updated_at, updated_at]
       else
         [bte.first.start, bte.last.end]
@@ -119,7 +120,8 @@ module StopTime::Models
     end
 
     def period
-      return [updated_at, updated_at] if tasks.empty?
+      # FIXME: maybe should be updated_at?
+      return [created_at, created_at] if tasks.empty?
       p = tasks.first.bill_period
       tasks.each do |task|
         tp = task.bill_period
@@ -849,7 +851,7 @@ module StopTime::Views
               a invoice.number,
                 :href => R(CustomersNInvoicesX, @customer.id, invoice.number)
             end
-            td { invoice.updated_at }
+            td { invoice.created_at }
             td { _format_period(invoice.period) }
             # FIXME: really retrieve the payed flag.
             td { _form_input_checkbox("payed_#{invoice.number}") }
@@ -911,7 +913,7 @@ module StopTime::Views
         end
         tr do
           td { b "Date" }
-          td { @invoice.updated_at.to_formatted_s(:date_only) }
+          td { @invoice.created_at.to_formatted_s(:date_only) }
         end
         tr do
           td { b "Period" }
