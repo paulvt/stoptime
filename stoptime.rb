@@ -67,7 +67,7 @@ module StopTime::Models
       not self.fixed_cost.blank?
     end
 
-    def task_type
+    def type
       fixed_cost? ? "fixed_cost" : "hourly_rate"
     end
 
@@ -347,7 +347,7 @@ module StopTime::Controllers
         @task = Task.create(
           :customer_id => customer_id,
           :name => @input.name)
-        case @input.task_type
+        case @input.type
         when "fixed_cost"
           @task.fixed_cost = @input.fixed_cost
           @task.hourly_rate = nil
@@ -376,7 +376,7 @@ module StopTime::Controllers
       @target = [CustomersNTasks, customer_id]
       @method = "create"
       @input = @task.attributes
-      @input["task_type"] = @task.task_type # FIXME: find nicer way!
+      @input["type"] = @task.type # FIXME: find nicer way!
       render :task_form
     end
   end
@@ -388,7 +388,7 @@ module StopTime::Controllers
       @target = [CustomersNTasksN,  customer_id, task_id]
       @method = "update"
       @input = @task.attributes
-      @input["task_type"] = @task.task_type
+      @input["type"] = @task.type
       # FIXME: Check that task is of that customer.
       render :task_form
     end
@@ -400,7 +400,7 @@ module StopTime::Controllers
       if @input.has_key? "update"
         # FIXME: task should be cloned/dupped as to prevent rewriting history!
         @task["name"] = @input["name"] unless @input["name"].blank?
-        case @input.task_type
+        case @input.type
         when "fixed_cost"
           @task.fixed_cost = @input.fixed_cost
           @task.hourly_rate = nil
@@ -414,7 +414,7 @@ module StopTime::Controllers
           @target = [CustomersNTasksN,  customer_id, task_id]
           @method = "update"
           @input = @task.attributes
-          @input["task_type"] = @input.task_type
+          @input["type"] = @input.type
           return render :task_form
         end
       end
@@ -531,7 +531,7 @@ module StopTime::Controllers
 
   class Timeline
     def get
-      @entries = TimeEntry.all(:order => "start DESC")
+      @time_entries = TimeEntry.all(:order => "start DESC")
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
       @task_list = Task.all.map { |t| [t.id, t.name] }
       @input["bill"] = true # Bill by default.
@@ -553,9 +553,10 @@ module StopTime::Controllers
       elsif @input.has_key? "delete"
       end
 
-      @entries = TimeEntry.all(:order => "start DESC")
+      @time_entries = TimeEntry.all(:order => "start DESC")
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
       @task_list = Task.all.map { |t| [t.id, t.name] }
+      @input["bill"] = true # Bill by default.
       render :time_entries
     end
   end
@@ -698,7 +699,7 @@ module StopTime::Views
           end
         end
       end
-      @entries.each do |entry|
+      @time_entries.each do |entry|
         tr do
           td { a entry.customer.short_name, 
                  :href => R(CustomersN, entry.customer.id) }
@@ -825,11 +826,11 @@ module StopTime::Views
         li do
           ol.radio do
             li do 
-              _form_input_radio("task_type", "hourly_rate", default=true)
+              _form_input_radio("type", "hourly_rate", default=true)
               _form_input_with_label("Hourly rate", "hourly_rate", :text)
             end
             li do
-              _form_input_radio("task_type", "fixed_cost")
+              _form_input_radio("type", "fixed_cost")
               _form_input_with_label("Fixed cost", "fixed_cost", :text)
             end
           end
