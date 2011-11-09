@@ -85,6 +85,10 @@ module StopTime::Models
       end
     end
 
+    def billed?
+      not invoice.nil?
+    end
+
     def summary
       case type
       when "fixed_cost"
@@ -562,7 +566,9 @@ module StopTime::Controllers
     def get
       @time_entries = TimeEntry.all(:order => "start DESC")
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
-      @task_list = Task.all.map { |t| [t.id, t.name] }
+      @task_list = Task.all(:conditions => ['invoice_id IS NULL']).map do
+        |t| [t.id, t.name]
+      end
       @input["bill"] = true # Bill by default.
       render :time_entries
     end
@@ -891,7 +897,12 @@ module StopTime::Views
         h2 "Projects & Tasks"
         select :name => "task_id", :size => 6 do
           @customer.tasks.each do |task|
-            option(:value => task.id) { task.name }
+            if task.billed?
+              option(:value => task.id, 
+                     :disabled => true) { task.name + " (#{task.invoice.number})" }
+            else
+              option(:value => task.id) { task.name }
+            end
           end
         end
         input :type => :submit, :name => "edit", :value => "Edit"
