@@ -311,7 +311,7 @@ module StopTime::Controllers
         @button = "create"
         return render :customer_form
       end
-      redirect R(Customers)
+      redirect R(CustomersN, @customer.id)
     end
   end
 
