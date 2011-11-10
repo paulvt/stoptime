@@ -43,7 +43,7 @@ unless defined? PUBLIC_DIR
 
   # FIXME: this should be configurable.
   HourlyRate = 20.0
-  VATRate = 0.0
+  VATRate = 19
 end
 
 module StopTime
@@ -1124,7 +1124,7 @@ module StopTime::Views
         end
         subtotal += line[2]
       end
-      if VATRate.zero?
+      if @company.vatno.blank?
         vat = 0
       else
         tr do
@@ -1133,9 +1133,9 @@ module StopTime::Views
           td ""
           td.right { "€ %.2f" % subtotal }
         end
-        vat = subtotal * VATRate/100
+        vat = subtotal * VATRate/100.0
         tr do
-          td { i "VAT #{VATRate}%" }
+          td { i "VAT %d%%" % VATRate }
           td ""
           td ""
           td.right { "€ %.2f" % vat }
