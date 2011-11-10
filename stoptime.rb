@@ -317,7 +317,6 @@ module StopTime::Controllers
 
   class CustomersNew
     def get
-      # FIXME: set other defaults?
       @customer = Customer.new(:hourly_rate => HourlyRate)
       @input = @customer.attributes
 
@@ -399,10 +398,11 @@ module StopTime::Controllers
     def get(customer_id)
       @customer = Customer.find(customer_id)
       @task = Task.new(:hourly_rate => @customer.hourly_rate)
-      @target = [CustomersNTasks, customer_id]
-      @method = "create"
       @input = @task.attributes
       @input["type"] = @task.type # FIXME: find nicer way!
+
+      @target = [CustomersNTasks, customer_id]
+      @method = "create"
       render :task_form
     end
   end
@@ -461,7 +461,6 @@ module StopTime::Controllers
       return redirect R(CustomersN, customer_id) if @input.cancel
 
       # Create the invoice.
-      # FIXME: make the sequence number reset on a new year.
       last = Invoice.last
       number = if last
                  last_year = last.number.to_s[0..3].to_i
