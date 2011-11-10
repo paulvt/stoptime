@@ -1003,7 +1003,8 @@ module StopTime::Views
           tr do
             td do
               a invoice.number,
-                :href => R(CustomersNInvoicesX, @customer.id, invoice.number)
+                :href => R(CustomersNInvoicesX,
+                           invoice.customer.id, invoice.number)
             end
             td { invoice.created_at.to_formatted_s(:date_only) }
             td { _format_period(invoice.period) }
