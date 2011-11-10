@@ -1051,7 +1051,7 @@ module StopTime::Views
   def invoices
     h2 "Invoices"
 
-    if @invoices.empty?
+    if @invoices.values.flatten.empty?
       p do
         text "Found none! You can create one by "
         a "selecting a customer", :href => R(Customers)
