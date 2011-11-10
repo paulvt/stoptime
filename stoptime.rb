@@ -756,8 +756,7 @@ module StopTime::Views
   end
 
   def _menu_link(label, ctrl)
-    # FIXME: this should not be hardcoded!
-    if ctrl == Index
+    if ctrl == self.helpers.class # FIXME: dirty hack?
       li.selected { a label, :href => R(ctrl) }
     else
       li { a label, :href => R(ctrl) }
