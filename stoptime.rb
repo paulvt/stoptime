@@ -940,7 +940,7 @@ module StopTime::Views
 
   def customer_form
     form.float_left :action => R(*@target), :method => :post do
-      h2 "Customer information"
+      h2 "Customer Information"
       ol do
         li { _form_input_with_label("Name", "name", :text) }
         li { _form_input_with_label("Short name", "short_name", :text) }
@@ -1024,7 +1024,7 @@ module StopTime::Views
   end
 
   def task_form
-    h2 "Task information"
+    h2 "Task Information"
     form :action => R(*@target), :method => :post do
       ol do
         li { _form_input_with_label("Name", "name", :text) }
@@ -1158,7 +1158,7 @@ module StopTime::Views
   def invoice_select_form
     form :action => R(CustomersNInvoices, @customer.id), :method => :post do
       unless @hourly_rate_tasks.empty?
-        h2 "Registered time"
+        h2 "Registered Time"
         table.time_entries do
           col.flag {}
           col.start_time {}
@@ -1194,7 +1194,7 @@ module StopTime::Views
       end
 
       unless @fixed_cost_tasks.empty?
-        h2 "Fixed cost tasks"
+        h2 "Fixed Cost Projects/Tasks"
         table.tasks do
           col.flag {}
           col.task {}
