@@ -22,7 +22,9 @@ Markaby::Builder.set(:indent, 2)
 Camping.goes :StopTime
 
 unless defined? PUBLIC_DIR
+  # The directory with public data.
   PUBLIC_DIR = Pathname.new(__FILE__).dirname.expand_path + "public"
+  # The directory with template data.
   TEMPLATE_DIR = Pathname.new(__FILE__).dirname.expand_path + "templates"
 
   # Set up the locales.
@@ -41,50 +43,78 @@ unless defined? PUBLIC_DIR
     :default => "%Y-%m-%d",
     :month_and_year => "%B %Y")
 
+  # The default hourly rate.
   # FIXME: this should be configurable.
   HourlyRate = 20.0
+
+  # The default VAT rate.
   VATRate = 19
 end
 
+# = The main application module
 module StopTime
 
+  # Enable SASS CSS generation from templates/sass.
   use Sass::Plugin::Rack
 
+  # Create/migrate the database when needed.
   def self.create
     StopTime::Models.create_schema
   end
 
 end
 
+# = The Stop… Camping Time! models
 module StopTime::Models
 
+  # == The customer class
+  #
+  # This class represents a customer that has projects, tasks
+  # for which invoices need to be generated.
   class Customer < Base
     has_many :tasks
     has_many :invoices
     has_many :time_entries, :through => :tasks
 
+    # Returns a list of tasks that have not been billed via in invoice.
     def unbilled_tasks
       tasks.all(:conditions => ["invoice_id IS NULL"])
     end
   end
 
+  # == The task class
+  #
+  # This class represents a task (or project) of a customer on which time can
+  # be registered.
+  # There are two types of classes:  with an hourly and with a fixed cost.
   class Task < Base
     has_many :time_entries
     belongs_to :customer
     belongs_to :invoice
 
+    # Determines whether the task has a fixed cost.
+    # When +false+ is returned, one can assume the task has an hourly rate.
     def fixed_cost?
       not self.fixed_cost.blank?
     end
 
+    # Returns the type of the task, this is a String valued either
+    # "+fixed_cost+" or "+hourly_rate+".
     def type
       fixed_cost? ? "fixed_cost" : "hourly_rate"
     end
 
+    # Returns a list of time entries that should be (and are not yet)
+    # billed.
     def billable_time_entries
       time_entries.all(:conditions => ["bill = 't'"], :order => "start ASC")
     end
 
+    # Returns the bill period of the task by means of an Array containing
+    # the first and last Time object found for registered time on this
+    # task.
+    # If no time is registered, the last time the task has been updated
+    # is returned.
     def bill_period
       bte = billable_time_entries
       if bte.empty?
@@ -95,10 +125,18 @@ module StopTime::Models
       end
     end
 
+    # Returns whether the task is billed, i.e. included in an invoice.
     def billed?
       not invoice.nil?
     end
 
+    # Returns a time and cost summary of the registered time on the task
+    # by means of Array of three values.
+    # In case of a fixed cost task, only the third value is set to the
+    # fixed cost.
+    # In case of a task with an hourly rate, the first value is
+    # the total of time (in hours), the second value is the hourly rate,
+    # and the third value is the total amount (time times rate).
     def summary
       case type
       when "fixed_cost"
@@ -113,26 +151,39 @@ module StopTime::Models
     end
   end
 
+  # == The time entry class
+  #
+  # This class represents an amount of time that is registered on a certain
+  # task.
   class TimeEntry < Base
     belongs_to :task
     has_one :customer, :through => :task
 
+    # Returns the total amount of time, the duration, in hours.
     def hours_total
       (self.end - self.start) / 1.hour
     end
   end
 
+  # == The invoice class
+  #
+  # This class represents an invoice for a customer that contains billed
+  # tasks and through the tasks registered time.
   class Invoice < Base
     has_many :tasks
     has_many :time_entries, :through => :tasks
     belongs_to :customer
 
+    # Returns a a time and cost summary of the contained tasks.
+    # See also Task#summary.
     def summary
       summ = {}
       tasks.each { |task| summ[task.name] = task.summary }
       return summ
     end
 
+    # Returns the invoice period based on the contained tasks.
+    # See also Task#bill_period.
     def period
       # FIXME: maybe should be updated_at?
       return [created_at, created_at] if tasks.empty?
@@ -146,10 +197,14 @@ module StopTime::Models
     end
   end
 
+  # == The company information class
+  #
+  # This class contains information about the company or sole
+  # proprietorship of the user of Stop… Camping Time!
   class CompanyInfo < Base
   end
 
-  class StopTimeTables < V 1.0
+  class StopTimeTables < V 1.0 # :nodoc:
     def self.up
       create_table Customer.table_name do |t|
         t.string :name, :short_name,
@@ -176,7 +231,7 @@ module StopTime::Models
     end
   end
 
-  class CommentSupport < V 1.1
+  class CommentSupport < V 1.1 # :nodoc:
     def self.up
       add_column(TimeEntry.table_name, :comment, :string)
     end
@@ -186,7 +241,7 @@ module StopTime::Models
     end
   end
 
-  class BilledFlagSupport < V 1.2
+  class BilledFlagSupport < V 1.2 # :nodoc:
     def self.up
       add_column(TimeEntry.table_name, :bill, :boolean)
     end
@@ -196,7 +251,7 @@ module StopTime::Models
     end
   end
 
-  class HourlyRateSupport < V 1.3
+  class HourlyRateSupport < V 1.3 # :nodoc:
     def self.up
       add_column(Customer.table_name, :hourly_rate, :float,
                                       :null => false, :default => HourlyRate)
@@ -207,7 +262,7 @@ module StopTime::Models
     end
   end
 
-  class FixedCostTaskSupport < V 1.4
+  class FixedCostTaskSupport < V 1.4 # :nodoc:
     def self.up
       add_column(Task.table_name, :billed, :boolean)
       add_column(Task.table_name, :fixed_cost, :float)
@@ -221,7 +276,7 @@ module StopTime::Models
     end
   end
 
-  class InvoiceSupport < V 1.5
+  class InvoiceSupport < V 1.5 # :nodoc:
     def self.up
       create_table Invoice.table_name do |t|
         t.integer :number, :customer_id
@@ -235,7 +290,7 @@ module StopTime::Models
     end
   end
 
-  class CompanyInfoSupport < V 1.6
+  class CompanyInfoSupport < V 1.6 # :nodoc:
     def self.up
       create_table CompanyInfo.table_name do |t|
         t.string :name, :contact_name,
@@ -259,7 +314,7 @@ module StopTime::Models
    end
   end
 
-  class ImprovedInvoiceSupport < V 1.7
+  class ImprovedInvoiceSupport < V 1.7 # :nodoc:
     def self.up
       add_column(Task.table_name, :invoice_id, :integer)
       remove_column(Task.table_name, :billed)
@@ -275,8 +330,16 @@ module StopTime::Models
 
 end # StopTime::Models
 
+# = The Stop… Camping Time! controllers
 module StopTime::Controllers
 
+  # == The index controller
+  #
+  # Controller that presents the overview as the index, listing
+  # the running tasks and projects per customer.
+  #
+  # path:: /
+  # view:: Views#overview
   class Index
     def get
       @tasks = {}
@@ -287,12 +350,24 @@ module StopTime::Controllers
     end
   end
 
+  # == The customers controller
+  #
+  # Controller for viewing a list of existing customers or creating a new
+  # one.
+  #
+  # path:: /customers
+  # view:: Views#customers and Views#customer_form
   class Customers
+    # Gets the list of customers and displays them via Views#customers.
     def get
       @customers = Customer.all
       render :customers
     end
 
+    # Creates a new customer object (Models::Customer) if the input is
+    # valid and redirects to CustomersN.
+    # If the provided information is invalid, the errors are retrieved
+    # and shown in the initial form (Views#customer_form).
     def post
       return redirect R(Customers) if @input.cancel
       @customer = Customer.create(
@@ -315,7 +390,15 @@ module StopTime::Controllers
     end
   end
 
+  # == The customer creation controller
+  #
+  # Controller for filling in the information to create a new customer.
+  #
+  # path:: /customers/new
+  # view:: Views#customer_form
   class CustomersNew
+    # Generates the form to create a new customer object (Models::Customer)
+    # using Views#customer_form.
     def get
       @customer = Customer.new(:hourly_rate => HourlyRate)
       @input = @customer.attributes
@@ -326,7 +409,15 @@ module StopTime::Controllers
     end
   end
 
+  # == The customer controller
+  #
+  # Controller for viewing and updating information of a customer.
+  #
+  # path:: /customers/_customer_id_
+  # view:: Views#customer_form
   class CustomersN
+    # Finds the specific customer for the given _customer_id_ and shows
+    # a form for updating via Views#customer_form.
     def get(customer_id)
       @customer = Customer.find(customer_id)
       @invoices = @customer.invoices
@@ -338,6 +429,10 @@ module StopTime::Controllers
       render :customer_form
     end
 
+    # Updates or deletes the customer with the given _customer_id_ if the
+    # input is valid and redirects to CustomersN.
+    # If the provided information is invalid, the errors are retrieved
+    # and shown in the initial form (Views#customer_form).
     def post(customer_id)
       return redirect R(Customers) if @input.cancel
       @customer = Customer.find(customer_id)
@@ -360,7 +455,19 @@ module StopTime::Controllers
     end
   end
 
+  # == The tasks controller for a specific customer
+  #
+  # Controller for creating, editing and deleting a task for a
+  # specific customer.
+  #
+  # path:: /customers/_customer_id_/tasks
+  # view:: Views#task_form
   class CustomersNTasks
+    # Creates, updates or deletes a task object (Models::Task) for a
+    # customer with the given _customer_id_ if the input is valid and
+    # redirects to CustomersN.
+    # If the provided information is invalid, the errors are retrieved and
+    # shown in the initial form (Views#task_form).
     def post(customer_id)
       return redirect R(Customers) if @input.cancel
       if @input.has_key? "delete"
@@ -394,7 +501,16 @@ module StopTime::Controllers
     end
   end
 
+  # == The task creation controller for a specific customer
+  #
+  # Controller for filling in the information to create a new task
+  # for a specific customer.
+  #
+  # path:: /customers/_customer_id_/tasks/new
+  # view:: Views#task_form
   class CustomersNTasksNew
+    # Generates the form to create a new task object (Models::Task)
+    # for a customer with the given _customer_id_ using Views#task_form.
     def get(customer_id)
       @customer = Customer.find(customer_id)
       @task = Task.new(:hourly_rate => @customer.hourly_rate)
@@ -407,7 +523,17 @@ module StopTime::Controllers
     end
   end
 
+  # == The task controller for a specific customer
+  #
+  # Controller for viewing and updating information of a task for
+  # a specific customer.
+  #
+  # path:: /customers/_customer_id_/tasks/_task_id_
+  # view:: Views#task_form
   class CustomersNTasksN
+    # Finds the task with the given _task_id_ for the customer with the
+    # given _customer_id_ and shows a form for updating via
+    # Views#task_form.
     def get(customer_id, task_id)
       @customer = Customer.find(customer_id)
       @task = Task.find(task_id)
@@ -419,6 +545,11 @@ module StopTime::Controllers
       render :task_form
     end
 
+    # Updates the task with the given _task_id_ for the customer with
+    # the given _customer_id_ if the input is valid and redirects to
+    # CustomersN.
+    # If the provided information is invalid, the errors are retrieved
+    # and shown in the intial form (Views#task_form).
     def post(customer_id, task_id)
       return redirect R(CustomersN, customer_id) if @input.cancel
       @customer = Customer.find(customer_id)
@@ -448,7 +579,15 @@ module StopTime::Controllers
     end
   end
 
+  # == The invoices controller for a specific customer
+  #
+  # Controller for creating and viewing invoices for a specific customer.
+  #
+  # path:: /customers/_customer_id_/invoices
+  # view:: Views#invoices
   class CustomersNInvoices
+    # Gets the list of invoices for the customer with the given
+    # _customer_id_ and displays them using Views#invoices.
     def get(customer_id)
       # FIXME: quick hack! is this URL even used?
       @invoices = {}
@@ -457,6 +596,17 @@ module StopTime::Controllers
       render :invoices
     end
 
+    # Creates a new invoice object (Models::Invoice) if the input is
+    # valid and redirects to CustomersNInvoicesX.
+    #
+    # A unique number is generated for the invoice by taking the
+    # year and a sequence number.
+    #
+    # A fixed cost task is directly tied to the invoice.
+    #
+    # For a task with an hourly rate, a task copy is created with the
+    # selected time to bill and put in the invoice; the remaining unbilled
+    # time is left in the original task.
     def post(customer_id)
       return redirect R(CustomersN, customer_id) if @input.cancel
 
@@ -500,10 +650,23 @@ module StopTime::Controllers
     end
   end
 
+  # == The invoice controller for a specific customer
+  #
+  # Controller for viewing and updating information of an invoice for a
+  # specific customer.
+  #
+  # path:: /customers/_customer_id_/invoices/_invoice_number_
+  # view:: Views#invoice
   class CustomersNInvoicesX
     include ActionView::Helpers::NumberHelper
     include I18n
 
+    # Finds the invoice with the given _invoice_number_ for the customer
+    # with the given _customer_id_ and shows a form for updating via
+    # Views#invoice.
+    # If the invoice_number has a .pdf or .tex suffix, a PDF or LaTeX
+    # source document is generated for the invoice (if not already
+    # existing) and served via a redirect to the Static controller.
     def get(customer_id, invoice_number)
       # FIXME: make this (much) nicer!
       if m = invoice_number.match(/(\d+)\.(\w+)$/)
@@ -534,6 +697,8 @@ module StopTime::Controllers
       end
     end
 
+    # Updates the invoice with the given _invoice_number_ for the customer
+    # with the given _customer_id_ and redirects to CustomersNInvoicesX.
     def post(customer_id, invoice_number)
       invoice = Invoice.find_by_number(invoice_number)
       invoice.payed = @input.has_key? "payed"
@@ -542,6 +707,9 @@ module StopTime::Controllers
       redirect R(CustomersNInvoicesX, customer_id, invoice_number)
     end
 
+    private
+
+    # Generates a LaTex document for the invoice with the given _number_.
     def _generate_invoice_tex(number)
       template = TEMPLATE_DIR + "invoice.tex.erb"
       tex_file = PUBLIC_DIR + "#{number}.tex"
@@ -552,6 +720,8 @@ module StopTime::Controllers
       end
     end
 
+    # Generates a PDF document for the invoice with the given _number_
+    # via _generate_invoice_tex.
     def _generate_invoice_pdf(number)
       tex_file = PUBLIC_DIR + "#{@number}.tex"
       _generate_invoice_tex(number) unless tex_file.exist?
@@ -562,7 +732,17 @@ module StopTime::Controllers
     end
   end
 
+  # == The invoice creating controller for a specifc customer
+  #
+  # Controller for creating a new invoice for a specific customer.
+  #
+  # path:: /customers/_customer_id_/invoices/new
+  # view:: Views#invoice_select_form
   class CustomersNInvoicesNew
+    # Generates the form to create a new invoice object (Models::Invoice)
+    # by listing unbilled fixed cost tasks and unbilled registered time
+    # (for tasks with an hourly rate) so that it can be individually selected
+    # using Views#invoice_select_form.
     def get(customer_id)
       @customer = Customer.find(customer_id)
       @hourly_rate_tasks = {}
@@ -581,7 +761,16 @@ module StopTime::Controllers
     end
   end
 
+  # == The timeline controller
+  #
+  # Controller for presenting a timeline of registered time and
+  # also for quickly registering time.
+  #
+  # path:: /timeline
+  # view:: Views#time_entries
   class Timeline
+    # Retrieves all registered time in descending order to present
+    # the timeline using Views#time_entries
     def get
       @time_entries = TimeEntry.all(:order => "start DESC")
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
@@ -592,6 +781,8 @@ module StopTime::Controllers
       render :time_entries
     end
 
+    # Registers a time entry and redirects to Timeline.
+    # If the provided information was invalid, the errors are retrieved.
     def post
       if @input.has_key? "enter"
         @time_entry = TimeEntry.create(
@@ -609,7 +800,17 @@ module StopTime::Controllers
     end
   end
 
+  # == The timeline quick register controller
+  #
+  # Controller that presents a view for quickly registering time
+  # on a task.
+  #
+  # path:: /timeline/new
+  # view:: Views#time_entry_form
   class TimelineNew
+    # Retrieves a list of customers and tasks and the current date
+    # and time for prefilling a form (Views#time_entry_form) for quickly
+    # registering time.
     def get
       @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
       @task_list = Task.all.reject { |t| t.billed? }.map do |t|
@@ -625,7 +826,15 @@ module StopTime::Controllers
     end
   end
 
+  # == The timeline time entry controller
+  #
+  # Controller for viewing and updating information of a time entry.
+  #
+  # path:: /timeline/_entry_id_
+  # view:: Views#time_entry_form
   class TimelineN
+    # Finds the time entry with the given _entry_id_ and shows
+    # a form for updating via Views#time_entry_form.
     def get(entry_id)
       @time_entry = TimeEntry.find(entry_id)
       @input = @time_entry.attributes
@@ -641,6 +850,10 @@ module StopTime::Controllers
       render :time_entry_form
     end
 
+    # Updates or deletes the time entry if the input is valid and redirects
+    # to Timeline.
+    # If the provided information is invalid, the errors are retrieved
+    # and shown in the initial form (Views#time_entry_form).
     def post(entry_id)
       return redirect R(Timeline) if @input.cancel
       @time_entry = TimeEntry.find(entry_id)
@@ -663,7 +876,15 @@ module StopTime::Controllers
     end
   end
 
+  # == The invoices controller
+  #
+  # Controller for viewing a list of all invoices.
+  #
+  # path:: /invoices
+  # view:: Views#invoices
   class Invoices
+    # Retrieves the list of invoices, sorted per customer, and displays
+    # them using Views#invoices.
     def get
       @invoices = {}
       Customer.all.each do |customer|
@@ -673,7 +894,15 @@ module StopTime::Controllers
     end
   end
 
+  # == The invoices per period controller
+  #
+  # Controller for viewing a list of all invoices sorted by period.
+  #
+  # path:: /invoices/period
+  # view:: Views#invoices
   class InvoicesPeriod
+    # Retrieves the list of invoices, sorted per period, and displays
+    # them using Views#invoices.
     def get
       @invoices = Hash.new { |h, k| h[k] = Array.new }
       Invoice.all.each do |invoice|
@@ -684,13 +913,25 @@ module StopTime::Controllers
     end
   end
 
+  # == The company controller
+  #
+  # Controller for viewing and updating information of the company of
+  # the user (stored in Models::CompanyInfo).
+  #
+  # path:: /company
+  # view:: Views#company_form
   class Company
+    # Retrieves the company information and shows a form for updating
+    # via Views#company_form.
     def get
       @company = CompanyInfo.first
       @input = @company.attributes
       render :company_form
     end
 
+    # Updates the company information and shows the updated form
+    # (Views#company_form).
+    # If the provided information was invalid, the errors are retrieved.
     def post
       @company = CompanyInfo.first
       attrs = ["name", "contact_name",
@@ -709,7 +950,16 @@ module StopTime::Controllers
     end
   end
 
+  # == The static data controller
+  #
+  # Controller for serving static data information available in the
+  # +public/+ subdirectory.
+  #
+  # path:: /static/_path_
+  # view:: N/A (X-Sendfile)
   class Static < R '/static/(.+)'
+    # Sets the headers such that the web server will fetch and offer
+    # the file identified by the _path_ relative to the +public/+ subdirectory.
     def get(path)
       mime_type = MIME::Types.type_for(path).first
       @headers['Content-Type'] = mime_type.nil? ? "text/plain" : mime_type.to_s
@@ -724,8 +974,10 @@ module StopTime::Controllers
 
 end # module StopTime::Controllers
 
+# = The Stop… Camping Time! views
 module StopTime::Views
 
+  # The main layout used by all views.
   def layout
     xhtml_strict do
       head do
@@ -745,6 +997,7 @@ module StopTime::Views
     end
   end
 
+  # Partial view that generates the menu.
   def _menu
     ol.menu! do
       [["Overview", Index],
@@ -754,7 +1007,10 @@ module StopTime::Views
        ["Company", Company]].each { |label, ctrl| _menu_link(label, ctrl) }
     end
   end
+  private_method :_menu
 
+  # Partial view that generates the menu link and determines the active
+  # menu item.
   def _menu_link(label, ctrl)
     if ctrl == self.helpers.class # FIXME: dirty hack?
       li.selected { a label, :href => R(ctrl) }
@@ -763,6 +1019,7 @@ module StopTime::Views
     end
   end
 
+  # The main overview showing accumulated time per task per customer.
   def overview
     h2 "Overview"
 
@@ -808,6 +1065,7 @@ module StopTime::Views
     end
   end
 
+  # The main overview showing the timeline of registered time.
   def time_entries
     h2 "Timeline"
     table.timeline do
@@ -869,6 +1127,7 @@ module StopTime::Views
     end
   end
 
+  # Form for editing a time entry (Models::TimeEntry).
   def time_entry_form
     form :action => R(*target), :method => :post do
       ol do
@@ -894,6 +1153,7 @@ module StopTime::Views
     end
   end
 
+  # The main overview of the list of customers.
   def customers
     h2 "Customers"
     if @customers.empty?
@@ -938,6 +1198,9 @@ module StopTime::Views
     end
   end
 
+  # Form for editing the properties of customer (Models::Customer) but also
+  # for adding/editing/deleting tasks and showing a list of invoices for
+  # the customer.
   def customer_form
     form.float_left :action => R(*@target), :method => :post do
       h2 "Customer Information"
@@ -984,6 +1247,7 @@ module StopTime::Views
     div.clear {}
   end
 
+  # Partial view that generates a list of _invoices_.
   def _invoice_list(invoices)
     if invoices.empty?
       p "None found!"
@@ -1016,6 +1280,7 @@ module StopTime::Views
     end
   end
 
+  # Partial view for formatting the _period_ of an invoice.
   def _format_period(period)
     period = period.map { |m| m.to_formatted_s(:month_and_year) }.uniq
     case period.length
@@ -1024,6 +1289,7 @@ module StopTime::Views
     end
   end
 
+  # Form for updating the properties of a task (Models::Task).
   def task_form
     h2 "Task Information"
     form :action => R(*@target), :method => :post do
@@ -1049,6 +1315,7 @@ module StopTime::Views
     end
   end
 
+  # The main overview of the existing invoices.
   def invoices
     h2 "Invoices"
 
@@ -1067,6 +1334,9 @@ module StopTime::Views
     end
   end
 
+  # A view displaying the information (billed tasks and time) of an
+  # invoice (Models::Invoice) that also allows for updating the "+payed+"
+  # property.
   def invoice
     h2 do
       span "Invoice for "
@@ -1156,6 +1426,8 @@ module StopTime::Views
       :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.tex")
   end
 
+  # Form for selecting fixed cost tasks and registered time for tasks with
+  # an hourly rate that need to be billed.
   def invoice_select_form
     form :action => R(CustomersNInvoices, @customer.id), :method => :post do
       unless @hourly_rate_tasks.empty?
@@ -1223,6 +1495,7 @@ module StopTime::Views
     end
   end
 
+  # Form for editing the company information stored in Models::CompanyInfo.
   def company_form
     h2 "Company Information"
 
@@ -1257,12 +1530,18 @@ module StopTime::Views
     end
   end
 
+  # Partial view that generates a form label with the given _label_name_
+  # and a form input with the given _input_name_ and _type_, such that the
+  # label is linked to the input.
   def _form_input_with_label(label_name, input_name, type)
     label label_name, :for => input_name
     input :type => type, :name => input_name, :id => input_name,
           :value => @input[input_name]
   end
 
+  # Partial view that generates a form radio button with the given _name_
+  # and _value_.
+  # Whether it is initially selected is determined by the _default_ flag.
   def _form_input_radio(name, value, default=false)
     input_val = @input[name]
     if input_val == value or (input_val.blank? and default)
@@ -1274,6 +1553,8 @@ module StopTime::Views
     end
   end
 
+  # Partial view that generates a form checkbox with the given _name_.
+  # Whether it is initiall checked is determined by the _value_ flag.
   def _form_input_checkbox(name, value=true)
     if @input[name] == value
       input :type => "checkbox", :id => "#{name}_#{value}", :name => name,
@@ -1284,6 +1565,11 @@ module StopTime::Views
     end
   end
 
+  # Partial view that generates a select element for a form with a field
+  # (and ID) _name_ and list of _opts_list_.
+  #
+  # The option list is an Array of a 2-valued array containg a value label
+  # and a human readable description for the value.
   def _form_select(name, opts_list)
     if opts_list.empty?
       select :name => name, :id => name, :disabled => true do
