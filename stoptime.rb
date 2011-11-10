@@ -363,6 +363,7 @@ module StopTime::Controllers
 
   class CustomersNTasks
     def post(customer_id)
+      return redirect R(Customers) if @input.cancel
       if @input.has_key? "delete"
         @task = Task.find(@input.task_id)
         @task.delete
