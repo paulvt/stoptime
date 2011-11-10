@@ -228,12 +228,10 @@ module StopTime::Models
         t.boolean :payed
         t.timestamps
       end
-      add_column(TimeEntry.table_name, :invoice_id, :integer)
     end
 
     def self.down
       drop_table Invoice.table_name
-      remove_column(TimeEntry.table_name, :invoice_id)
     end
   end
 
