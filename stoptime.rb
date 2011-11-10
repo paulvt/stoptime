@@ -1007,7 +1007,6 @@ module StopTime::Views
        ["Company", Company]].each { |label, ctrl| _menu_link(label, ctrl) }
     end
   end
-  private_method :_menu
 
   # Partial view that generates the menu link and determines the active
   # menu item.
