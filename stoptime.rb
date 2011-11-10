@@ -770,8 +770,9 @@ module StopTime::Views
 
     if @tasks.empty?
       p do
-        text "No customers found! Create one "
+        text "No customers, projects or tasks found! Set them up "
         a "here", :href => R(CustomersNew)
+        text "."
       end
     else
       @tasks.keys.sort_by { |c| c.name }.each do |customer|
@@ -897,38 +898,46 @@ module StopTime::Views
 
   def customers
     h2 "Customers"
-    table.customers do
-       col.name {}
-       col.short_name {}
-       col.address {}
-       col.email {}
-       col.phone {}
-       tr do
-         th "Name"
-         th "Short name"
-         th "Address"
-         th "Email"
-         th "Phone"
-       end
-      @customers.each do |customer|
-        tr do
-          td { a customer.name, :href => R(CustomersN, customer.id) }
-          td { customer.short_name }
-          td { [customer.address_street,
-                customer.address_postal_code,
-                customer.address_city].join(", ") unless customer.address_street.blank? }
-          td { a customer.email, :href => "mailto:#{customer.email}" }
-          td { customer.phone }
-          td do
-            form :action => R(CustomersN, customer.id), :method => :post do
-              input :type => :submit, :name => "delete", :value => "Delete"
+    if @customers.empty?
+      p do
+        text "None found! You can create one "
+        a "here", :href => R(CustomersNew)
+        text "."
+      end
+    else
+      table.customers do
+         col.name {}
+         col.short_name {}
+         col.address {}
+         col.email {}
+         col.phone {}
+         tr do
+           th "Name"
+           th "Short name"
+           th "Address"
+           th "Email"
+           th "Phone"
+         end
+        @customers.each do |customer|
+          tr do
+            td { a customer.name, :href => R(CustomersN, customer.id) }
+            td { customer.short_name }
+            td { [customer.address_street,
+                  customer.address_postal_code,
+                  customer.address_city].join(", ") unless customer.address_street.blank? }
+            td { a customer.email, :href => "mailto:#{customer.email}" }
+            td { customer.phone }
+            td do
+              form :action => R(CustomersN, customer.id), :method => :post do
+                input :type => :submit, :name => "delete", :value => "Delete"
+              end
             end
           end
         end
       end
-    end
 
-    a "Add a new customer", :href=> R(CustomersNew)
+      a "Add a new customer", :href=> R(CustomersNew)
+    end
   end
 
   def customer_form
@@ -974,11 +983,12 @@ module StopTime::Views
         a "Create a new invoice", :href => R(CustomersNInvoicesNew, @customer.id)
       end
     end
+    div.clear {}
   end
 
   def _invoice_list(invoices)
     if invoices.empty?
-      p "None!"
+      p "None found!"
     else
       table.invoices do
         col.number {}
@@ -1016,6 +1026,7 @@ module StopTime::Views
   end
 
   def task_form
+    h2 "Task information"
     form :action => R(*@target), :method => :post do
       ol do
         li { _form_input_with_label("Name", "name", :text) }
@@ -1040,12 +1051,20 @@ module StopTime::Views
   end
 
   def invoices
-    h2 "List of invoices"
+    h2 "Invoices"
 
-    @invoices.keys.sort.each do |key|
-      next if @invoices[key].empty?
-      h3 { key }
-      _invoice_list(@invoices[key])
+    if @invoices.empty?
+      p do
+        text "Found none! You can create one by "
+        a "selecting a customer", :href => R(Customers)
+        text "."
+      end
+    else
+      @invoices.keys.sort.each do |key|
+        next if @invoices[key].empty?
+        h3 { key }
+        _invoice_list(@invoices[key])
+      end
     end
   end
 
@@ -1075,6 +1094,7 @@ module StopTime::Views
           td.val do
             _form_input_checkbox("payed")
             input :type => :submit, :name => "update", :value => "Update"
+            input :type => :reset, :name => "reset", :value => "Reset"
           end
         end
       end
@@ -1234,6 +1254,7 @@ module StopTime::Views
         li { _form_input_with_label("Account number", "accountno", :text) }
       end
       input :type => "submit", :name => "update", :value => "Update"
+      input :type => :reset, :name => "reset", :value => "Reset"
     end
   end
 
@@ -1265,12 +1286,18 @@ module StopTime::Views
   end
 
   def _form_select(name, opts_list)
-    select :name => name, :id => name do
-      opts_list.each do |opt_val, opt_str|
-        if @input[name] == opt_val
-          option opt_str, :value => opt_val, :selected => true
-        else
-          option opt_str, :value => opt_val
+    if opts_list.empty?
+      select :name => name, :id => name, :disabled => true do
+        option "None found", :value => "none", :selected => true
+      end
+    else
+      select :name => name, :id => name do
+        opts_list.sort_by { |o| o.last }.each do |opt_val, opt_str|
+          if @input[name] == opt_val
+            option opt_str, :value => opt_val, :selected => true
+          else
+            option opt_str, :value => opt_val
+          end
         end
       end
     end
