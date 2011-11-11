@@ -2,9 +2,10 @@
 
 Some stuff that should still be done, in no particular order.
 
-* Rounding the entries on some resoltion (i.e. 5 minutes)
+* Rounding the entries on some resolution (i.e. 5 minutes)
 * Versioning control for invoices
 * Split entries that span over a day/a month
-* Ability for exporting all data.
+* Ability for exporting all data
 * Any form of error handling
 * Solve the large amount of FIXMEs
+* Allow for invoice-time comments for tasks 
