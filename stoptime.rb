@@ -38,6 +38,7 @@ unless defined? PUBLIC_DIR
     :default => "%Y-%m-%d %H:%M",
     :month_and_year => "%B %Y",
     :date_only => "%Y-%m-%d",
+    :time_only => "%H:%M",
     :day_code => "%Y%m%d")
   ActiveSupport::CoreExtensions::Date::Conversions::DATE_FORMATS.merge!(
     :default => "%Y-%m-%d",
@@ -325,6 +326,20 @@ module StopTime::Models
       remove_column(Task.table_name, :invoice_id, :integer)
       add_column(Task.table_name, :billed, :boolean)
       add_column(TimeEntry.table_name, :invoice_id)
+    end
+  end
+
+  class TimeEntryDateSupport < V 1.8 # :nodoc:
+    def self.up
+      add_column(TimeEntry.table_name, :date, :datetime)
+      TimeEntry.all.each do |te|
+        te.date = te.start.at_beginning_of_day
+        te.save
+      end
+    end
+
+    def self.down
+      remove_column(TimeEntry.table_name, :date)
     end
   end
 
@@ -787,8 +802,10 @@ module StopTime::Controllers
     # If the provided information was invalid, the errors are retrieved.
     def post
       if @input.has_key? "enter"
+
         @time_entry = TimeEntry.create(
           :task_id => @input.task,
+          :date => @input.date,
           :start => @input.start,
           :end => @input.end,
           :comment => @input.comment,
@@ -1075,6 +1092,7 @@ module StopTime::Views
     h2 "Timeline"
     table.timeline do
       col.task {}
+      col.date {}
       col.start_time {}
       col.end_time {}
       col.comment {}
@@ -1082,6 +1100,7 @@ module StopTime::Views
       col.flag {}
       tr do
         th "Project/Task"
+        th "Date"
         th "Start time"
         th "End time"
         th "Comment"
@@ -1091,10 +1110,11 @@ module StopTime::Views
       form :action => R(Timeline), :method => :post do
         tr do
           td { _form_select("task", @task_list) }
+          td { input :type => :text, :name => "date",
+                     :value => DateTime.now.to_date.to_formatted_s }
           td { input :type => :text, :name => "start",
-                     :value => DateTime.now.to_date.to_formatted_s + " " }
-          td { input :type => :text, :name => "end",
-                     :value => DateTime.now.to_date.to_formatted_s + " " }
+                     :value => DateTime.now.to_time.to_formatted_s(:time_only) }
+          td { input :type => :text, :name => "end" }
           td { input :type => :text, :name => "comment" }
           td { "N/A" }
           td { _form_input_checkbox("bill") }
@@ -1108,9 +1128,10 @@ module StopTime::Views
         tr do
           td { a entry.task.name,
                  :href => R(CustomersNTasksN, entry.customer.id, entry.task.id) }
-          td { a entry.start,
+          td { a entry.date.to_date,
                  :href => R(TimelineN, entry.id) }
-          td { entry.end }
+          td { entry.start.to_formatted_s(:time_only) }
+          td { entry.end.to_formatted_s(:time_only)}
           td { entry.comment }
           td { "%.2fh" % entry.hours_total }
           td do
@@ -1439,6 +1460,7 @@ module StopTime::Views
         h2 "Registered Time"
         table.time_entries do
           col.flag {}
+          col.date {}
           col.start_time {}
           col.end_time {}
           col.comment {}
@@ -1446,6 +1468,7 @@ module StopTime::Views
           col.amount {}
           tr do
             th ""
+            th "Date"
             th "Start time"
             th "End time"
             th "Comment"
@@ -1460,7 +1483,9 @@ module StopTime::Views
             @hourly_rate_tasks[task].each do |entry|
               tr do
                 td { _form_input_checkbox("time_entries[]", entry.id) }
-                td { label entry.start, :for => "time_entries[]_#{entry.id}" }
+                td { label entry.date.to_date,
+                           :for => "time_entries[]_#{entry.id}" }
+                td { entry.start }
                 td { entry.end }
                 td { entry.comment }
                 td.right { "%.2fh" % entry.hours_total }

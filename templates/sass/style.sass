@@ -57,19 +57,21 @@ ol#menu
       padding-bottom: 6px
       background: $light-grey
 
-/* Table layout */   
+/* Table layout */
 table
   padding: 3px 0px
   border-spacing: 0px 4px
 
   col.amount, col.hours, col.hourly_rate
-    width: 15%
+    width: 10%
   col.flag
-    width: 3%
+    width: 4%
+  col.date
+    width: 8%
   col.start_time, col.end_time
-    width: 15%
+    width: 5%
   col.comment
-    width: 30%
+    width: 20%
   col.task
     width: 25%
   col.name, col.period
@@ -78,7 +80,7 @@ table
     width: 20%
   col.address
     width: 20%
-  col.email, col.phone, col.date
+  col.email, col.phone
     width: 15%
   col.number
     width: 7%
@@ -99,9 +101,11 @@ table
     width: 50%
 
   td
+    padding: 0px 5px
     vertical-align: top
 
   th
+    padding: 0px 5px
     text-align: left
     background: $dark-grey
 
@@ -113,8 +117,14 @@ table
     width: 80px
     padding-bottom: 5px
 
+  input
+    width: 100%
+
+  input[type="submit"], input[type="reset"]
+    width: auto
+
 /* Form layout */
-form 
+form
   ol
     list-style: none
     padding: 10px
@@ -125,8 +135,6 @@ form
       margin-right: 10px
       float: left
 
-    input, select
-      width: 250px
 
   ol.radio
     margin-left: 195px
@@ -140,6 +148,9 @@ form
 
   li
     padding-bottom: 10px
+
+  input, select
+    width: 250px
 
   input[type="submit"], input[type="reset"]
     width: auto
