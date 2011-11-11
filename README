@@ -26,7 +26,7 @@ Stop… Camping Time! is a Camping application, so you need:
 
 The following Ruby libraries are required:
 
-* ActionPack  (>= 2.3)
+* ActionPack (>= 2.3) for ActionView
 * ActiveSupport (>= 2.3)
 * MIME-Types
 * SASS
@@ -39,7 +39,7 @@ and the following LaTeX programs:
 
 == Installation
 
-For now, Stop… Camping Time!  is in a developing state and not ready for
+For now, Stop… Camping Time! is in a developing state and not ready for
 site-wide deployment yet.
 
 == Usage
@@ -53,7 +53,7 @@ application.
 
 == License
 
-Stop… Camping Time!  is free software; you can redistribute it and/or
+Stop… Camping Time! is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or (at your
 option) any later version.
