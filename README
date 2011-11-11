@@ -1,0 +1,59 @@
+= Stop… Camping Time!
+
+A (Camping) web application for task/project time registration and
+invoicing.
+
+== Features
+
+* Running project & tasks overview
+* Timeline overview of registered time
+* Management customer information 
+* Administration of running and billed projects/task with
+  * fixed cost, or
+  * hourly rates
+* Administration of invoices
+* Invoice generation in PDF/LaTeX format
+
+== Requirements
+
+Stop… Camping Time! is a Camping application, so you need:
+
+* Ruby 1.8 (>= 1.8.6) or 1.9 (>= 1.9.1)
+* Camping (>= 2.1) with
+  * Active Record (>= 2.3)
+  * Markaby, and optionally:
+  * Mongrel
+
+The following Ruby libraries are required:
+
+* ActionPack  (>= 2.3)
+* ActiveSupport (>= 2.3)
+* MIME-Types
+* SASS
+
+and the following LaTeX programs:
+
+* pdflatex, with:
+  * isodoc package
+* rubber
+
+== Installation
+
+For now, Stop… Camping Time!  is in a developing state and not ready for
+site-wide deployment yet.
+
+== Usage
+
+Run from the command line:
+
+  $ camping stoptime.rb
+
+and head over to http://localhost:3301/ to view and use the web
+application.
+
+== License
+
+Stop… Camping Time!  is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
