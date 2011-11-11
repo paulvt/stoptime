@@ -1555,8 +1555,8 @@ module StopTime::Views
         li { _form_input_with_label("Web address", "website", :text) }
         li { _form_input_with_label("Chamber number", "chamber", :text) }
         li { _form_input_with_label("VAT number", "vatno", :text) }
-        li { _form_input_with_label("Account name", "accountname", :text) }
-        li { _form_input_with_label("Account number", "accountno", :text) }
+        li { _form_input_with_label("Bank account name", "accountname", :text) }
+        li { _form_input_with_label("Bank account number", "accountno", :text) }
       end
       input :type => "submit", :name => "update", :value => "Update"
       input :type => :reset, :name => "reset", :value => "Reset"
