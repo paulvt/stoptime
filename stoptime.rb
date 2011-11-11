@@ -802,12 +802,11 @@ module StopTime::Controllers
     # If the provided information was invalid, the errors are retrieved.
     def post
       if @input.has_key? "enter"
-
         @time_entry = TimeEntry.create(
           :task_id => @input.task,
           :date => @input.date,
-          :start => @input.start,
-          :end => @input.end,
+          :start => "#{@input.date} #{@input.start}",
+          :end => "#{@input.date} #{@input.end}",
           :comment => @input.comment,
           :bill => @input.has_key?("bill"))
         @time_entry.save
@@ -838,8 +837,8 @@ module StopTime::Controllers
         [t.id, t.name]
       end
       @input["bill"] = true
-      @input["start"] = DateTime.now.to_formatted_s
-      @input["end"] = DateTime.now.to_date.to_formatted_s + " "
+      @input["date"] = DateTime.now.to_date
+      @input["start"] = Time.now.to_formatted_s(:time_only)
 
       @target = [Timeline]
       @button = "enter"
@@ -861,6 +860,9 @@ module StopTime::Controllers
       @input = @time_entry.attributes
       @input["customer"] = @time_entry.task.customer.id
       @input["task"] = @time_entry.task.id
+      @input["date"] = @time_entry.date.to_date
+      @input["start"] = @time_entry.start.to_formatted_s(:time_only)
+      @input["end"] = @time_entry.end.to_formatted_s(:time_only)
       @customer_list = Customer.all.map do |c|
         [c.id, c.short_name.present? ? c.short_name : c.name]
       end
@@ -883,7 +885,7 @@ module StopTime::Controllers
       if @input.has_key? "delete"
         @time_entry.delete
       elsif @input.has_key? "update"
-        attrs = ["start", "end", "comment"]
+        attrs = ["date", "start", "end", "comment"]
         attrs.each do |attr|
           @time_entry[attr] = @input[attr]
         end
@@ -1165,6 +1167,7 @@ module StopTime::Views
           label "Task", :for => "task"
           _form_select("task", @task_list)
         end
+        li { _form_input_with_label("Date", "date", :text) }
         li { _form_input_with_label("Start Time", "start", :text) }
         li { _form_input_with_label("End Time", "end", :text) }
         li { _form_input_with_label("Comment", "comment", :text) }
