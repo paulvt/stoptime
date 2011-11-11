@@ -773,7 +773,9 @@ module StopTime::Controllers
     # the timeline using Views#time_entries
     def get
       @time_entries = TimeEntry.all(:order => "start DESC")
-      @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
+      @customer_list = Customer.all.map do |c|
+        [c.id, c.short_name.present? ? c.short_name : c.name]
+      end
       @task_list = Task.all.reject { |t| t.billed? }.map do |t|
         [t.id, t.name]
       end
@@ -812,7 +814,9 @@ module StopTime::Controllers
     # and time for prefilling a form (Views#time_entry_form) for quickly
     # registering time.
     def get
-      @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
+      @customer_list = Customer.all.map do |c|
+        [c.id, c.short_name.present? ? c.short_name : c.name]
+      end
       @task_list = Task.all.reject { |t| t.billed? }.map do |t|
         [t.id, t.name]
       end
@@ -840,7 +844,9 @@ module StopTime::Controllers
       @input = @time_entry.attributes
       @input["customer"] = @time_entry.task.customer.id
       @input["task"] = @time_entry.task.id
-      @customer_list = Customer.all.map { |c| [c.id, c.short_name] }
+      @customer_list = Customer.all.map do |c|
+        [c.id, c.short_name.present? ? c.short_name : c.name]
+      end
       @task_list = Task.all.reject { |t| t.billed? }.map do |t|
         [t.id, t.name]
       end
