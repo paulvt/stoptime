@@ -982,7 +982,7 @@ module StopTime::Controllers
   #
   # path:: /static/_path_
   # view:: N/A (X-Sendfile)
-  class Static < R '/static/(.+)'
+  class Static < R '/static/(.*?)'
     # Sets the headers such that the web server will fetch and offer
     # the file identified by the _path_ relative to the +public/+ subdirectory.
     def get(path)
@@ -1007,8 +1007,10 @@ module StopTime::Views
     xhtml_strict do
       head do
         title "Stop… Camping Time!"
+        # FIXME: improve static serving so that the hack below is not needed.
         link :rel => "stylesheet", :type => "text/css",
-             :media => "screen", :href => R(Static, "stylesheets/style.css")
+             :media => "screen",
+             :href => (R(Static, "") + "stylesheets/style.css")
       end
       body do
         div.wrapper! do

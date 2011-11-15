@@ -1,4 +1,7 @@
 .sass-cache
+htpasswd
+db/*
 public/*.pdf
 public/*.tex
 public/stylesheets/*.css
+tmp/*
