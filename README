@@ -7,7 +7,7 @@ invoicing.
 
 * Running project & tasks overview
 * Timeline overview of registered time
-* Management customer information 
+* Management customer information
 * Administration of running and billed projects/task with
   * fixed cost, or
   * hourly rates
@@ -28,7 +28,6 @@ The following Ruby libraries are required:
 
 * ActionPack (>= 2.3) for ActionView
 * ActiveSupport (>= 2.3)
-* MIME-Types
 * Rack (for deployment using Apache/Rackup)
 * SASS
 
@@ -88,7 +87,7 @@ Use the following basic configuration:
      </Directory>
 
      XSendFile on
-  </VirtualHost> 
+  </VirtualHost>
 
 Now, restart Apache and visit http://some.domain.tld/.
 
@@ -103,10 +102,10 @@ serving files under +/path/to/document_root+, i.e. something like:
      <Directory /path/to/document_root/
          Allow from all
      </Directory>
-  </VirtualHost> 
+  </VirtualHost>
 
 Then, add a symlink from the +public+ subdirectory of to the document
-root, e.g. 
+root, e.g.
 
   ln -s /path/to/stoptime/public /path/to/document_root/stoptime
 

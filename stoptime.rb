@@ -14,7 +14,6 @@ require "action_view"
 require "active_support"
 require "camping"
 require "markaby"
-require "mime/types"
 require "pathname"
 require "sass/plugin/rack"
 
@@ -986,10 +985,10 @@ module StopTime::Controllers
     # Sets the headers such that the web server will fetch and offer
     # the file identified by the _path_ relative to the +public/+ subdirectory.
     def get(path)
-      mime_type = MIME::Types.type_for(path).first
-      @headers['Content-Type'] = mime_type.nil? ? "text/plain" : mime_type.to_s
       unless path.include? ".."
-        @headers['X-Sendfile'] = (PUBLIC_DIR + path).to_s
+        full_path = PUBLIC_DIR + path
+        @headers['Content-Type'] = Rack::Mime.mime_type(full_path.extname)
+        @headers['X-Sendfile'] = full_path.to_s
       else
         @status = "403"
         "Error 403: Invalid path: #{path}"
@@ -1051,9 +1050,8 @@ module StopTime::Views
 
     if @tasks.empty?
       p do
-        text "No customers, projects or tasks found! Set them up "
-        a "here", :href => R(CustomersNew)
-        text "."
+        "No customers, projects or tasks found! Set them up " +
+        "#{a "here", :href => R(CustomersNew)}."
       end
     else
       @tasks.keys.sort_by { |c| c.name }.each do |customer|
