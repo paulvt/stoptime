@@ -1,7 +1,6 @@
 #!/usr/bin/env camping
 #
-# stoptime.rb - The Stop… Camping Time! time registration and invoice
-#               application.
+# stoptime.rb - The Stop… Camping Time! time registration and invoicing application.
 #
 # Stop… Camping Time! is Copyright © 2011 Paul van Tilburg <paul@luon.net>
 #
