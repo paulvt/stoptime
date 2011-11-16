@@ -670,7 +670,7 @@ module StopTime::Controllers
   #
   # path:: /customers/_customer_id_/invoices/_invoice_number_
   # view:: Views#invoice
-  class CustomersNInvoicesX
+  class CustomersNInvoicesX < R '/customers/(\d+)/invoices/([^/]+)'
     include ActionView::Helpers::NumberHelper
     include I18n
 
