@@ -1460,7 +1460,7 @@ module StopTime::Views
     form :action => R(CustomersNInvoices, @customer.id), :method => :post do
       unless @hourly_rate_tasks.empty?
         h2 "Registered Time"
-        table.time_entries do
+        table.invoice_select do
           col.flag {}
           col.date {}
           col.start_time {}
@@ -1469,7 +1469,7 @@ module StopTime::Views
           col.hours {}
           col.amount {}
           tr do
-            th ""
+            th "Bill?"
             th "Date"
             th "Start time"
             th "End time"
@@ -1480,15 +1480,15 @@ module StopTime::Views
           @hourly_rate_tasks.keys.each do |task|
             tr.task do
               td { _form_input_checkbox("tasks[]", task.id) }
-              td task.name, :colspan => 5
+              td task.name, :colspan => 6
             end
             @hourly_rate_tasks[task].each do |entry|
               tr do
                 td { _form_input_checkbox("time_entries[]", entry.id) }
                 td { label entry.date.to_date,
                            :for => "time_entries[]_#{entry.id}" }
-                td { entry.start }
-                td { entry.end }
+                td { entry.start.to_formatted_s(:time_only) }
+                td { entry.end.to_formatted_s(:time_only) }
                 td { entry.comment }
                 td.right { "%.2fh" % entry.hours_total }
                 td.right { "€ %.2f" % (entry.hours_total * entry.task.hourly_rate) }

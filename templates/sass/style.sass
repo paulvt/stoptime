@@ -65,7 +65,7 @@ table
   col.amount, col.hours, col.hourly_rate
     width: 10%
   col.flag
-    width: 4%
+    width: 3%
   col.date
     width: 9%
   col.start_time, col.end_time
@@ -94,7 +94,7 @@ table
   &.tasks
     width: 60%
 
-  &.customers
+  &.customers, &.invoice_select
     width: 75%
 
   &.invoices
@@ -120,7 +120,7 @@ table
   input
     width: 100%
 
-  input[type="submit"], input[type="reset"]
+  input[type="submit"], input[type="reset"], input[type="checkbox"]
     width: auto
 
 /* Form layout */
