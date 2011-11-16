@@ -883,10 +883,12 @@ module StopTime::Controllers
       if @input.has_key? "delete"
         @time_entry.delete
       elsif @input.has_key? "update"
-        attrs = ["date", "start", "end", "comment"]
+        attrs = ["date", "comment"]
         attrs.each do |attr|
           @time_entry[attr] = @input[attr]
         end
+        @time_entry.start = "#{@input["date"]} #{@input["start"]}"
+        @time_entry.end = "#{@input["date"]} #{@input["end"]}"
         @time_entry.task = Task.find(@input.task)
         @time_entry.bill = @input.has_key? "bill"
         @time_entry.save
