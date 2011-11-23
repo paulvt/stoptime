@@ -1040,6 +1040,25 @@ module StopTime::Controllers
     end
   end
 
+  # == The location creation controller
+  #
+  # Controller for filling in the information to create a new location.
+  #
+  # path:: /locations/new
+  # view:: Views#location_form
+  class LocationsNew
+    # Generates the form to create a new location object
+    # (Models::Location) using Views#location_form.
+    def get
+      @location = Location.new
+      @input = @location.attributes
+
+      @target = [Locations]
+      @button = "create"
+      render :location_form
+    end
+  end
+
   # == The static data controller
   #
   # Controller for serving static data information available in the
