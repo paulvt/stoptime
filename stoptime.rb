@@ -1005,6 +1005,41 @@ module StopTime::Controllers
     end
   end
 
+  # == The locations controller
+  #
+  # Controller for viewing a list of existing locations or creating a new
+  # one.
+  #
+  # path:: /locations
+  # view:: Views#locations and Views#location_form
+  class Locations
+    # Gets the list of locations and displays them via Views#locations.
+    def get
+      @locations = Location.all
+      render :locations
+    end
+
+    # Creates a new location object (Models::Location) if the input is
+    # valid and redirects to LocationsN.
+    # If the provided information is invalid, the errors are retrieved
+    # and shown in the initial form (Views#location_form).
+    def post
+      return redirect R(Locations) if @input.cancel
+      @location = Location.create(
+        :name => @input.name,
+        :distance => @input.distance,
+        :travel_time => @input.travel_time)
+      @location.save
+      if @location.invalid?
+        @errors = @location.errors
+        @target = [Location]
+        @button = "create"
+        return render :location_form
+      end
+      redirect R(LocationsN, @location.id)
+    end
+  end
+
   # == The static data controller
   #
   # Controller for serving static data information available in the
@@ -1061,7 +1096,8 @@ module StopTime::Views
        ["Timeline", Timeline],
        ["Customers", Customers],
        ["Invoices", Invoices],
-       ["Company", Company]].each { |label, ctrl| _menu_link(label, ctrl) }
+       ["Company", Company],
+       ["Locations", Locations]].each { |label, ctrl| _menu_link(label, ctrl) }
     end
   end
 
