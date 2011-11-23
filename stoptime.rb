@@ -1686,6 +1686,21 @@ module StopTime::Views
     end
   end
 
+  # Form for editing the properties of a location (Models::Location)
+  def location_form
+    form.float_left :action => R(*@target), :method => :post do
+      h2 "Location Information"
+      ol do
+        li { _form_input_with_label("Name", "name", :text) }
+        li { _form_input_with_label("Distance (km)", "distance", :text) }
+        li { _form_input_with_label("Travel time (min)", "travel_time", :text) }
+      end
+      input :type => "submit", :name => @button, :value => @button.capitalize
+      input :type => "submit", :name => "cancel", :value => "Cancel"
+    end
+    div.clear {}
+  end
+
   # Partial view that generates a form label with the given _label_name_
   # and a form input with the given _input_name_ and _type_, such that the
   # label is linked to the input.
