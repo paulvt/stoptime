@@ -1682,7 +1682,7 @@ module StopTime::Views
         end
       end
 
-      a "Add a new location", :href=> R(LocationsNew)
+      a "Add a new location", :href => R(LocationsNew)
     end
   end
 
