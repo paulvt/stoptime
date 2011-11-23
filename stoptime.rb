@@ -156,6 +156,7 @@ module StopTime::Models
   # task.
   class TimeEntry < Base
     belongs_to :task
+    belongs_to :location
     has_one :customer, :through => :task
 
     # Returns the total amount of time, the duration, in hours.
@@ -170,6 +171,7 @@ module StopTime::Models
   # tasks and through the tasks registered time.
   class Invoice < Base
     has_many :tasks
+    has_many :locations
     has_many :time_entries, :through => :tasks
     belongs_to :customer
 
@@ -201,6 +203,17 @@ module StopTime::Models
   # This class contains information about the company or sole
   # proprietorship of the user of Stop… Camping Time!
   class CompanyInfo < Base
+  end
+
+  # == The location class
+  #
+  # This class represents a specific location where work can be done.
+  # Each location has a name, a distance (in kilometres, from the user's
+  # home) and travel time (in minutes, also from the user's home).  Each
+  # time entry can be associated with a location.
+  class Location < Base
+    has_many :time_entries
+    belongs_to :invoice
   end
 
   class StopTimeTables < V 1.0 # :nodoc:
