@@ -1649,6 +1649,43 @@ module StopTime::Views
     end
   end
 
+  # The main overview of the list of locations.
+  def locations
+    h2 "Locations"
+    if @locations.empty?
+      p do
+        text "None found! You can create one "
+        a "here", :href => R(LocationsNew)
+        text "."
+      end
+    else
+      table.locations do
+         col.name {}
+         col.distance {}
+         col.travel_time {}
+         tr do
+           th "Name"
+           th "Distance (km)"
+           th "Travel time (min)"
+         end
+        @locations.each do |location|
+          tr do
+            td { location.name }
+            td { location.distance }
+            td { location.travel_time }
+            td do
+              form :action => R(LocationsN, location.id), :method => :post do
+                input :type => :submit, :name => "delete", :value => "Delete"
+              end
+            end
+          end
+        end
+      end
+
+      a "Add a new location", :href=> R(LocationsNew)
+    end
+  end
+
   # Partial view that generates a form label with the given _label_name_
   # and a form input with the given _input_name_ and _type_, such that the
   # label is linked to the input.
