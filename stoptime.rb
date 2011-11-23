@@ -1712,7 +1712,7 @@ module StopTime::Views
          end
         @locations.each do |location|
           tr do
-            td { location.name }
+            td { a location.name, :href => R(LocationsN, location.id) }
             td { location.distance }
             td { location.travel_time }
             td do
