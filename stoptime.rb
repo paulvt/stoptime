@@ -214,6 +214,11 @@ module StopTime::Models
   class Location < Base
     has_many :time_entries
     belongs_to :invoice
+
+    # Returns whether the location is billed, i.e. included in an invoice.
+    def billed?
+      not invoice.nil?
+    end
   end
 
   class StopTimeTables < V 1.0 # :nodoc:
@@ -822,6 +827,9 @@ module StopTime::Controllers
       @task_list = Task.all.reject { |t| t.billed? }.map do |t|
         [t.id, t.name]
       end
+      @location_list = Location.all.reject { |l| l.billed? }.map do |l|
+        [l.id, l.name]
+      end
       @input["bill"] = true # Bill by default.
       render :time_entries
     end
@@ -832,6 +840,7 @@ module StopTime::Controllers
       if @input.has_key? "enter"
         @time_entry = TimeEntry.create(
           :task_id => @input.task,
+          :location_id => @input.location,
           :date => @input.date,
           :start => "#{@input.date} #{@input.start}",
           :end => "#{@input.date} #{@input.end}",
@@ -888,6 +897,7 @@ module StopTime::Controllers
       @input = @time_entry.attributes
       @input["customer"] = @time_entry.task.customer.id
       @input["task"] = @time_entry.task.id
+      @input["location"] = @time_entry.location.id
       @input["date"] = @time_entry.date.to_date
       @input["start"] = @time_entry.start.to_formatted_s(:time_only)
       @input["end"] = @time_entry.end.to_formatted_s(:time_only)
@@ -920,6 +930,7 @@ module StopTime::Controllers
         @time_entry.start = "#{@input["date"]} #{@input["start"]}"
         @time_entry.end = "#{@input["date"]} #{@input["end"]}"
         @time_entry.task = Task.find(@input.task)
+        @time_entry.location = Location.find(@input.location)
         @time_entry.bill = @input.has_key? "bill"
         @time_entry.save
         if @time_entry.invalid?
@@ -1222,6 +1233,7 @@ module StopTime::Views
     h2 "Timeline"
     table.timeline do
       col.task {}
+      col.location {}
       col.date {}
       col.start_time {}
       col.end_time {}
@@ -1230,6 +1242,7 @@ module StopTime::Views
       col.flag {}
       tr do
         th "Project/Task"
+        th "Location"
         th "Date"
         th "Start time"
         th "End time"
@@ -1240,6 +1253,7 @@ module StopTime::Views
       form :action => R(Timeline), :method => :post do
         tr do
           td { _form_select("task", @task_list) }
+          td { _form_select("location", @location_list) }
           td { input :type => :text, :name => "date",
                      :value => DateTime.now.to_date.to_formatted_s }
           td { input :type => :text, :name => "start",
@@ -1258,6 +1272,12 @@ module StopTime::Views
         tr do
           td { a entry.task.name,
                  :href => R(CustomersNTasksN, entry.customer.id, entry.task.id) }
+          if entry.location
+            td { a entry.location.name,
+                   :href => R(LocationsN, entry.location.id) }
+          else
+            td { "unspecified" }
+          end
           td { a entry.date.to_date,
                  :href => R(TimelineN, entry.id) }
           td { entry.start.to_formatted_s(:time_only) }
