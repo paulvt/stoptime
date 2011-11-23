@@ -1059,6 +1059,48 @@ module StopTime::Controllers
     end
   end
 
+  # == The location controller
+  #
+  # Controller for viewing and updating information of a location.
+  #
+  # path:: /locations/_location_id_
+  # view:: Views#location_form
+  class LocationsN
+    # Finds the specific location for the given _location_id_ and shows
+    # a form for updating via Views#location_form.
+    def get(location_id)
+      @location = Location.find(location_id)
+      @input = @location.attributes
+
+      @target = [LocationsN, @location.id]
+      @button = "update"
+      render :location_form
+    end
+
+    # Updates or deletes the location with the given _location_id_ if the
+    # input is valid and redirects to LocationsN.
+    # If the provided information is invalid, the errors are retrieved
+    # and shown in the initial form (Views#location_form).
+    def post(location_id)
+      return redirect R(Locations) if @input.cancel
+      @location = Location.find(location_id)
+      if @input.has_key? "delete"
+        @location.delete
+      elsif @input.has_key? "update"
+        attrs = ["name", "distance", "travel_time"]
+        attrs.each do |attr|
+          @location[attr] = @input[attr]
+        end
+        @location.save
+        if @location.invalid?
+          @errors = @location.errors
+          return render :location_form
+        end
+      end
+      redirect R(Locations)
+    end
+  end
+
   # == The static data controller
   #
   # Controller for serving static data information available in the
