@@ -341,6 +341,23 @@ module StopTime::Models
     end
   end
 
+  class LocationSupport < V 1.9 # :nodoc:
+    def self.up
+      create_table Location.table_name do |t|
+        t.string :name
+        t.float :distance, :travel_time
+        t.integer :invoice_id
+        t.timestamps
+      end
+      add_column(TimeEntry.table_name, :location_id, :integer)
+    end
+
+    def self.down
+      drop_table Location.table_name
+      remove_column(TimeEntry.table_name, :location_id)
+    end
+  end
+
 end # StopTime::Models
 
 # = The Stop… Camping Time! controllers
