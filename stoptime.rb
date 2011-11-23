@@ -1020,7 +1020,7 @@ module StopTime::Controllers
     end
 
     # Creates a new location object (Models::Location) if the input is
-    # valid and redirects to Locations.
+    # valid and redirects to LocationsN.
     # If the provided information is invalid, the errors are retrieved
     # and shown in the initial form (Views#location_form).
     def post
@@ -1036,7 +1036,7 @@ module StopTime::Controllers
         @button = "create"
         return render :location_form
       end
-      redirect R(Locations)
+      redirect R(LocationsN, @location.id)
     end
   end
 
