@@ -1,0 +1,5 @@
+
+Allow for defining locations so that the application can account for
+travelled distance and time.
+
+tags: feature
