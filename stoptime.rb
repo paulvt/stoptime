@@ -611,6 +611,9 @@ module StopTime::Controllers
         if @task.invalid?
           @errors = @task.errors
           @customer = Customer.find(customer_id)
+          @customer_list = Customer.all.map do |c|
+            [c.id, c.short_name.present? ? c.short_name : c.name]
+          end
           @target = [CustomersNTasks, customer_id]
           @method = "create"
           return render :task_form
@@ -635,6 +638,7 @@ module StopTime::Controllers
       @task = Task.new(:hourly_rate => @customer.hourly_rate)
       @input = @task.attributes
       @input["type"] = @task.type # FIXME: find nicer way!
+      @input["customer"] = customer_id
 
       @target = [CustomersNTasks, customer_id]
       @method = "create"
@@ -655,11 +659,15 @@ module StopTime::Controllers
     # Views#task_form.
     def get(customer_id, task_id)
       @customer = Customer.find(customer_id)
+      @customer_list = Customer.all.map do |c|
+        [c.id, c.short_name.present? ? c.short_name : c.name]
+      end
       @task = Task.find(task_id)
       @target = [CustomersNTasksN,  customer_id, task_id]
       @method = "update"
       @input = @task.attributes
       @input["type"] = @task.type
+      @input["customer"] = customer_id
       # FIXME: Check that task is of that customer.
       render :task_form
     end
@@ -671,10 +679,9 @@ module StopTime::Controllers
     # and shown in the intial form (Views#task_form).
     def post(customer_id, task_id)
       return redirect R(CustomersN, customer_id) if @input.cancel
-      @customer = Customer.find(customer_id)
       @task = Task.find(task_id)
       if @input.has_key? "update"
-        # FIXME: task should be cloned/dupped as to prevent rewriting history!
+        @task["customer"] = Customer.find(@input["customer"])
         @task["name"] = @input["name"] unless @input["name"].blank?
         case @input.type
         when "fixed_cost"
@@ -687,10 +694,12 @@ module StopTime::Controllers
         @task.save
         if @task.invalid?
           @errors = @task.errors
+          @customer = Customer.find(customer_id)
+          @customer_list = Customer.all.map do |c|
+            [c.id, c.short_name.present? ? c.short_name : c.name]
+          end
           @target = [CustomersNTasksN,  customer_id, task_id]
           @method = "update"
-          @input = @task.attributes
-          @input["type"] = @input.type
           return render :task_form
         end
       end
@@ -1432,6 +1441,10 @@ module StopTime::Views
     h2 "Task Information"
     form :action => R(*@target), :method => :post do
       ol do
+        li do
+          label "Customer", :for => "customer"
+          _form_select("customer", @customer_list)
+        end
         li { _form_input_with_label("Name", "name", :text) }
         li do
           label "Project/Task type"
