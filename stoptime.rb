@@ -1153,7 +1153,8 @@ module StopTime::Views
   # Partial view that generates the menu link and determines the active
   # menu item.
   def _menu_link(label, ctrl)
-    if ctrl == self.helpers.class # FIXME: dirty hack?
+    # FIXME: dirty hack?
+    if self.helpers.class.to_s.match(/^#{ctrl.to_s}/)
       li.selected { a label, :href => R(ctrl) }
     else
       li { a label, :href => R(ctrl) }
