@@ -1,0 +1,5 @@
+
+Things such as the default hourly rate and the VAT rate should be globally
+configurable.
+The default invoice template should also be configurable so that anyone can
+write their own instead of having to change the upstream code.
