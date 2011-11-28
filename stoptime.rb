@@ -68,8 +68,28 @@ module StopTime::Models
 
   # == The customer class
   #
-  # This class represents a customer that has projects, tasks
+  # This class represents a customer that has projects/tasks
   # for which invoices need to be generated.
+  #
+  # === Attributes
+  #
+  # [id] unique identification number (Fixnum)
+  # [name] official (long) name (String)
+  # [short_name] abbreviated name (String)
+  # [address_street] street part of the address (String)
+  # [address_postal_code] zip/postal code part of the address (String)
+  # [address_city] city part of the postal code (String)
+  # [email] email address (String)
+  # [phone] phone number (String)
+  # [hourly_rate] default hourly rate (Float)
+  # [created_at] time of creation (Time)
+  # [updated_at] time of last update (Time)
+  #
+  # === Attributes by association
+  #
+  # [invoices] list of invoices (Array of Invoice)
+  # [tasks] list of tasks (Array of Task)
+  # [time_entries] list of time entries (Array of TimeEntry)
   class Customer < Base
     has_many :tasks
     has_many :invoices
@@ -86,6 +106,21 @@ module StopTime::Models
   # This class represents a task (or project) of a customer on which time can
   # be registered.
   # There are two types of classes:  with an hourly and with a fixed cost.
+  #
+  # === Attributes
+  #
+  # [id] unique identification number (Fixnum)
+  # [name] description (String)
+  # [fixed_cost] fixed cost of the task (Float)
+  # [hourly_rate] hourly rate for the task (Float)
+  # [created_at] time of creation (Time)
+  # [updated_at] time of last update (Time)
+  #
+  # === Attributes by association
+  #
+  # [customer] associated customer (Customer)
+  # [invoice] associated invoice if the task is billed (Invoice)
+  # [time_entries] list of registered time entries (Array of TimeEntry)
   class Task < Base
     has_many :time_entries
     belongs_to :customer
@@ -154,6 +189,22 @@ module StopTime::Models
   #
   # This class represents an amount of time that is registered on a certain
   # task.
+  #
+  # === Attributes
+  #
+  # [id] unique identification number (Fixnum)
+  # [date] date of the entry (Time)
+  # [start] start time of the entry (Time)
+  # [end] finish time of the entry (Time)
+  # [bill] flag whether to bill or not (FalseClass/TrueClass)
+  # [comment] additional comment (String)
+  # [created_at] time of creation (Time)
+  # [updated_at] time of last update (Time)
+  #
+  # === Attributes by association
+  #
+  # [task] task the entry registers time for (Task)
+  # [customer] associated customer (Customer)
   class TimeEntry < Base
     belongs_to :task
     has_one :customer, :through => :task
@@ -168,6 +219,20 @@ module StopTime::Models
   #
   # This class represents an invoice for a customer that contains billed
   # tasks and through the tasks registered time.
+  #
+  # === Attributes
+  #
+  # [id] unique identification number (Fixnum)
+  # [number] invoice number (Fixnum)
+  # [payed] flag whether the invoice has been paid (TrueClass/FalseClass)
+  # [created_at] time of creation (Time)
+  # [updated_at] time of last update (Time)
+  #
+  # === Attributes by association
+  #
+  # [customer] associated customer (Customer)
+  # [tasks] billed tasks by the invoice (Array of Task)
+  # [time_entries] billed time entries (Array of TimeEntry)
   class Invoice < Base
     has_many :tasks
     has_many :time_entries, :through => :tasks
@@ -200,6 +265,27 @@ module StopTime::Models
   #
   # This class contains information about the company or sole
   # proprietorship of the user of Stop… Camping Time!
+  #
+  # === Attributes
+  #
+  # [id] unique identification number (Fixnum)
+  # [name] official company name (String)
+  # [contact_name] optional personal contact name (String)
+  # [address_street] street part of the address (String)
+  # [address_postal_code] zip/postal code part of the address (String)
+  # [address_city] city part of the postal code (String)
+  # [country] country of residence (String)
+  # [country_code] two letter country code (String)
+  # [email] email address (String)
+  # [phone] phone number (String)
+  # [cell] cellular phone number (String)
+  # [website] web address (String)
+  # [chamber] optional chamber of commerce ID number (String)
+  # [vatno] optional VAT number (String)
+  # [accountname] name of the bank account holder (String)
+  # [accountno] number of the bank account (String)
+  # [created_at] time of creation (Time)
+  # [updated_at] time of last update (Time)
   class CompanyInfo < Base
   end
 
