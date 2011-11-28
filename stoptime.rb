@@ -1215,6 +1215,7 @@ module StopTime::Views
         th "Comment"
         th "Total time"
         th "Bill?"
+        th {}
       end
       form :action => R(Timeline), :method => :post do
         tr do
@@ -1311,6 +1312,7 @@ module StopTime::Views
            th "Address"
            th "Email"
            th "Phone"
+           th {}
          end
         @customers.each do |customer|
           tr do

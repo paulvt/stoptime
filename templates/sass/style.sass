@@ -2,6 +2,7 @@
 
 // Colours
 $light-grey: #efefef
+$medium-grey: #cfcfcf
 $dark-grey: #9f9f9f
 $dark-red: #990000
 
@@ -112,8 +113,12 @@ table
     text-align: left
     background: $dark-grey
 
-  tr.total
-    border-top: solid black
+  tr
+    &:hover
+      background-color: $medium-grey
+
+    &.total
+      border-top: solid black
 
   td.key
     font-weight: bold
