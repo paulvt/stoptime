@@ -224,7 +224,7 @@ module StopTime::Models
   #
   # [id] unique identification number (Fixnum)
   # [number] invoice number (Fixnum)
-  # [payed] flag whether the invoice has been paid (TrueClass/FalseClass)
+  # [paid] flag whether the invoice has been paid (TrueClass/FalseClass)
   # [created_at] time of creation (Time)
   # [updated_at] time of last update (Time)
   #
@@ -424,6 +424,26 @@ module StopTime::Models
 
     def self.down
       remove_column(TimeEntry.table_name, :date)
+    end
+  end
+
+  class PaidFlagTypoFix < V 1.9 # :nodoc:
+    def self.up
+      add_column(Invoice.table_name, :paid, :boolean)
+      Invoice.all.each do |i|
+        i.paid = i.payed unless i.payed.blank?
+        i.save
+      end
+      remove_column(Invoice.table_name, :payed)
+    end
+
+    def self.down
+      add_column(Invoice.table_name, :payed, :boolean)
+      Invoice.all.each do |i|
+        i.payed = i.paid unless i.paid.blank?
+        i.save
+      end
+      remove_column(Invoice.table_name, :paid)
     end
   end
 
@@ -800,7 +820,7 @@ module StopTime::Controllers
     # with the given _customer_id_ and redirects to CustomersNInvoicesX.
     def post(customer_id, invoice_number)
       invoice = Invoice.find_by_number(invoice_number)
-      invoice.payed = @input.has_key? "payed"
+      invoice.paid = @input.has_key? "paid"
       invoice.save
 
       redirect R(CustomersNInvoicesX, customer_id, invoice_number)
@@ -1377,7 +1397,7 @@ module StopTime::Views
           th "Number"
           th "Date"
           th "Period"
-          th "Payed"
+          th "Paid?"
         end
         invoices.each do |invoice|
           tr do
@@ -1388,8 +1408,8 @@ module StopTime::Views
             end
             td { invoice.created_at.to_formatted_s(:date_only) }
             td { _format_period(invoice.period) }
-            # FIXME: really retrieve the payed flag.
-            td { _form_input_checkbox("payed_#{invoice.number}") }
+            # FIXME: really retrieve the paid flag.
+            td { _form_input_checkbox("paid_#{invoice.number}") }
           end
         end
       end
@@ -1451,7 +1471,7 @@ module StopTime::Views
   end
 
   # A view displaying the information (billed tasks and time) of an
-  # invoice (Models::Invoice) that also allows for updating the "+payed+"
+  # invoice (Models::Invoice) that also allows for updating the "+paid+"
   # property.
   def invoice
     h2 do
@@ -1475,9 +1495,9 @@ module StopTime::Views
           td.val { _format_period(@invoice.period) }
         end
         tr do
-          td.key { b "Payed" }
+          td.key { b "Paid?" }
           td.val do
-            _form_input_checkbox("payed")
+            _form_input_checkbox("paid")
             input :type => :submit, :name => "update", :value => "Update"
             input :type => :reset, :name => "reset", :value => "Reset"
           end
