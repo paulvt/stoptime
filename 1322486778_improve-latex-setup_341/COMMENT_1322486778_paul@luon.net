@@ -1,0 +1,3 @@
+
+The depend on rubber is not necessary, PDFLaTeX suffices.  Also, we should
+ship the non-base LaTeX packages if possible.
