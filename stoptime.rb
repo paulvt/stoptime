@@ -1234,7 +1234,7 @@ module StopTime::Views
         end
       end
       @time_entries.each do |entry|
-        tr do
+        tr(:class => entry.task.billed? ? "billed" : nil) do
           td { a entry.task.name,
                  :href => R(CustomersNTasksN, entry.customer.id, entry.task.id) }
           td { a entry.date.to_date,
