@@ -1,0 +1,3 @@
+
+Many controllers set @errors in the post method, but they are not displayed
+by the forms.
