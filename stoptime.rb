@@ -635,6 +635,9 @@ module StopTime::Controllers
     # for a customer with the given _customer_id_ using Views#task_form.
     def get(customer_id)
       @customer = Customer.find(customer_id)
+      @customer_list = Customer.all.map do |c|
+        [c.id, c.short_name.present? ? c.short_name : c.name]
+      end
       @task = Task.new(:hourly_rate => @customer.hourly_rate)
       @input = @task.attributes
       @input["type"] = @task.type # FIXME: find nicer way!
@@ -1727,7 +1730,7 @@ module StopTime::Views
   # The option list is an Array of a 2-valued array containg a value label
   # and a human readable description for the value.
   def _form_select(name, opts_list)
-    if opts_list.empty?
+    if opts_list.blank?
       select :name => name, :id => name, :disabled => true do
         option "None found", :value => "none", :selected => true
       end
