@@ -1339,7 +1339,7 @@ module StopTime::Views
         end
       end
 
-      a "Add a new customer", :href=> R(CustomersNew)
+      a "» Add a new customer", :href=> R(CustomersNew)
     end
   end
 
@@ -1379,14 +1379,14 @@ module StopTime::Views
         div do
           input :type => :submit, :name => "edit", :value => "Edit"
           input :type => :submit, :name => "delete", :value => "Delete"
-          a "Add a new project/task", :href => R(CustomersNTasksNew, @customer.id)
+          a "» Add a new project/task", :href => R(CustomersNTasksNew, @customer.id)
         end
       end
 
       div.clear do
         h2 "Invoices"
         _invoice_list(@invoices)
-        a "Create a new invoice", :href => R(CustomersNInvoicesNew, @customer.id)
+        a "» Create a new invoice", :href => R(CustomersNInvoicesNew, @customer.id)
       end
     end
     div.clear {}
@@ -1471,8 +1471,7 @@ module StopTime::Views
     if @invoices.values.flatten.empty?
       p do
         text "Found none! You can create one by "
-        a "selecting a customer", :href => R(Customers)
-        text "."
+             "#{a "selecting a customer", :href => R(Customers)}."
       end
     else
       @invoices.keys.sort.each do |key|
@@ -1569,9 +1568,9 @@ module StopTime::Views
       end
     end
 
-    a "Download PDF",
+    a "» Download PDF",
       :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.pdf")
-    a "Download Latex source",
+    a "» Download Latex source",
       :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.tex")
   end
 
