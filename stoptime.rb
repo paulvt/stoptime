@@ -1178,8 +1178,8 @@ module StopTime::Views
         h3 { a customer.name, :href => R(CustomersN, customer.id) }
         if @tasks[customer].empty?
           p do
-            text "No projects/tasks found! Create one "
-            a "here", :href => R(CustomersNTasksNew, customer.id)
+            text "No projects/tasks found! Create one " +
+                 "#{a "here", :href => R(CustomersNTasksNew, customer.id)}."
           end
         else
           table.overview do
@@ -1308,9 +1308,8 @@ module StopTime::Views
     h2 "Customers"
     if @customers.empty?
       p do
-        text "None found! You can create one "
-        a "here", :href => R(CustomersNew)
-        text "."
+        text "None found! You can create one " +
+             "#{a "here", :href => R(CustomersNew)}."
       end
     else
       table.customers do
