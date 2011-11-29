@@ -641,7 +641,7 @@ module StopTime::Controllers
       @task = Task.new(:hourly_rate => @customer.hourly_rate)
       @input = @task.attributes
       @input["type"] = @task.type # FIXME: find nicer way!
-      @input["customer"] = customer_id
+      @input["customer"] = @customer.id
 
       @target = [CustomersNTasks, customer_id]
       @method = "create"
@@ -670,7 +670,7 @@ module StopTime::Controllers
       @method = "update"
       @input = @task.attributes
       @input["type"] = @task.type
-      @input["customer"] = customer_id
+      @input["customer"] = @customer.id
       # FIXME: Check that task is of that customer.
       render :task_form
     end
