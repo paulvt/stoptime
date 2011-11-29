@@ -97,7 +97,7 @@ module StopTime::Models
 
     # Returns a list of tasks that have not been billed via in invoice.
     def unbilled_tasks
-      tasks.all(:conditions => ["invoice_id IS NULL"])
+      tasks.all(:conditions => ["invoice_id IS NULL"], :order => "name ASC")
     end
   end
 
@@ -479,7 +479,7 @@ module StopTime::Controllers
   class Customers
     # Gets the list of customers and displays them via Views#customers.
     def get
-      @customers = Customer.all
+      @customers = Customer.all(:order => "name ASC")
       render :customers
     end
 
