@@ -908,10 +908,15 @@ module StopTime::Controllers
       @customer_list = Customer.all.map do |c|
         [c.id, c.short_name.present? ? c.short_name : c.name]
       end
-      @task_list = Task.all.reject { |t| t.billed? }.map do |t|
-        [t.id, t.name]
+      @task_list = Hash.new { |h, k| h[k] = Array.new }
+      Task.all.reject { |t| t.billed? }.each do |t|
+        customer = t.customer
+        cust_name = customer.short_name.present? ? customer.short_name \
+                                                 : customer.name
+        @task_list[cust_name] << [t.id, t.name]
       end
       @input["bill"] = true # Bill by default.
+      @input["task"] = @time_entries.first.task.id if @time_entries.present?
       render :time_entries
     end
 
@@ -1227,7 +1232,7 @@ module StopTime::Views
       end
       form :action => R(Timeline), :method => :post do
         tr do
-          td { _form_select("task", @task_list) }
+          td { _form_select_nested("task", @task_list) }
           td { input :type => :text, :name => "date",
                      :value => DateTime.now.to_date.to_formatted_s }
           td { input :type => :text, :name => "start",
@@ -1734,6 +1739,36 @@ module StopTime::Views
             option opt_str, :value => opt_val, :selected => true
           else
             option opt_str, :value => opt_val
+          end
+        end
+      end
+    end
+  end
+
+  # Partial view similar to Views#_form_select that generates a select element
+  # for a form with a field (and ID) _name_ and hash of _opts_.
+  # The hash _opts_ represents a subdivision of the options, where the key
+  # is the name of the subdivision and the value the options list as in
+  # Views#_form_select.
+  #
+  # The option list is an Hash of Strings mapping to an Array of a 2-valued
+  # array containg a value label and a human readable description for the
+  # value.
+  def _form_select_nested(name, opts)
+    if opts.blank?
+      select :name => name, :id => name, :disabled => true do
+        option "None found", :value => "none", :selected => true
+      end
+    else
+      select :name => name, :id => name do
+        opts.keys.sort.each do |key|
+          option "— #{key} —", :disabled => true
+          opts[key].sort_by { |o| o.last }.each do |opt_val, opt_str|
+            if @input[name] == opt_val
+              option opt_str, :value => opt_val, :selected => true
+            else
+              option opt_str, :value => opt_val
+            end
           end
         end
       end
