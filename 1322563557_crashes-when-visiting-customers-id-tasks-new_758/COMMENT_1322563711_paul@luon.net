@@ -1,1 +1,9 @@
+commit 218b3e45a4890d3c37dde148dbe2a88cda89df01
+Author: Paul van Tilburg <paul@luon.net>
+Date:   Tue Nov 29 11:46:41 2011 +0100
 
+    Fixed crash in CustomersNTasksNew#get
+    
+    The @customer_list was not set (closes: #ae0311).
+    Also made Views#_form_select more robust by also catching undefined lists
+    and treating them as empty lists.
