@@ -174,7 +174,8 @@ module StopTime::Models
     def summary
       case type
       when "fixed_cost"
-        [nil, nil, fixed_cost]
+        total = time_entries.inject(0.0) { |summ, te| summ + te.hours_total }
+        [total, nil, fixed_cost]
       when "hourly_rate"
         time_entries.inject([0.0, hourly_rate, 0.0]) do |summ, te|
           summ[0] += te.hours_total
@@ -1193,14 +1194,8 @@ module StopTime::Views
                     :href => R(CustomersNTasksN, customer.id, task.id)
                 end
                 summary = task.summary
-                case task.type
-                when "fixed_rate"
-                  td ""
-                  td.right { "€ %.2f" % summary[2] }
-                when "hourly_rate"
-                  td.right { "%.2fh" % summary[0] }
-                  td.right { "€ %.2f" % summary[2] }
-                end
+                td.right { "%.2fh" % summary[0] }
+                td.right { "€ %.2f" % summary[2] }
               end
             end
           end
