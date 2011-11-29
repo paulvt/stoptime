@@ -463,7 +463,7 @@ module StopTime::Controllers
     def get
       @tasks = {}
       Customer.all.each do |customer|
-        @tasks[customer] = customer.unbilled_tasks
+        @tasks[customer] = customer.unbilled_tasks.sort_by { |t| t.name }
       end
       render :overview
     end
