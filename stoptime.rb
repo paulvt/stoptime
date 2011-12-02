@@ -113,6 +113,7 @@ module StopTime::Models
   # [name] description (String)
   # [fixed_cost] fixed cost of the task (Float)
   # [hourly_rate] hourly rate for the task (Float)
+  # [invoice_comment] extra comment for the invoice (String)
   # [created_at] time of creation (Time)
   # [updated_at] time of last update (Time)
   #
@@ -444,6 +445,16 @@ module StopTime::Models
         i.save
       end
       remove_column(Invoice.table_name, :paid)
+    end
+  end
+
+  class InvoiceCommentsSupport < V 1.91 # :nodoc:
+    def self.up
+      add_column(Task.table_name, :invoice_comment, :string)
+    end
+
+    def self.down
+      remove_column(Task.table_name, :invoice_comment)
     end
   end
 
