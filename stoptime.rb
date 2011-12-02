@@ -1537,7 +1537,9 @@ module StopTime::Views
       @tasks.each do |task, line|
         tr do
           td { task }
-          if line[0].nil? and line[1].nil?
+          if line[1].nil?
+            # FIXME: information of time spent is available in the summary
+            # but show it?
             td.right "–"
             td.right "–"
           else
