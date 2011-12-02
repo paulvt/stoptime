@@ -1211,18 +1211,18 @@ module StopTime::Views
               col.hours {}
               col.amount {}
               tr do
+                summary = task.summary
                 td do
-                  a task.name,
+                  a summary[0].present ? summary[0] : task.name,
                     :href => R(CustomersNTasksN, customer.id, task.id)
                 end
-                summary = task.summary
                 case task.type
                 when "fixed_rate"
                   td ""
-                  td.right { "€ %.2f" % summary[2] }
+                  td.right { "€ %.2f" % summary[3] }
                 when "hourly_rate"
-                  td.right { "%.2fh" % summary[0] }
-                  td.right { "€ %.2f" % summary[2] }
+                  td.right { "%.2fh" % summary[1] }
+                  td.right { "€ %.2f" % summary[3] }
                 end
               end
             end
@@ -1561,8 +1561,8 @@ module StopTime::Views
       subtotal = 0.0
       @tasks.each do |task, line|
         tr do
-          td { task }
-          if line[0].nil? and line[1].nil?
+          td { task.comment_or_name }
+          if line[1].nil?
             td.right "–"
             td.right "–"
           else
