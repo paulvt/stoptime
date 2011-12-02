@@ -786,13 +786,17 @@ module StopTime::Controllers
         task.time_entries = task.time_entries - tasks[task]
         task.save
         bill_task.time_entries = tasks[task]
+        bill_task.invoice_comment = @input["task_#{task.id}_comment"]
         bill_task.save
         invoice.tasks << bill_task
       end
 
       # Then, handle the fixed cost tasks.
       @input["tasks"].each do |task|
-        invoice.tasks << Task.find(task)
+        task = Task.find(task)
+        task.invoice_comment = @input["task_#{task.id}_comment"]
+        task.save
+        invoice.tasks << task
       end unless @input["tasks"].blank?
       invoice.save
 
@@ -1603,9 +1607,10 @@ module StopTime::Views
   # Form for selecting fixed cost tasks and registered time for tasks with
   # an hourly rate that need to be billed.
   def invoice_select_form
+    h2 "Registered Time"
     form :action => R(CustomersNInvoices, @customer.id), :method => :post do
+      h3 "Projects/Tasks with an Hourly Rate"
       unless @hourly_rate_tasks.empty?
-        h2 "Registered Time"
         table.invoice_select do
           col.flag {}
           col.date {}
@@ -1626,11 +1631,15 @@ module StopTime::Views
           @hourly_rate_tasks.keys.each do |task|
             tr.task do
               td { _form_input_checkbox("tasks[]", task.id) }
-              td task.name, :colspan => 6
+              td task.name, :colspan => 3
+              td do
+                input :type =>  :text, :name => "task_#{task.id}_comment",
+                      :id => "tasks_#{task.id}_comment", :value => task.name
+              end
             end
             @hourly_rate_tasks[task].each do |entry|
               tr do
-                td { _form_input_checkbox("time_entries[]", entry.id) }
+                td.indent { _form_input_checkbox("time_entries[]", entry.id) }
                 td { label entry.date.to_date,
                            :for => "time_entries[]_#{entry.id}" }
                 td { entry.start.to_formatted_s(:time_only) }
@@ -1645,22 +1654,28 @@ module StopTime::Views
       end
 
       unless @fixed_cost_tasks.empty?
-        h2 "Fixed Cost Projects/Tasks"
+        h3 "Fixed Cost Projects/Tasks"
         table.tasks do
           col.flag {}
           col.task {}
+          col.comment {}
           col.hours {}
           col.amount {}
           tr do
-            th ""
+            th "Bill?"
             th "Project/Task"
-            th "Registered time"
-            th "Amount"
+            th "Comment"
+            th.right "Registered time"
+            th.right "Amount"
           end
           @fixed_cost_tasks.keys.each do |task|
             tr do
               td { _form_input_checkbox("tasks[]", task.id) }
               td { label task.name, :for => "tasks[]_#{task.id}" }
+              td do
+                input :type =>  :text, :name => "task_#{task.id}_comment",
+                      :id => "tasks_#{task.id}_comment", :value => task.name
+              end
               td.right { "%.2fh" % @fixed_cost_tasks[task] }
               td.right { task.fixed_cost }
             end
