@@ -91,11 +91,11 @@
  \begin{ihtable}
 <% subtotal = 0.0
    @tasks.each do |task, line|
-     if line[0].nil? and line[1].nil?
-%>  \ifcitem{<%= task %>}%
+     if line[2].nil?
+%>  \ifcitem{<%= task.comment_or_name %>}%
           {<%= number_with_precision(line[2]) %>}<%
      else
-%>  \ihitem{<%= task %>}%
+%>  \ihitem{<%= task.comment_or_name %>}%
          {<%= number_with_precision(line[0]) %>}{<%= number_with_precision(line[1]) %>}%
          {<%= number_with_precision(line[2]) %>}<%
      end 
