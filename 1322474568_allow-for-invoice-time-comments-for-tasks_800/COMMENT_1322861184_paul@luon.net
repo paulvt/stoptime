@@ -1,0 +1,6 @@
+commit 2539750c760bd0c4542ea4b8843087170422a68f
+Merge: afd1ab7 351753b
+Author: Paul van Tilburg <paul@luon.net>
+Date:   Fri Dec 2 22:24:46 2011 +0100
+
+    Merge branch 'feature/invoice_comments' (closes #7ede70)
