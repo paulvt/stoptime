@@ -1577,7 +1577,7 @@ module StopTime::Views
 
     a "» Download PDF",
       :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.pdf")
-    a "» Download Latex source",
+    a "» Download LaTeX source",
       :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.tex")
   end
 
