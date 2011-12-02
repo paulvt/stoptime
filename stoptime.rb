@@ -184,6 +184,16 @@ module StopTime::Models
         end
       end
     end
+
+    # Returns an invoice comment if the task is billed and if it is
+    # set, otherwise the name.
+    def comment_or_name
+      if billed? and self.invoice_comment.present?
+        self.invoice_comment
+      else
+        self.name
+      end
+    end
   end
 
   # == The time entry class
