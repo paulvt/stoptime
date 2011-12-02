@@ -1222,7 +1222,7 @@ module StopTime::Views
               tr do
                 summary = task.summary
                 td do
-                  a summary[0].present ? summary[0] : task.name,
+                  a task.name,
                     :href => R(CustomersNTasksN, customer.id, task.id)
                 end
                 summary = task.summary
