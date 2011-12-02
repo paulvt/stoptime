@@ -249,15 +249,16 @@ module StopTime::Models
     has_many :time_entries, :through => :tasks
     belongs_to :customer
 
-    # Returns a a time and cost summary of the contained tasks.
-    # See also Task#summary.
+    # Returns a time and cost summary of the contained tasks (Hash of
+    # Task to Array).
+    # See also Task#summary for the specification of the array.
     def summary
       summ = {}
-      tasks.each { |task| summ[task.name] = task.summary }
+      tasks.each { |task| summ[task] = task.summary }
       return summ
     end
 
-    # Returns the invoice period based on the contained tasks.
+    # Returns the invoice period based on the contained tasks (Array of Time).
     # See also Task#bill_period.
     def period
       # FIXME: maybe should be updated_at?
