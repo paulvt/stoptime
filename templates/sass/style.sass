@@ -2,6 +2,7 @@
 
 // Colours
 $light-grey: #efefef
+$medium-grey: #cfcfcf
 $dark-grey: #9f9f9f
 $dark-red: #990000
 
@@ -17,6 +18,12 @@ $dark-red: #990000
   clear: both
   padding-top: 10px
 
+.billed
+  text-decoration: line-through
+
+.indent
+  padding-left: 20px
+
 /* Basic elements */
 a
   text-decoration: none
@@ -29,6 +36,9 @@ body
   font-family: sans-serif
   font-size: 13px
   margin: 0px
+
+h3
+  margin: 10px 0px
 
 /* Main layout */
 #wrapper
@@ -65,9 +75,9 @@ table
   col.amount, col.hours, col.hourly_rate
     width: 10%
   col.flag
-    width: 4%
+    width: 3%
   col.date
-    width: 8%
+    width: 9%
   col.start_time, col.end_time
     width: 5%
   col.comment
@@ -94,7 +104,7 @@ table
   &.tasks
     width: 60%
 
-  &.customers
+  &.customers, &.invoice_select
     width: 75%
 
   &.invoices
@@ -109,8 +119,12 @@ table
     text-align: left
     background: $dark-grey
 
-  tr.total
-    border-top: solid black
+  tr
+    &:hover
+      background-color: $medium-grey
+
+    &.total
+      border-top: solid black
 
   td.key
     font-weight: bold
@@ -120,7 +134,7 @@ table
   input
     width: 100%
 
-  input[type="submit"], input[type="reset"]
+  input[type="submit"], input[type="reset"], input[type="checkbox"]
     width: auto
 
 /* Form layout */

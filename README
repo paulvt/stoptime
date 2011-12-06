@@ -7,7 +7,7 @@ invoicing.
 
 * Running project & tasks overview
 * Timeline overview of registered time
-* Management customer information 
+* Management customer information
 * Administration of running and billed projects/task with
   * fixed cost, or
   * hourly rates
@@ -22,13 +22,13 @@ Stop… Camping Time! is a Camping application, so you need:
 * Camping (>= 2.1) with
   * Active Record (>= 2.3)
   * Markaby, and optionally:
-  * Mongrel
+  * Mongrel (for testing and deployment without Apache/Rackup)
 
 The following Ruby libraries are required:
 
 * ActionPack (>= 2.3) for ActionView
 * ActiveSupport (>= 2.3)
-* MIME-Types
+* Rack (for deployment using Apache/Rackup)
 * SASS
 
 and the following LaTeX programs:
@@ -44,12 +44,91 @@ site-wide deployment yet.
 
 == Usage
 
-Run from the command line:
+Stop… Camping Time! can be deployed directly using the Camping server
+(which uses Mongrel, or optionally Webrick).  This is for simple
+deployments or for testing purposes.
+Easy deployment via Apache is possible using Phusion Passenger, aka
+_mod_rails_ or _mod_rack_ (see http://modrails.com).  See below for the
+basic instructions.
+
+Note that this application is a valid Rack application (see
+http://rack.rubyforge.org/) and can be deployed by anything that supports
+them.
+
+=== Camping Server/Mongrel
+
+Simply run from the command line:
 
   $ camping stoptime.rb
 
 and head over to http://localhost:3301/ to view and use the web
 application.
+
+=== Physion Passenger (mod_rails/mod_rack)/Apache
+
+Camping applications are Rack applications.  Deployment follows the
+standard way of deploying Rack applications using mod_rack.
+Stop… Camping Time! additionally needs to have the +xsendfile+
+module installed.
+
+*N.B.* Ensure that Apache can, in both types of setups, write in the +db/+
+and +public/+ folder.
+
+==== Deployment on a virtual host
+
+Use the following basic configuration:
+
+  <VirtualHost *:80>
+     ServerName some.domain.tld
+     DocumentRoot /path/to/stoptime/public
+     <Directory /path/to/stoptime/public>
+         Allow from all
+         Options -MultiViews
+     </Directory>
+
+     XSendFile on
+  </VirtualHost>
+
+Now, restart Apache and visit http://some.domain.tld/.
+
+==== Deployment on a sub URI
+
+For deployment on a sub URI, let us assume there is some virtual host
+serving files under +/path/to/document_root+, i.e. something like:
+
+  <VirtualHost *:80>
+     ServerName some.domain.tld
+     DocumentRoot /path/to/document_root
+     <Directory /path/to/document_root/
+         Allow from all
+     </Directory>
+  </VirtualHost>
+
+Then, add a symlink from the +public+ subdirectory of to the document
+root, e.g.
+
+  ln -s /path/to/stoptime/public /path/to/document_root/stoptime
+
+Then, add a +RackBaseURI+ option to the virtual host configuration.
+For example:
+
+  <VirtualHost *:80>
+    ServerName some.domain.tld
+    ...
+
+    RackBaseUri /stoptime
+    <Directory /path/to/document_root/stoptime>
+      Options -Multiviews
+    </Directory>
+
+    XSendFile on
+  </VirtualHost>
+
+Now, restart Apache and visit http://some.domain.tld/stoptime.
+
+For more extensive information, please refer to the documentat of
+Phusion Passenger:
+http://www.modrails.com/documentation/Users%20guide%20Apache.html#_deploying_a_rack_based_ruby_application
 
 == License
 
