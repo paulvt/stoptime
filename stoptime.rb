@@ -1739,26 +1739,28 @@ module StopTime::Views
   # Partial view that generates a form radio button with the given _name_
   # and _value_.
   # Whether it is initially selected is determined by the _default_ flag.
-  def _form_input_radio(name, value, default=false)
+  # Additional options can be passed via the collection _opts_.
+  def _form_input_radio(name, value, default=false, *opts)
     input_val = @input[name]
     if input_val == value or (input_val.blank? and default)
       input :type => "radio", :id => "#{name}_#{value}",
-            :name => name, :value => value, :checked => true
+            :name => name, :value => value, :checked => true, *opts
     else
       input :type => "radio", :id => "#{name}_#{value}",
-            :name => name, :value => value
+            :name => name, :value => value, *opts
     end
   end
 
   # Partial view that generates a form checkbox with the given _name_.
   # Whether it is initiall checked is determined by the _value_ flag.
-  def _form_input_checkbox(name, value=true)
+  # Additional options can be passed via the collection _opts_.
+  def _form_input_checkbox(name, value=true, *opts)
     if @input[name] == value
       input :type => "checkbox", :id => "#{name}_#{value}", :name => name,
-            :value => value, :checked => true
+            :value => value, :checked => true, *opts
     else
       input :type => "checkbox", :id => "#{name}_#{value}", :name => name,
-            :value => value
+            :value => value, *opts
     end
   end
 
