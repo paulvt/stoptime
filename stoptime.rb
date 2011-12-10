@@ -846,7 +846,7 @@ module StopTime::Controllers
 
       if @format == "html"
         @input = @invoice.attributes
-        render :invoice
+        render :invoice_form
       elsif @format == "tex"
         tex_file = PUBLIC_DIR + "invoices/#{@number}.tex"
         _generate_invoice_tex(@number) unless tex_file.exist?
@@ -1459,7 +1459,7 @@ module StopTime::Views
   # A view displaying the information (billed tasks and time) of an
   # invoice (Models::Invoice) that also allows for updating the "+paid+"
   # property.
-  def invoice
+  def invoice_form
     h2 do
       span "Invoice for "
       a @customer.name, :href => R(CustomersN, @customer.id)
