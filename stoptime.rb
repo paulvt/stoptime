@@ -562,8 +562,11 @@ module StopTime::Controllers
     # a form for updating via Views#customer_form.
     def get(customer_id)
       @customer = Customer.find(customer_id)
-      @invoices = @customer.invoices
       @input = @customer.attributes
+      @invoices = @customer.invoices
+      @invoices.each do |i|
+        @input["paid_#{i.number}"] = true if i.paid?
+      end
 
       @target = [CustomersN, @customer.id]
       @button = "update"
@@ -1064,6 +1067,9 @@ module StopTime::Controllers
       @invoices = {}
       Customer.all.each do |customer|
         @invoices[customer.name] = customer.invoices
+        customer.invoices.each do |i|
+          @input["paid_#{i.number}"] = true if i.paid?
+        end
       end
       render :invoices
     end
@@ -1445,7 +1451,10 @@ module StopTime::Views
             td { invoice.created_at.to_formatted_s(:date_only) }
             td { _format_period(invoice.period) }
             # FIXME: really retrieve the paid flag.
-            td { _form_input_checkbox("paid_#{invoice.number}") }
+            td do
+              _form_input_checkbox("paid_#{invoice.number}", invoice.paid?,
+                                   :disabled => true)
+            end
           end
         end
       end
