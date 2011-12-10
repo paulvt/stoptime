@@ -1,0 +1,5 @@
+commit 8ff07620b6285ec2f76bea71c9416ee9721e963e
+Author: Paul van Tilburg <paul@luon.net>
+Date:   Sat Dec 10 16:54:43 2011 +0100
+
+    Show paid status of invoices (closes: #c937b1)
