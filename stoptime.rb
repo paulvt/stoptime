@@ -483,6 +483,8 @@ module StopTime::Controllers
   # path:: /
   # view:: Views#overview
   class Index
+    # Shows an overview of all unbilled projects/tasks per customer using
+    # Views#overview.
     def get
       @tasks = {}
       Customer.all.each do |customer|
