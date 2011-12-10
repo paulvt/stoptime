@@ -1285,13 +1285,8 @@ module StopTime::Views
           td { entry.comment }
           td { "%.2fh" % entry.hours_total }
           td do
-            if entry.bill
-              input :type => "checkbox", :name => "bill_#{entry.id}",
-                    :checked => true, :disabled => true
-            else
-              input :type => "checkbox", :name => "bill_#{entry.id}",
-                    :disabled => true
-            end
+            _form_input_checkbox("bill_#{entry.id}", entry.bill,
+                                 :disabled => true)
           end
           td do
             form :action => R(TimelineN, entry.id), :method => :post do
