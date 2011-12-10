@@ -848,11 +848,11 @@ module StopTime::Controllers
         @input = @invoice.attributes
         render :invoice
       elsif @format == "tex"
-        tex_file = PUBLIC_DIR + "#{@number}.tex"
+        tex_file = PUBLIC_DIR + "invoices/#{@number}.tex"
         _generate_invoice_tex(@number) unless tex_file.exist?
         redirect(Static, tex_file.basename)
       elsif @format == "pdf"
-        pdf_file = PUBLIC_DIR + "#{@number}.pdf"
+        pdf_file = PUBLIC_DIR + "invoices/#{@number}.pdf"
         _generate_invoice_pdf(@number) unless pdf_file.exist?
         redirect(Static, pdf_file.basename)
       end
@@ -873,7 +873,7 @@ module StopTime::Controllers
     # Generates a LaTex document for the invoice with the given _number_.
     def _generate_invoice_tex(number)
       template = TEMPLATE_DIR + "invoice.tex.erb"
-      tex_file = PUBLIC_DIR + "#{number}.tex"
+      tex_file = PUBLIC_DIR + "invoices/#{number}.tex"
 
       I18n.with_locale :nl do
         erb = ERB.new(File.read(template))
@@ -884,7 +884,7 @@ module StopTime::Controllers
     # Generates a PDF document for the invoice with the given _number_
     # via _generate_invoice_tex.
     def _generate_invoice_pdf(number)
-      tex_file = PUBLIC_DIR + "#{@number}.tex"
+      tex_file = PUBLIC_DIR + "invoices/#{@number}.tex"
       _generate_invoice_tex(number) unless tex_file.exist?
 
       # FIXME: remove rubber depend, use pdflatex directly
@@ -1723,8 +1723,8 @@ module StopTime::Views
         li { _form_input_with_label("Web address", "website", :text) }
         li { _form_input_with_label("Chamber number", "chamber", :text) }
         li { _form_input_with_label("VAT number", "vatno", :text) }
-        li { _form_input_with_label("Account name", "accountname", :text) }
-        li { _form_input_with_label("Account number", "accountno", :text) }
+        li { _form_input_with_label("Bank account name", "accountname", :text) }
+        li { _form_input_with_label("Bank account number", "accountno", :text) }
       end
       input :type => "submit", :name => "update", :value => "Update"
       input :type => :reset, :name => "reset", :value => "Reset"
