@@ -850,11 +850,11 @@ module StopTime::Controllers
       elsif @format == "tex"
         tex_file = PUBLIC_DIR + "invoices/#{@number}.tex"
         _generate_invoice_tex(@number) unless tex_file.exist?
-        redirect(Static, tex_file.basename)
+        redirect R(Static, "") + "invoices/#{tex_file.basename}"
       elsif @format == "pdf"
         pdf_file = PUBLIC_DIR + "invoices/#{@number}.pdf"
         _generate_invoice_pdf(@number) unless pdf_file.exist?
-        redirect(Static, pdf_file.basename)
+        redirect R(Static, "") + "invoices/#{pdf_file.basename}"
       end
     end
 
