@@ -934,6 +934,9 @@ module StopTime::Controllers
     # the timeline using Views#time_entries
     def get
       @time_entries = TimeEntry.all(:order => "start DESC")
+      @time_entries.each do |te|
+        @input["bill_#{te.id}"] = true if te.bill?
+      end
       @customer_list = Customer.all.map do |c|
         [c.id, c.short_name.present? ? c.short_name : c.name]
       end
@@ -1291,8 +1294,7 @@ module StopTime::Views
           td { entry.comment }
           td { "%.2fh" % entry.hours_total }
           td do
-            _form_input_checkbox("bill_#{entry.id}", entry.bill,
-                                 :disabled => true)
+            _form_input_checkbox("bill_#{entry.id}", true, :disabled => true)
           end
           td do
             form :action => R(TimelineN, entry.id), :method => :post do
