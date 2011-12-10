@@ -868,6 +868,9 @@ module StopTime::Controllers
       redirect R(CustomersNInvoicesX, customer_id, invoice_number)
     end
 
+    ##############
+    # Private helper methods
+    #
     private
 
     # Generates a LaTex document for the invoice with the given _number_.
@@ -1183,28 +1186,6 @@ module StopTime::Views
     end
   end
 
-  # Partial view that generates the menu.
-  def _menu
-    ol.menu! do
-      [["Overview", Index],
-       ["Timeline", Timeline],
-       ["Customers", Customers],
-       ["Invoices", Invoices],
-       ["Company", Company]].each { |label, ctrl| _menu_link(label, ctrl) }
-    end
-  end
-
-  # Partial view that generates the menu link and determines the active
-  # menu item.
-  def _menu_link(label, ctrl)
-    # FIXME: dirty hack?
-    if self.helpers.class.to_s.match(/^#{ctrl.to_s}/)
-      li.selected { a label, :href => R(ctrl) }
-    else
-      li { a label, :href => R(ctrl) }
-    end
-  end
-
   # The main overview showing accumulated time per task per customer.
   def overview
     h2 "Overview"
@@ -1425,51 +1406,6 @@ module StopTime::Views
       end
     end
     div.clear {}
-  end
-
-  # Partial view that generates a list of _invoices_.
-  def _invoice_list(invoices)
-    if invoices.empty?
-      p "None found!"
-    else
-      table.invoices do
-        col.number {}
-        col.date {}
-        col.period {}
-        col.flag {}
-        tr do
-          th "Number"
-          th "Date"
-          th "Period"
-          th "Paid?"
-        end
-        invoices.each do |invoice|
-          tr do
-            td do
-              a invoice.number,
-                :href => R(CustomersNInvoicesX,
-                           invoice.customer.id, invoice.number)
-            end
-            td { invoice.created_at.to_formatted_s(:date_only) }
-            td { _format_period(invoice.period) }
-            # FIXME: really retrieve the paid flag.
-            td do
-              _form_input_checkbox("paid_#{invoice.number}", invoice.paid?,
-                                   :disabled => true)
-            end
-          end
-        end
-      end
-    end
-  end
-
-  # Partial view for formatting the _period_ of an invoice.
-  def _format_period(period)
-    period = period.map { |m| m.to_formatted_s(:month_and_year) }.uniq
-    case period.length
-    when 1: period.first
-    when 2: period.join("–")
-    end
   end
 
   # Form for updating the properties of a task (Models::Task).
@@ -1730,6 +1666,78 @@ module StopTime::Views
       end
       input :type => "submit", :name => "update", :value => "Update"
       input :type => :reset, :name => "reset", :value => "Reset"
+    end
+  end
+
+  ###############
+  # Partial views
+  #
+  private
+
+  # Partial view that generates the menu.
+  def _menu
+    ol.menu! do
+      [["Overview", Index],
+       ["Timeline", Timeline],
+       ["Customers", Customers],
+       ["Invoices", Invoices],
+       ["Company", Company]].each { |label, ctrl| _menu_link(label, ctrl) }
+    end
+  end
+
+  # Partial view that generates the menu link and determines the active
+  # menu item.
+  def _menu_link(label, ctrl)
+    # FIXME: dirty hack?
+    if self.helpers.class.to_s.match(/^#{ctrl.to_s}/)
+      li.selected { a label, :href => R(ctrl) }
+    else
+      li { a label, :href => R(ctrl) }
+    end
+  end
+
+  # Partial view that generates a list of _invoices_.
+  def _invoice_list(invoices)
+    if invoices.empty?
+      p "None found!"
+    else
+      table.invoices do
+        col.number {}
+        col.date {}
+        col.period {}
+        col.flag {}
+        tr do
+          th "Number"
+          th "Date"
+          th "Period"
+          th "Paid?"
+        end
+        invoices.each do |invoice|
+          tr do
+            td do
+              a invoice.number,
+                :href => R(CustomersNInvoicesX,
+                           invoice.customer.id, invoice.number)
+            end
+            td { invoice.created_at.to_formatted_s(:date_only) }
+            td { _format_period(invoice.period) }
+            # FIXME: really retrieve the paid flag.
+            td do
+              _form_input_checkbox("paid_#{invoice.number}", invoice.paid?,
+                                   :disabled => true)
+            end
+          end
+        end
+      end
+    end
+  end
+
+  # Partial view for formatting the _period_ of an invoice.
+  def _format_period(period)
+    period = period.map { |m| m.to_formatted_s(:month_and_year) }.uniq
+    case period.length
+    when 1: period.first
+    when 2: period.join("–")
     end
   end
 
