@@ -1,0 +1,5 @@
+commit 4860aec9ca8ddea86790b52f2fda1baba4416308
+Author: Paul van Tilburg <paul@luon.net>
+Date:   Mon Dec 12 17:10:18 2011 +0100
+
+    Use the time_entries partial view to show time entries for a task (closes #e966ae)
