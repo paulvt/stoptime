@@ -1229,10 +1229,17 @@ module StopTime::Views
   end
 
   # The main overview showing the timeline of registered time.
-  def time_entries
-    h2 "Timeline"
+  # If the _task_id_ argument is set, the task column will be hidden and
+  # it will be assumed it is used as a partial view.
+  # FIXME: This should be done in a nicer way.
+  def time_entries(task_id=nil)
+    if task_id.present?
+      h2 "Registered unbilled time"
+    else
+      h2 "Timeline"
+    end
     table.timeline do
-      col.task {}
+      col.task {} unless task_id.present?
       col.date {}
       col.start_time {}
       col.end_time {}
@@ -1240,7 +1247,7 @@ module StopTime::Views
       col.hours {}
       col.flag {}
       tr do
-        th "Project/Task"
+        th "Project/Task" unless task_id.present?
         th "Date"
         th "Start time"
         th "End time"
@@ -1251,7 +1258,11 @@ module StopTime::Views
       end
       form :action => R(Timeline), :method => :post do
         tr do
-          td { _form_select_nested("task", @task_list) }
+          if task_id.present?
+            input :type => :hidden, :name => "task", :value => task_id
+          else
+            td { _form_select_nested("task", @task_list) }
+          end
           td { input :type => :text, :name => "date",
                      :value => DateTime.now.to_date.to_formatted_s }
           td { input :type => :text, :name => "start",
@@ -1268,8 +1279,10 @@ module StopTime::Views
       end
       @time_entries.each do |entry|
         tr(:class => entry.task.billed? ? "billed" : nil) do
-          td { a entry.task.name,
-                 :href => R(CustomersNTasksN, entry.customer.id, entry.task.id) }
+          td do
+            a entry.task.name,
+              :href => R(CustomersNTasksN, entry.customer.id, entry.task.id)
+          end unless task_id.present?
           td { a entry.date.to_date,
                  :href => R(TimelineN, entry.id) }
           td { entry.start.to_formatted_s(:time_only) }
@@ -1418,6 +1431,7 @@ module StopTime::Views
         li do
           label "Customer", :for => "customer"
           _form_select("customer", @customer_list)
+          a "» Go to customer", :href => R(CustomersN, @customer.id)
         end
         li { _form_input_with_label("Name", "name", :text) }
         li do
@@ -1438,6 +1452,8 @@ module StopTime::Views
       input :type => "submit", :name => @method, :value => @method.capitalize
       input :type => "submit", :name => "cancel", :value => "Cancel"
     end
+    # Show registered time (ab)using the time_entries view as partial view.
+    time_entries(@task.id) unless @method == "create"
   end
 
   # The main overview of the existing invoices.
