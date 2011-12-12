@@ -642,6 +642,11 @@ module StopTime::Controllers
           @customer_list = Customer.all.map do |c|
             [c.id, c.short_name.present? ? c.short_name : c.name]
           end
+          @time_entries = @task.time_entries.all(:order => "start DESC")
+          @time_entries.each do |te|
+            @input["bill_#{te.id}"] = true if te.bill?
+          end
+
           @target = [CustomersNTasks, customer_id]
           @method = "create"
           return render :task_form
@@ -694,12 +699,18 @@ module StopTime::Controllers
         [c.id, c.short_name.present? ? c.short_name : c.name]
       end
       @task = Task.find(task_id)
-      @target = [CustomersNTasksN,  customer_id, task_id]
-      @method = "update"
+      @time_entries = @task.time_entries.all(:order => "start DESC")
+
       @input = @task.attributes
       @input["type"] = @task.type
       @input["customer"] = @customer.id
+      @time_entries.each do |te|
+        @input["bill_#{te.id}"] = true if te.bill?
+      end
+
       # FIXME: Check that task is of that customer.
+      @target = [CustomersNTasksN,  customer_id, task_id]
+      @method = "update"
       render :task_form
     end
 
