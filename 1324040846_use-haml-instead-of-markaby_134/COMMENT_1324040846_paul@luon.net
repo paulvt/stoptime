@@ -1,0 +1,3 @@
+
+Since we are using Sass already, it might be nice to convert the Markaby
+code into Haml.
