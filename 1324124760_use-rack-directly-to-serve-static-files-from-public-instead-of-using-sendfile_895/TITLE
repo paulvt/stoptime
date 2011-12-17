@@ -1,0 +1,1 @@
+Use Rack directly to serve static files from public/ instead of using sendfile
