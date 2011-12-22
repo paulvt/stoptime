@@ -644,9 +644,7 @@ module StopTime::Controllers
         if @task.invalid?
           @errors = @task.errors
           @customer = Customer.find(customer_id)
-          @customer_list = Customer.all.map do |c|
-            [c.id, c.short_name.present? ? c.short_name : c.name]
-          end
+          @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
           @time_entries = @task.time_entries.all(:order => "start DESC")
           @time_entries.each do |te|
             @input["bill_#{te.id}"] = true if te.bill?
@@ -673,9 +671,7 @@ module StopTime::Controllers
     # for a customer with the given _customer_id_ using Views#task_form.
     def get(customer_id)
       @customer = Customer.find(customer_id)
-      @customer_list = Customer.all.map do |c|
-        [c.id, c.short_name.present? ? c.short_name : c.name]
-      end
+      @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
       @task = Task.new(:hourly_rate => @customer.hourly_rate)
       @input = @task.attributes
       @input["type"] = @task.type # FIXME: find nicer way!
@@ -700,9 +696,7 @@ module StopTime::Controllers
     # Views#task_form.
     def get(customer_id, task_id)
       @customer = Customer.find(customer_id)
-      @customer_list = Customer.all.map do |c|
-        [c.id, c.short_name.present? ? c.short_name : c.name]
-      end
+      @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
       @task = Task.find(task_id)
       @time_entries = @task.time_entries.all(:order => "start DESC")
 
@@ -742,9 +736,7 @@ module StopTime::Controllers
         if @task.invalid?
           @errors = @task.errors
           @customer = Customer.find(customer_id)
-          @customer_list = Customer.all.map do |c|
-            [c.id, c.short_name.present? ? c.short_name : c.name]
-          end
+          @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
           @target = [CustomersNTasksN,  customer_id, task_id]
           @method = "update"
           return render :task_form
@@ -958,15 +950,10 @@ module StopTime::Controllers
       @time_entries.each do |te|
         @input["bill_#{te.id}"] = true if te.bill?
       end
-      @customer_list = Customer.all.map do |c|
-        [c.id, c.short_name.present? ? c.short_name : c.name]
-      end
+      @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
       @task_list = Hash.new { |h, k| h[k] = Array.new }
       Task.all.reject { |t| t.billed? }.each do |t|
-        customer = t.customer
-        cust_name = customer.short_name.present? ? customer.short_name \
-                                                 : customer.name
-        @task_list[cust_name] << [t.id, t.name]
+        @task_list[t.customer.shortest_name] << [t.id, t.name]
       end
       @input["bill"] = true # Bill by default.
       @input["task"] = @time_entries.first.task.id if @time_entries.present?
@@ -1005,12 +992,8 @@ module StopTime::Controllers
     # and time for prefilling a form (Views#time_entry_form) for quickly
     # registering time.
     def get
-      @customer_list = Customer.all.map do |c|
-        [c.id, c.short_name.present? ? c.short_name : c.name]
-      end
-      @task_list = Task.all.reject { |t| t.billed? }.map do |t|
-        [t.id, t.name]
-      end
+      @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
+      @task_list = Task.all.reject { |t| t.billed? }.map { |t| [t.id, t.name] }
       @input["bill"] = true
       @input["date"] = DateTime.now.to_date
       @input["start"] = Time.now.to_formatted_s(:time_only)
@@ -1038,12 +1021,8 @@ module StopTime::Controllers
       @input["date"] = @time_entry.date.to_date
       @input["start"] = @time_entry.start.to_formatted_s(:time_only)
       @input["end"] = @time_entry.end.to_formatted_s(:time_only)
-      @customer_list = Customer.all.map do |c|
-        [c.id, c.short_name.present? ? c.short_name : c.name]
-      end
-      @task_list = Task.all.reject { |t| t.billed? }.map do |t|
-        [t.id, t.name]
-      end
+      @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
+      @task_list = Task.all.reject { |t| t.billed? }.map { |t| [t.id, t.name] }
 
       @target = [TimelineN, entry_id]
       @button = "update"
