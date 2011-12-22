@@ -95,6 +95,11 @@ module StopTime::Models
     has_many :invoices
     has_many :time_entries, :through => :tasks
 
+    # Returns the short name if set, otherwise the full name.
+    def shortest_name
+      short_name.present? ? short_name : name
+    end
+
     # Returns a list of tasks that have not been billed via in invoice.
     def unbilled_tasks
       tasks.all(:conditions => ["invoice_id IS NULL"], :order => "name ASC")
