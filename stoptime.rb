@@ -1234,7 +1234,10 @@ module StopTime::Views
       h2 "Timeline"
     end
     table.timeline do
-      col.task {} unless task_id.present?
+      unless task_id.present?
+        col.customer {}
+        col.task {}
+      end
       col.date {}
       col.start_time {}
       col.end_time {}
@@ -1242,7 +1245,10 @@ module StopTime::Views
       col.hours {}
       col.flag {}
       tr do
-        th "Project/Task" unless task_id.present?
+        unless task_id.present?
+          th "Customer"
+          th "Project/Task"
+        end
         th "Date"
         th "Start time"
         th "End time"
@@ -1256,6 +1262,7 @@ module StopTime::Views
           if task_id.present?
             input :type => :hidden, :name => "task", :value => task_id
           else
+            td { "–" }
             td { _form_select_nested("task", @task_list) }
           end
           td { input :type => :text, :name => "date",
@@ -1274,10 +1281,16 @@ module StopTime::Views
       end
       @time_entries.each do |entry|
         tr(:class => entry.task.billed? ? "billed" : nil) do
-          td do
-            a entry.task.name,
-              :href => R(CustomersNTasksN, entry.customer.id, entry.task.id)
-          end unless task_id.present?
+          unless task_id.present?
+            td do
+              a entry.customer.shortest_name,
+                :href => R(CustomersN, entry.customer.id)
+            end
+            td do
+              a entry.task.name,
+                :href => R(CustomersNTasksN, entry.customer.id, entry.task.id)
+            end
+          end
           td { a entry.date.to_date,
                  :href => R(TimelineN, entry.id) }
           td { entry.start.to_formatted_s(:time_only) }
