@@ -421,7 +421,8 @@ module StopTime::Models
   class HourlyRateSupport < V 1.3 # :nodoc:
     def self.up
       add_column(Customer.table_name, :hourly_rate, :float,
-                                      :null => false, :default => HourlyRate)
+                                      :null => false,
+                                      :default => @config["hourly_rate"])
     end
 
     def self.down
@@ -613,7 +614,7 @@ module StopTime::Controllers
     # Generates the form to create a new customer object (Models::Customer)
     # using Views#customer_form.
     def get
-      @customer = Customer.new(:hourly_rate => HourlyRate)
+      @customer = Customer.new(:hourly_rate => @config['hourly_rate'])
       @input = @customer.attributes
 
       @target = [Customers]
@@ -1618,9 +1619,9 @@ module StopTime::Views
           td ""
           td.right { "€ %.2f" % subtotal }
         end
-        vat = subtotal * VATRate/100.0
+        vat = subtotal * @config["vat_rate"]/100.0
         tr do
-          td { i "VAT %d%%" % VATRate }
+          td { i "VAT %d%%" % @config["vat_rate"] }
           td ""
           td ""
           td.right { "€ %.2f" % vat }

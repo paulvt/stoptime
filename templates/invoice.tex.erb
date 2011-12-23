@@ -78,7 +78,7 @@
 \newcommand{\ihsubtotal}[1]{\cmidrule[.0em]{4-4}%
   \textit{Subtotaal}&&&\currency~#1\\}
 \newcommand{\ihnosubtotal}[1]{\cmidrule[.0em]{4-4}&&&\\}
-\newcommand{\ihvat}[1]{\textit{Btw-heffing <%= "%d\\%%" % VATRate %>}&&&\currency~#1\\}
+\newcommand{\ihvat}[1]{\textit{Btw-heffing <%= "%d\\%%" % @config["vat_rate"] %>}&&&\currency~#1\\}
 \newcommand{\ihtotal}[1]{\cmidrule[.05em]{4-4}%
   \textbf{\Totaltext}&&&\textbf{\currency~#1}}
 
@@ -105,7 +105,7 @@
      vat = 0 %>
   \ihnosubtotal{} <%
    else
-     vat = subtotal * VATRate/100.0 %>
+     vat = subtotal * @config["vat_rate"]/100.0 %>
   \ihsubtotal{<%= number_with_precision(subtotal) %>}
   \ihvat{<%= number_with_precision(vat) %>}<%
    end %>
