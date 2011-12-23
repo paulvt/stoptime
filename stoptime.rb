@@ -41,14 +41,27 @@ unless defined? PUBLIC_DIR
   ActiveSupport::CoreExtensions::Date::Conversions::DATE_FORMATS.merge!(
     :default => "%Y-%m-%d",
     :month_and_year => "%B %Y")
-
-  # The default hourly rate.
-  # FIXME: this should be configurable.
-  HourlyRate = 20.0
-
-  # The default VAT rate.
-  VATRate = 19
 end
+
+# = Mix-in module
+#
+# This module enables configuration support available for specific
+# controllers or the entire application.
+module StopTime::Config
+
+  # The parsed configuration (Hash).
+  attr_reader :config
+
+  # Override controller call handler so that the configuration is available
+  # for all controllers and views.
+  # See also: http://code.whytheluckystiff.net/camping/wiki/BeforeAndAfterOverrides
+  def service(*a)
+    # FIXME: config path should be configurable!
+    @config = StopTime::Models::Config.instance
+    super(*a)
+  end
+
+end #module Photos::Config
 
 # = The main application module
 module StopTime
@@ -61,10 +74,61 @@ module StopTime
     StopTime::Models.create_schema
   end
 
+  # Automatically mix-in the configuration support in the application.
+  include StopTime::Config
+
+  Signal.trap("HUP") do
+    $stderr.puts "I: caught signal HUP, reloading config"
+    Models::Config.instance.reload
+  end
+
 end
 
 # = The Stop… Camping Time! models
 module StopTime::Models
+
+  # The configuration model class
+  #
+  # This class contains the configuration overlaying overridden options for
+  # subdirectories such that for each directory the specific configuration
+  # can be found.
+  class Config
+
+    include Singleton
+
+    # The default configuation file. (FIXME: shouldn't be hardcoded!)
+    ConfigFile = "./config.yaml"
+    # The default configuration. Note that the configuration of the root
+    # will be merged with this configuration.
+    DefaultConfig = { "invoice_id" => "%Y%N",
+                      "hourly_rate" => 20.0,
+                      "vat_rate"    => 19.0 }
+
+    # Creates a new configuration object and loads the configuation.
+    def initialize
+      load
+    end
+
+    # Loads the configuration by reaiding the file file, parsing it, and
+    # performing a merge with descendants.
+    def load
+      cfg = nil
+      # Read and parse the configuration.
+      begin
+        File.open(ConfigFile, "r") { |file| cfg = YAML.load(file) }
+      rescue => e
+        $stderr.puts "E: couldn't read configuration file: #{e}"
+      end
+      # Merge the loaded config with the default config.
+      @config = DefaultConfig.dup.merge cfg unless cfg.nil?
+    end
+
+    # Reloads the configuration file.
+    def reload
+      load
+    end
+
+  end # class StopTime::Models::Config
 
   # == The customer class
   #

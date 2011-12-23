@@ -1,0 +1,10 @@
+# Default configuration for Stop… Camping Time!
+
+# The default hourly rate
+#hourly_rate: 20.0
+
+# The VAT rate
+#vat_rate: 19.0
+
+# The invoice ID format (see strftime(3) and %N for the sequence number)
+#invoice_id: %Y%N
