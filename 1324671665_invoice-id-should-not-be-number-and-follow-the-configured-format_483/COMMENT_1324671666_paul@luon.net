@@ -1,0 +1,4 @@
+
+At the moment the invoice ID is stricly an integer (also in the database)
+and this should be a string, as the format can be set to a non-numeric
+format in the default configuration.
