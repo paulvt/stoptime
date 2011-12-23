@@ -1,0 +1,5 @@
+commit c8ced1777c8c7811eada8c5d976bedb849f36c63
+Author: Paul van Tilburg <paul@luon.net>
+Date:   Fri Dec 23 21:17:44 2011 +0100
+
+    Use the new configuration throughout the views, controllers and templates (closes #21e3ae)
