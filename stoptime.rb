@@ -94,6 +94,7 @@ module StopTime::Models
   # can be found.
   class Config
 
+    # There should only be a single configuration object (for reloading).
     include Singleton
 
     # The default configuation file. (FIXME: shouldn't be hardcoded!)
@@ -112,6 +113,7 @@ module StopTime::Models
     # Loads the configuration by reaiding the file file, parsing it, and
     # performing a merge with descendants.
     def load
+      @config = DefaultConfig.dup
       cfg = nil
       # Read and parse the configuration.
       begin
@@ -122,7 +124,7 @@ module StopTime::Models
       # Merge the loaded config with the default config (if it's a Hash)
       case cfg
       when Hash
-        @config = DefaultConfig.dup.merge cfg if cfg
+        @config.merge! cfg if cfg
       when nil, false
         # It's ok, it is empty.
       else
