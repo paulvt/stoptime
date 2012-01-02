@@ -41,14 +41,27 @@ unless defined? PUBLIC_DIR
   ActiveSupport::CoreExtensions::Date::Conversions::DATE_FORMATS.merge!(
     :default => "%Y-%m-%d",
     :month_and_year => "%B %Y")
-
-  # The default hourly rate.
-  # FIXME: this should be configurable.
-  HourlyRate = 20.0
-
-  # The default VAT rate.
-  VATRate = 19
 end
+
+# = Mix-in module
+#
+# This module enables configuration support available for specific
+# controllers or the entire application.
+module StopTime::Config
+
+  # The parsed configuration (Hash).
+  attr_reader :config
+
+  # Override controller call handler so that the configuration is available
+  # for all controllers and views.
+  # See also: http://code.whytheluckystiff.net/camping/wiki/BeforeAndAfterOverrides
+  def service(*a)
+    # FIXME: config path should be configurable!
+    @config = StopTime::Models::Config.instance
+    super(*a)
+  end
+
+end #module Photos::Config
 
 # = The main application module
 module StopTime
@@ -61,10 +74,61 @@ module StopTime
     StopTime::Models.create_schema
   end
 
+  # Automatically mix-in the configuration support in the application.
+  include StopTime::Config
+
+  Signal.trap("HUP") do
+    $stderr.puts "I: caught signal HUP, reloading config"
+    Models::Config.instance.reload
+  end
+
 end
 
 # = The Stop… Camping Time! models
 module StopTime::Models
+
+  # The configuration model class
+  #
+  # This class contains the configuration overlaying overridden options for
+  # subdirectories such that for each directory the specific configuration
+  # can be found.
+  class Config
+
+    include Singleton
+
+    # The default configuation file. (FIXME: shouldn't be hardcoded!)
+    ConfigFile = "./config.yaml"
+    # The default configuration. Note that the configuration of the root
+    # will be merged with this configuration.
+    DefaultConfig = { "invoice_id" => "%Y%N",
+                      "hourly_rate" => 20.0,
+                      "vat_rate"    => 19.0 }
+
+    # Creates a new configuration object and loads the configuation.
+    def initialize
+      load
+    end
+
+    # Loads the configuration by reaiding the file file, parsing it, and
+    # performing a merge with descendants.
+    def load
+      cfg = nil
+      # Read and parse the configuration.
+      begin
+        File.open(ConfigFile, "r") { |file| cfg = YAML.load(file) }
+      rescue => e
+        $stderr.puts "E: couldn't read configuration file: #{e}"
+      end
+      # Merge the loaded config with the default config.
+      @config = DefaultConfig.dup.merge cfg unless cfg.nil?
+    end
+
+    # Reloads the configuration file.
+    def reload
+      load
+    end
+
+  end # class StopTime::Models::Config
 
   # == The customer class
   #
@@ -357,7 +421,8 @@ module StopTime::Models
   class HourlyRateSupport < V 1.3 # :nodoc:
     def self.up
       add_column(Customer.table_name, :hourly_rate, :float,
-                                      :null => false, :default => HourlyRate)
+                                      :null => false,
+                                      :default => @config["hourly_rate"])
     end
 
     def self.down
@@ -549,7 +614,7 @@ module StopTime::Controllers
     # Generates the form to create a new customer object (Models::Customer)
     # using Views#customer_form.
     def get
-      @customer = Customer.new(:hourly_rate => HourlyRate)
+      @customer = Customer.new(:hourly_rate => @config['hourly_rate'])
       @input = @customer.attributes
 
       @target = [Customers]
@@ -1554,9 +1619,9 @@ module StopTime::Views
           td ""
           td.right { "€ %.2f" % subtotal }
         end
-        vat = subtotal * VATRate/100.0
+        vat = subtotal * @config["vat_rate"]/100.0
         tr do
-          td { i "VAT %d%%" % VATRate }
+          td { i "VAT %d%%" % @config["vat_rate"] }
           td ""
           td ""
           td.right { "€ %.2f" % vat }
