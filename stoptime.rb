@@ -1510,6 +1510,10 @@ module StopTime::Views
   # Form for updating the properties of a task (Models::Task).
   def task_form
     h2 "Task Information"
+    p.warn do
+      em "This task is already billed!  Only make changes if you know " +
+         "what you are doing!"
+    end if task.billed?
     form :action => R(*@target), :method => :post do
       ol do
         li do
@@ -1531,7 +1535,16 @@ module StopTime::Views
             end
           end
         end
-        # FIXME: add link(s) to related invoice(s)
+        if task.billed?
+          li do
+            label "Invoice number"
+            a @task.invoice.number,
+              :href => R(CustomersNInvoicesX, @customer.id, @task.invoice.number)
+          end
+          li do
+            _form_input_with_label("Invoice comment", "invoice_comment", :text)
+          end
+        end
       end
       input :type => "submit", :name => @method, :value => @method.capitalize
       input :type => "submit", :name => "cancel", :value => "Cancel"
