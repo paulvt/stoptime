@@ -97,7 +97,7 @@ module StopTime::Models
     include Singleton
 
     # The default configuation file. (FIXME: shouldn't be hardcoded!)
-    ConfigFile = File.basename(__FILE__) + "/config.yaml"
+    ConfigFile = File.dirname(__FILE__) + "/config.yaml"
     # The default configuration. Note that the configuration of the root
     # will be merged with this configuration.
     DefaultConfig = { "invoice_id" => "%Y%N",
@@ -119,8 +119,15 @@ module StopTime::Models
       rescue => e
         $stderr.puts "E: couldn't read configuration file: #{e}"
       end
-      # Merge the loaded config with the default config.
-      @config = DefaultConfig.dup.merge cfg unless cfg.nil?
+      # Merge the loaded config with the default config (if it's a Hash)
+      case cfg
+      when Hash
+        @config = DefaultConfig.dup.merge cfg if cfg
+      when nil, false
+        # It's ok, it is empty.
+      else
+        $stderr.puts "W: wrong format detected in configuration file!"
+      end
     end
 
     # Reloads the configuration file.
