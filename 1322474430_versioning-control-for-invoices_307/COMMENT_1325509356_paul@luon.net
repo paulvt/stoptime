@@ -1,0 +1,5 @@
+commit 0ba447524d69690b3fdc6b83b280ae20e6503f1d
+Author: Paul van Tilburg <paul@luon.net>
+Date:   Mon Jan 2 14:00:56 2012 +0100
+
+    Adjust the task form for showing invoice information for billed task (refs: #69f890)
