@@ -43,28 +43,24 @@ unless defined? PUBLIC_DIR
     :month_and_year => "%B %Y")
 end
 
-# = Mix-in module
-#
-# This module enables configuration support available for specific
-# controllers or the entire application.
-module StopTime::Config
+# = The main application module
+module StopTime
 
   # The parsed configuration (Hash).
   attr_reader :config
 
   # Override controller call handler so that the configuration is available
   # for all controllers and views.
-  # See also: http://code.whytheluckystiff.net/camping/wiki/BeforeAndAfterOverrides
   def service(*a)
-    # FIXME: config path should be configurable!
     @config = StopTime::Models::Config.instance
     super(*a)
   end
 
-end #module Photos::Config
-
-# = The main application module
-module StopTime
+  # Trap the HUP signal and reload the configuration.
+  Signal.trap("HUP") do
+    $stderr.puts "I: caught signal HUP, reloading config"
+    Models::Config.instance.reload
+  end
 
   # Enable SASS CSS generation from templates/sass.
   use Sass::Plugin::Rack
@@ -72,14 +68,6 @@ module StopTime
   # Create/migrate the database when needed.
   def self.create
     StopTime::Models.create_schema
-  end
-
-  # Automatically mix-in the configuration support in the application.
-  include StopTime::Config
-
-  Signal.trap("HUP") do
-    $stderr.puts "I: caught signal HUP, reloading config"
-    Models::Config.instance.reload
   end
 
 end
@@ -99,6 +87,7 @@ module StopTime::Models
 
     # The default configuation file. (FIXME: shouldn't be hardcoded!)
     ConfigFile = File.dirname(__FILE__) + "/config.yaml"
+
     # The default configuration. Note that the configuration of the root
     # will be merged with this configuration.
     DefaultConfig = { "invoice_id" => "%Y%N",
@@ -106,13 +95,9 @@ module StopTime::Models
                       "vat_rate"    => 19.0 }
 
     # Creates a new configuration object and loads the configuation.
+    # by reading the file @config.yaml@ on disk, parsing it, and
+    # performing a merge with the default config (DefaultConfig).
     def initialize
-      load
-    end
-
-    # Loads the configuration by reaiding the file file, parsing it, and
-    # performing a merge with descendants.
-    def load
       @config = DefaultConfig.dup
       cfg = nil
       # Read and parse the configuration.
