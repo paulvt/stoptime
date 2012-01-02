@@ -74,7 +74,7 @@
    \descriptiontext&Aantal uur&Uurtarief&\amounttext\ML}%
  {\endtabularx}
 \newcommand{\ihitem}[4]{#1&#2&\currency~#3&\currency~#4\\}
-\newcommand{\ifcitem}[2]{#1&--&--&\currency~#2\\}
+\newcommand{\ifcitem}[3]{#1&#2&--&\currency~#3\\}
 \newcommand{\ihsubtotal}[1]{\cmidrule[.0em]{4-4}%
   \textit{Subtotaal}&&&\currency~#1\\}
 \newcommand{\ihnosubtotal}[1]{\cmidrule[.0em]{4-4}&&&\\}
@@ -87,18 +87,19 @@
 \invoice{
  \hypersetup{pdftitle=\invoicetext\ naar\ \toname\ gedateerd \date\ (\ourref)}
 
- % FIXME: localise the dot/comma stuff in numbers.
  \begin{ihtable}
 <% subtotal = 0.0
    @tasks.each do |task, line|
-     if line[2].nil?
+     if line[1].blank?
 %>  \ifcitem{<%= task.comment_or_name %>}%
-          {<%= number_with_precision(line[2]) %>}<%
-     else
+         {<%= number_with_precision(line[0]) %>}%
+         {<%= number_with_precision(line[2]) %>}
+<%  else
 %>  \ihitem{<%= task.comment_or_name %>}%
-         {<%= number_with_precision(line[0]) %>}{<%= number_with_precision(line[1]) %>}%
-         {<%= number_with_precision(line[2]) %>}<%
-     end 
+         {<%= number_with_precision(line[0]) %>}%
+         {<%= number_with_precision(line[1]) %>}%
+         {<%= number_with_precision(line[2]) %>}
+<%   end
      subtotal += line[2]
    end
    if @company.vatno.blank?
