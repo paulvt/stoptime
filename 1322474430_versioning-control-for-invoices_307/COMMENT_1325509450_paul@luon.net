@@ -1,0 +1,5 @@
+commit 57943f913e13e616a15bac4648fd935ba31ea78d
+Author: Paul van Tilburg <paul@luon.net>
+Date:   Mon Jan 2 14:04:09 2012 +0100
+
+    Added links to billed tasks from an invoice (refs: #69f890)
