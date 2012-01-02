@@ -137,6 +137,11 @@ module StopTime::Models
       load
     end
 
+    # Give access to the configuration.
+    def [](attr)
+      @config[attr]
+    end
+
   end # class StopTime::Models::Config
 
   # == The customer class
