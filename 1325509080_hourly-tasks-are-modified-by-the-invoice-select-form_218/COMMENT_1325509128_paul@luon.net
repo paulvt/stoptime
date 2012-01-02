@@ -1,0 +1,5 @@
+commit 91cb9d42b2ad576915bfa2fa897c614121ae16cf
+Author: Paul van Tilburg <paul@luon.net>
+Date:   Mon Jan 2 13:58:47 2012 +0100
+
+    Only treat fixed cost tasks of the selected tasks (closes: #21f52e)
