@@ -92,8 +92,8 @@
    @tasks.each do |task, line|
      if line[1].blank?
 %>  \ifcitem{<%= task.comment_or_name %>}%
-         {<%= number_with_precision(line[0]) %>}%
-         {<%= number_with_precision(line[2]) %>}
+          {<%= number_with_precision(line[0]) %>}%
+          {<%= number_with_precision(line[2]) %>}
 <%  else
 %>  \ihitem{<%= task.comment_or_name %>}%
          {<%= number_with_precision(line[0]) %>}%
@@ -103,8 +103,8 @@
      subtotal += line[2]
    end
    if @company.vatno.blank?
-     vat = 0 %>
-  \ihnosubtotal{} <%
+     vat = 0
+%>  \ihnosubtotal{} <%
    else
      vat = subtotal * @config["vat_rate"]/100.0 %>
   \ihsubtotal{<%= number_with_precision(subtotal) %>}
