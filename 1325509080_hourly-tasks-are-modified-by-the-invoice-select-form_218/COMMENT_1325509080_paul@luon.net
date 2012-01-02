@@ -1,0 +1,5 @@
+
+When an hourly task is selected in the invoice_select_form, it
+is treated as a fixed cost task when processed.  That is, the 
+invoice comment is set en the hourly task is tied to an invoice
+(while only its cloned task should be).
