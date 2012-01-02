@@ -1636,6 +1636,14 @@ module StopTime::Views
           td.right { "€ %.2f" % line[2] }
         end
         subtotal += line[2]
+        task.time_entries.each do |entry|
+          tr do
+            td.indent { "&bullet; " + entry.comment }
+            td.right { "%.2fh" % entry.hours_total }
+            td.right { "–" }
+            td.right { "–" }
+          end
+        end unless task.fixed_cost?
       end
       if @company.vatno.blank?
         vat = 0
