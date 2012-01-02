@@ -1,0 +1,5 @@
+commit 768d2d55f66f221a93f10e8abad43450f83ae863
+Author: Paul van Tilburg <paul@luon.net>
+Date:   Mon Jan 2 14:05:03 2012 +0100
+
+    Allow for modification of the invoice comment (refs: #69f890)
