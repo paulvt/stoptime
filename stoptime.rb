@@ -1633,7 +1633,7 @@ module StopTime::Views
         subtotal += line[2]
         task.time_entries.each do |entry|
           tr do
-            td.indent { "&bullet; " + entry.comment }
+            td.indent { "– #{entry.comment}" }
             td.right { "%.2fh" % entry.hours_total }
             td.right { "–" }
             td.right { "–" }
