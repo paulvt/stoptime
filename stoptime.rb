@@ -1620,7 +1620,10 @@ module StopTime::Views
       subtotal = 0.0
       @tasks.each do |task, line|
         tr do
-          td { task.comment_or_name }
+          td do
+            a task.comment_or_name,
+              :href => R(CustomersNTasksN, customer.id, task.id)
+          end
           if line[1].blank?
             # FIXME: information of time spent is available in the summary
             # but show it?
