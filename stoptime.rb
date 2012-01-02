@@ -1305,7 +1305,7 @@ module StopTime::Views
   # FIXME: This should be done in a nicer way.
   def time_entries(task_id=nil)
     if task_id.present?
-      h2 "Registered unbilled time"
+      h2 "Registered #{task.billed? ? "billed" : "unbilled"} time"
     else
       h2 "Timeline"
     end
