@@ -795,7 +795,10 @@ module StopTime::Controllers
       @task = Task.find(task_id)
       if @input.has_key? "update"
         @task["customer"] = Customer.find(@input["customer"])
-        @task["name"] = @input["name"] unless @input["name"].blank?
+        @task.name = @input["name"] unless @input["name"].blank?
+        if @task.billed? and @input["invoice_comment"].present?
+          @task.invoice_comment = @input["invoice_comment"]
+        end
         case @input.type
         when "fixed_cost"
           @task.fixed_cost = @input.fixed_cost
