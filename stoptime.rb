@@ -864,13 +864,16 @@ module StopTime::Controllers
       invoice = Invoice.create(:number => number)
       invoice.customer = Customer.find(customer_id)
 
-      # Handle the hourly rated tasks first.
+      # Handle the hourly rated tasks first by looking at the selected time
+      # entries.
       tasks = Hash.new { |h, k| h[k] = Array.new }
       @input["time_entries"].each do |entry|
         time_entry = TimeEntry.find(entry)
         tasks[time_entry.task] << time_entry
       end unless @input["time_entries"].blank?
       tasks.each_key do |task|
+        # Create a new (billed) task clone that contains the selected time
+        # entries, leave the rest unbilled and associated with their task.
         bill_task = task.clone # FIXME: depends on rails version!
         task.time_entries = task.time_entries - tasks[task]
         task.save
@@ -880,9 +883,10 @@ module StopTime::Controllers
         invoice.tasks << bill_task
       end
 
-      # Then, handle the fixed cost tasks.
+      # Then, handle the (selected) fixed cost tasks.
       @input["tasks"].each do |task|
         task = Task.find(task)
+        next unless task.fixed_cost?
         task.invoice_comment = @input["task_#{task.id}_comment"]
         task.save
         invoice.tasks << task
