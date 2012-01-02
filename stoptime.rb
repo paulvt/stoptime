@@ -1101,7 +1101,7 @@ module StopTime::Controllers
       @input["start"] = @time_entry.start.to_formatted_s(:time_only)
       @input["end"] = @time_entry.end.to_formatted_s(:time_only)
       @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
-      @task_list = Task.all.reject { |t| t.billed? }.map { |t| [t.id, t.name] }
+      @task_list = Task.all.map { |t| [t.id, t.name] }
 
       @target = [TimelineN, entry_id]
       @button = "update"
