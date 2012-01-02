@@ -97,7 +97,7 @@ module StopTime::Models
     include Singleton
 
     # The default configuation file. (FIXME: shouldn't be hardcoded!)
-    ConfigFile = "./config.yaml"
+    ConfigFile = File.basename(__FILE__) + "/config.yaml"
     # The default configuration. Note that the configuration of the root
     # will be merged with this configuration.
     DefaultConfig = { "invoice_id" => "%Y%N",
