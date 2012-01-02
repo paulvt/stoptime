@@ -1532,10 +1532,10 @@ module StopTime::Views
       @tasks.each do |task, line|
         tr do
           td { task.comment_or_name }
-          if line[1].nil?
+          if line[1].blank?
             # FIXME: information of time spent is available in the summary
             # but show it?
-            td.right "–"
+            td.right { "%.2fh" % line[0] }
             td.right "–"
           else
             td.right { "%.2fh" % line[0] }
