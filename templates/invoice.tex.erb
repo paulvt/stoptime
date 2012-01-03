@@ -39,7 +39,9 @@
   website=<%= @company.website %>,
   %% Addressee info.
   %foreign,
-  to={<%= @customer.name %>\\<%= @customer.address_street%>\\
+  to={<%= @customer.name %>\\<% unless @customer.financial_contact.blank?
+%><%= @customer.financial_contact
+%>\\<% end %><%= @customer.address_street%>\\
       <%= @customer.address_postal_code %> <%= @customer.address_city %>},
   % Headlines.
   date=<%= @invoice.created_at.to_formatted_s(:day_code) %>,
@@ -54,11 +56,15 @@
   term=30,
   accountno=<%= @company.accountno %>,
   accountname=<%= @company.accountname %>,
-<% unless @company.vatno.blank? %>  vatno=<%= @company.vatno %>,
+<% unless @company.accountiban.blank? %>  iban=<% @company.accountiban %>,
+<% end %><% unless @company.bank_bic.blank? %>  bic=<% @company.bank_bic %>,
+<% end %><% unless @company.vatno.blank? %>  vatno=<%= @company.vatno %>,
 <% end %><% unless @company.chamber.blank? %>  chamber=<%= @company.chamber %>
 <% end %>}
 
-\newcommand{\addresstext}{adres}
+<% if @company.bank_name.present? %>
+\renewcommand{\accountnotext}{<%= @company.bank_name %> rekeningnr}
+<% end %>\newcommand{\addresstext}{adres}
 \newcommand{\addresswhotext}{t.n.v.}
 \renewcommand{\chambertext}{KvK-nr}
 \renewcommand{\datetext}{Factuurdatum}

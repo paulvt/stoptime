@@ -606,6 +606,7 @@ module StopTime::Controllers
       @customer = Customer.create(
         :name => @input.name,
         :short_name => @input.short_name,
+        :financial_contact => @input.financial_contact,
         :address_street => @input.address_street,
         :address_postal_code => @input.address_postal_code,
         :address_city => @input.address_city,
@@ -675,7 +676,7 @@ module StopTime::Controllers
       if @input.has_key? "delete"
         @customer.delete
       elsif @input.has_key? "update"
-        attrs = ["name", "short_name",
+        attrs = ["name", "short_name", "financial_contact",
                  "address_street", "address_postal_code", "address_city",
                  "email", "phone", "hourly_rate"]
         attrs.each do |attr|
@@ -1213,7 +1214,8 @@ module StopTime::Controllers
                "address_street", "address_postal_code", "address_city",
                "country", "country_code",
                "phone", "cell", "email", "website",
-               "chamber", "vatno", "accountname", "accountno"]
+               "chamber", "vatno",
+               "bank_name", "bank_bic", "accountno", "accountiban"]
       attrs.each do |attr|
         @company[attr] = @input[attr]
       end
@@ -1487,6 +1489,7 @@ module StopTime::Views
         li { _form_input_with_label("City/town", "address_city", :text) }
         li { _form_input_with_label("Email address", "email", :text) }
         li { _form_input_with_label("Phone number", "phone", :text) }
+        li { _form_input_with_label("Financial contact", "financial_contact", :text) }
         li { _form_input_with_label("Default hourly rate", "hourly_rate", :text) }
       end
       input :type => "submit", :name => @button, :value => @button.capitalize
@@ -1800,10 +1803,19 @@ module StopTime::Views
         li { _form_input_with_label("Cellular number", "cell", :text) }
         li { _form_input_with_label("Email address", "email", :text) }
         li { _form_input_with_label("Web address", "website", :text) }
+      end
+      h3 "Corporate information"
+      ol do
         li { _form_input_with_label("Chamber number", "chamber", :text) }
         li { _form_input_with_label("VAT number", "vatno", :text) }
-        li { _form_input_with_label("Bank account name", "accountname", :text) }
-        li { _form_input_with_label("Bank account number", "accountno", :text) }
+      end
+      h3 "Bank information"
+      ol do
+        li { _form_input_with_label("Name", "bank_name", :text) }
+        li { _form_input_with_label("Identification code", "bank_bic", :text) }
+        li { _form_input_with_label("Account holder", "accountname", :text) }
+        li { _form_input_with_label("Account number", "accountno", :text) }
+        li { _form_input_with_label("Intl. account number", "accountiban", :text) }
       end
       input :type => "submit", :name => "update", :value => "Update"
       input :type => :reset, :name => "reset", :value => "Reset"
