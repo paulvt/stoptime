@@ -139,6 +139,7 @@ module StopTime::Models
   # [id] unique identification number (Fixnum)
   # [name] official (long) name (String)
   # [short_name] abbreviated name (String)
+  # [financial_contact] name of the financial contact person/department (String)
   # [address_street] street part of the address (String)
   # [address_postal_code] zip/postal code part of the address (String)
   # [address_city] city part of the postal code (String)
@@ -363,8 +364,11 @@ module StopTime::Models
   # [website] web address (String)
   # [chamber] optional chamber of commerce ID number (String)
   # [vatno] optional VAT number (String)
+  # [bank_name] name of the bank (String)
+  # [bank_bic] bank identification code (aka SWIFT code) (String)
   # [accountname] name of the bank account holder (String)
   # [accountno] number of the bank account (String)
+  # [accountiban] international bank account number (String)
   # [created_at] time of creation (Time)
   # [updated_at] time of last update (Time)
   class CompanyInfo < Base
@@ -536,6 +540,22 @@ module StopTime::Models
 
     def self.down
       remove_column(Task.table_name, :invoice_comment)
+    end
+  end
+
+  class FinancialInfoSupport < V 1.92 # :nodoc:
+    def self.up
+      add_column(CompanyInfo.table_name, :bank_name, :string)
+      add_column(CompanyInfo.table_name, :bank_bic, :string)
+      add_column(CompanyInfo.table_name, :accountiban, :string)
+      add_column(Customer.table_name, :financial_contact, :string)
+    end
+
+    def self.down
+      remove_column(CompanyInfo.table_name, :bank_name)
+      remove_column(CompanyInfo.table_name, :bank_bic)
+      remove_column(CompanyInfo.table_name, :accountiban)
+      remove_column(Customer.table_name, :financial_contact)
     end
   end
 
