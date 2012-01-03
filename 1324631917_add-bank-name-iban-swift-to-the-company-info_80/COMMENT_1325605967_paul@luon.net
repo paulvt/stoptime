@@ -1,0 +1,10 @@
+commit 00e5aa2902119493783fa9f9e3f9f287360badad
+Author: Paul van Tilburg <paul@luon.net>
+Date:   Tue Jan 3 16:51:07 2012 +0100
+
+    Adapted forms and the invoice template to accommodate more financial info
+    
+    * Allow for setting and updating the financial contact of a customer
+      and show in invoices when set (closes: #9d4c2e).
+    * Allow for setting and updating bank information (IBAN, BIC, name)
+      and use it in the template (closes: #a11265).
