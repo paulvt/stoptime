@@ -984,6 +984,9 @@ module StopTime::Controllers
         erb = ERB.new(File.read(template))
         File.open(tex_file, "w") { |f| f.write(erb.result(binding)) }
       end
+    rescue Exception => err
+      tex_file.delete
+      raise err
     end
 
     # Generates a PDF document for the invoice with the given _number_
