@@ -845,9 +845,12 @@ module StopTime::Controllers
     # _customer_id_ and displays them using Views#invoices.
     def get(customer_id)
       # FIXME: quick hack! is this URL even used?
-      @invoices = {}
       customer = Customer.find(customer_id)
-      @invoices[customer.name] = customer.invoices
+      customer.invoices.each do |i|
+        @input["paid_#{i.number}"] = true if i.paid?
+      end
+      @invoices = {customer.name => customer.invoices}
+
       render :invoices
     end
 
