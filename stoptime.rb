@@ -1411,6 +1411,13 @@ module StopTime::Views
 
   # Form for editing a time entry (Models::TimeEntry).
   def time_entry_form
+    h2 "Time Entry Information"
+    if @time_entry.present? and @time_entry.task.billed?
+      p.warn do
+        em "This time entry is already billed!  Only make changes if you know " +
+           "what you are doing!"
+      end
+    end
     form :action => R(*target), :method => :post do
       ol do
         li do
@@ -1421,13 +1428,21 @@ module StopTime::Views
           label "Task", :for => "task"
           _form_select("task", @task_list)
         end
+        if @time_entry.present? and @time_entry.task.billed?
+          li do
+            label "Billed in invoice"
+            a @time_entry.task.invoice.number,
+              :href => R(CustomersNInvoicesX, @time_entry.customer.id,
+                                              @time_entry.task.invoice.number)
+          end
+        end
         li { _form_input_with_label("Date", "date", :text) }
         li { _form_input_with_label("Start Time", "start", :text) }
         li { _form_input_with_label("End Time", "end", :text) }
         li { _form_input_with_label("Comment", "comment", :text) }
         li do
-          _form_input_checkbox("bill")
           label "Bill?", :for => "bill"
+          _form_input_checkbox("bill")
         end
         # FIXME: link to invoice if any
       end
@@ -1561,7 +1576,7 @@ module StopTime::Views
         end
         if task.billed?
           li do
-            label "Invoice number"
+            label "Billed in invoice"
             a @task.invoice.number,
               :href => R(CustomersNInvoicesX, @customer.id, @task.invoice.number)
           end
