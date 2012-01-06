@@ -636,6 +636,7 @@ module StopTime::Controllers
     def get
       @customer = Customer.new(:hourly_rate => @config['hourly_rate'])
       @input = @customer.attributes
+      @tasks = []
 
       @target = [Customers]
       @button = "create"
@@ -655,6 +656,7 @@ module StopTime::Controllers
     def get(customer_id)
       @customer = Customer.find(customer_id)
       @input = @customer.attributes
+      @tasks = @customer.tasks.all(:order => "name, invoice_id ASC")
       @invoices = @customer.invoices
       @invoices.each do |i|
         @input["paid_#{i.number}"] = true if i.paid?
@@ -1521,7 +1523,7 @@ module StopTime::Views
       form :action => R(CustomersNTasks, @customer.id), :method => :post do
         h2 "Projects & Tasks"
         select :name => "task_id", :size => 10 do
-          @customer.tasks.each do |task|
+          @tasks.each do |task|
             if task.billed?
               option(:value => task.id,
                      :disabled => true) { task.name + " (#{task.invoice.number})" }
