@@ -915,6 +915,7 @@ module StopTime::Controllers
                end
       invoice = Invoice.create(:number => number)
       invoice.customer = Customer.find(customer_id)
+      invoice.company_info = CompanyInfo.last
 
       # Handle the hourly rated tasks first by looking at the selected time
       # entries.
@@ -976,9 +977,9 @@ module StopTime::Controllers
         @format = "html"
       end
       @invoice = Invoice.find_by_number(@number)
-
-      @company = CompanyInfo.first
       @customer = Customer.find(customer_id)
+
+      @company = @invoice.company_info
       @tasks = @invoice.summary
       @period = @invoice.period
 
@@ -1248,7 +1249,16 @@ module StopTime::Controllers
     # (Views#company_form).
     # If the provided information was invalid, the errors are retrieved.
     def post
-      @company = CompanyInfo.first
+      @company = CompanyInfo.find(@input.revision || :last)
+      # If we are editing the current info and it is already associated
+      # with some invoices, create a new revision.
+      @history_warn = true if @company != CompanyInfo.last
+      if @company == CompanyInfo.last and @company.invoices.length > 0
+        old_company = @company
+        @company = old_company.clone # FIXME: depends on rails versioN!
+        @company.original = old_company
+      end
+
       attrs = ["name", "contact_name",
                "address_street", "address_postal_code", "address_city",
                "country", "country_code",
