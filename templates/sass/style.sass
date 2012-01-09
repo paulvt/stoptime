@@ -74,52 +74,28 @@ ol#menu
 
 /* Table layout */
 table
+  table-layout: fixed
   padding: 3px 0px
   border-spacing: 0px 4px
 
   col.amount, col.hours, col.hourly_rate
-    width: 10%
+    width: 100px
   col.flag
-    width: 3%
+    width: 30px
   col.date
-    width: 9%
+    width: 95px
   col.start_time, col.end_time
-    width: 5%
-  col.comment
-    width: 20%
-  col.customer
-    width: 10%
-  col.task
-    width: 20%
-  col.name, col.period
-    width: 25%
-  col.short_name
-    width: 20%
-  col.address
-    width: 20%
-  col.email, col.phone
-    width: 15%
-  col.number
-    width: 7%
-
-  &.overview
-    width: 50%
-
-  &.timeline
-    width: 100%
-
-  &.tasks
-    width: 60%
-
-  &.customers, &.invoice_select
-    width: 75%
-
-  &.invoices
-    width: 50%
-
-  td
-    padding: 0px 5px
-    vertical-align: top
+    width: 55px
+  col.customer, col.name
+    width: 150px
+  col.task, col.comment
+    width: 200px
+  col.short_name, col.phone
+    width: 120px
+  col.address, col.period
+    width: 250px
+  col.email, col.number
+    width: 170px
 
   th
     padding: 0px 5px
@@ -131,15 +107,19 @@ table
       background-color: $medium-grey
 
     &.total
-      border-top: solid black
+      border-top: thin solid black
 
-  td.key
-    font-weight: bold
-    width: 80px
-    padding-bottom: 5px
+  td
+    padding: 0px 5px
+    vertical-align: top
+    border: inherit
+
+    &.key
+      font-weight: bold
+      width: 80px
 
   input
-    width: 100%
+    width: 90%
 
   input[type="submit"], input[type="reset"], input[type="checkbox"]
     width: auto

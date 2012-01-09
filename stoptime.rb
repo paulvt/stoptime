@@ -1521,12 +1521,32 @@ module StopTime::Views
         @customers.each do |customer|
           tr do
             td { a customer.name, :href => R(CustomersN, customer.id) }
-            td { customer.short_name }
-            td { [customer.address_street,
-                  customer.address_postal_code,
-                  customer.address_city].join(", ") unless customer.address_street.blank? }
-            td { a customer.email, :href => "mailto:#{customer.email}" }
-            td { customer.phone }
+            td { customer.short_name  || "–"}
+            td do
+              if customer.address_street.present?
+                text customer.address_street
+                br
+                text customer.address_postal_code + "&nbsp;" +
+                     customer.address_city
+              else
+                "–"
+              end
+            end
+            td do
+              if customer.email.present?
+                a customer.email, :href => "mailto:#{customer.email}"
+              else
+                "–"
+              end
+            end
+            td do
+              if customer.phone.present?
+                # FIXME: hardcoded prefix!
+                "0#{customer.phone}"
+              else
+                "–"
+              end
+            end
             td do
               form :action => R(CustomersN, customer.id), :method => :post do
                 input :type => :submit, :name => "delete", :value => "Delete"
