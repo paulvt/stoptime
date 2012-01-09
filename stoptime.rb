@@ -311,6 +311,7 @@ module StopTime::Models
   #
   # === Attributes by association
   #
+  # [company_info] associated company info (CompanyInfo)
   # [customer] associated customer (Customer)
   # [tasks] billed tasks by the invoice (Array of Task)
   # [time_entries] billed time entries (Array of TimeEntry)
@@ -318,6 +319,7 @@ module StopTime::Models
     has_many :tasks
     has_many :time_entries, :through => :tasks
     belongs_to :customer
+    belongs_to :company_info
 
     # Returns a time and cost summary of the contained tasks (Hash of
     # Task to Array).
@@ -371,7 +373,19 @@ module StopTime::Models
   # [accountiban] international bank account number (String)
   # [created_at] time of creation (Time)
   # [updated_at] time of last update (Time)
+  #
+  # === Attributes by association
+  #
+  # [invoices] associated invoices (Array of Invoice)
+  # [original] original (previous) revision (CompanyInfo)
   class CompanyInfo < Base
+    belongs_to :original, :class_name => "CompanyInfo"
+    has_many :invoices
+
+    # Returns the revision number (Fixnum).
+    def revision
+      id
+    end
   end
 
   class StopTimeTables < V 1.0 # :nodoc:
@@ -556,6 +570,23 @@ module StopTime::Models
       remove_column(CompanyInfo.table_name, :bank_bic)
       remove_column(CompanyInfo.table_name, :accountiban)
       remove_column(Customer.table_name, :financial_contact)
+    end
+  end
+
+  class CompanyInfoRevisioning < V 1.93 # :nodoc:
+    def self.up
+      add_column(CompanyInfo.table_name, :original_id, :integer)
+      add_column(Invoice.table_name, :company_info_id, :integer)
+      ci = CompanyInfo.last
+      Invoice.all.each do |i|
+        i.company_info = ci
+        i.save
+      end
+    end
+
+    def self.down
+      remove_column(CompanyInfo.table_name, :original_id)
+      remove_column(Invoice.table_name, :company_info_id)
     end
   end
 
