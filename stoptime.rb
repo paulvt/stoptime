@@ -1345,10 +1345,10 @@ module StopTime::Views
           end
         else
           table.overview do
+            col.task {}
+            col.hours {}
+            col.amount {}
             @tasks[customer].each do |task|
-              col.task {}
-              col.hours {}
-              col.amount {}
               tr do
                 summary = task.summary
                 td do
