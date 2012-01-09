@@ -1240,8 +1240,9 @@ module StopTime::Controllers
     # Retrieves the company information and shows a form for updating
     # via Views#company_form.
     def get
-      @company = CompanyInfo.first
+      @company = CompanyInfo.find(@input.revision || :last)
       @input = @company.attributes
+      @history_warn = true if @company != CompanyInfo.last
       render :company_form
     end
 
@@ -1756,6 +1757,8 @@ module StopTime::Views
       :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.pdf")
     a "» Download LaTeX source",
       :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.tex")
+    a "» View related company info",
+      :href => R(Company, :revision => @company.revision)
   end
 
   # Form for selecting fixed cost tasks and registered time for tasks with
@@ -1856,7 +1859,23 @@ module StopTime::Views
         end
       end
     end
-    form :action => R(Company), :method => :post do
+    p do
+      em " Viewing revision #{@company.revision}, " +
+         " last update at #{@company.updated_at}."
+      if @company.original.present?
+        a "» View previous revision",
+          :href => R(Company, :revision => @company.original.revision)
+      end
+    end
+    if @history_warn
+      p.warn do
+        em "This company information is already associated with some invoices! "
+        br
+        em "Only make changes if you know what you are doing!"
+      end
+    end
+    form :action => R(Company, :revision => @company.revision),
+         :method => :post do
       ol do
         li { _form_input_with_label("Name", "name", :text) }
         li { _form_input_with_label("Contact name", "contact_name", :text) }
