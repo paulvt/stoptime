@@ -343,6 +343,17 @@ module StopTime::Models
       end
       return p
     end
+
+    # Returns the total amount (including VAT).
+    def total_amount
+      subtotal = summary.inject(0.0) { |tot, (task, summ)| tot + summ[2] }
+      if company_info.vatno.blank?
+        subtotal
+      else
+        config = Config.instance
+        subtotal * (1 + config["vat_rate"]/100.0)
+      end
+    end
   end
 
   # == The company information class
@@ -1967,11 +1978,13 @@ module StopTime::Views
         col.number {}
         col.date {}
         col.period {}
+        col.amount {}
         col.flag {}
         tr do
           th "Number"
           th "Date"
           th "Period"
+          th.right "Amount"
           th "Paid?"
         end
         invoices.each do |invoice|
@@ -1984,6 +1997,7 @@ module StopTime::Views
             td { invoice.created_at.to_formatted_s(:date_only) }
             td { _format_period(invoice.period) }
             # FIXME: really retrieve the paid flag.
+            td.right { "€ %.2f" % invoice.total_amount }
             td do
               _form_input_checkbox("paid_#{invoice.number}", invoice.paid?,
                                    :disabled => true)
