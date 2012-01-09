@@ -1741,7 +1741,13 @@ module StopTime::Views
         subtotal += line[2]
         task.time_entries.each do |entry|
           tr do
-            td.indent { "– #{entry.comment}" }
+            td.indent do
+              if entry.comment.present?
+                "• #{entry.comment}"
+              else
+                em.light "• no comment"
+              end
+            end
             td.right { "%.2fh" % entry.hours_total }
             td.right { "–" }
             td.right { "–" }
@@ -1751,7 +1757,7 @@ module StopTime::Views
       if @company.vatno.blank?
         vat = 0
       else
-        tr do
+        tr.total do
           td { i "Sub-total" }
           td ""
           td ""
@@ -1766,7 +1772,7 @@ module StopTime::Views
         end
       end
       tr.total do
-        td { b "Total amount" }
+        td { b "Total" }
         td ""
         td ""
         td.right { "€ %.2f" % (subtotal + vat) }

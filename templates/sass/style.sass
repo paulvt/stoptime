@@ -6,6 +6,7 @@ $medium-grey: #cfcfcf
 $dark-grey: #9f9f9f
 $light-red: #cb0000
 $dark-red: #990000
+$white: #ffffff
 
 /* General classes */
 .right
@@ -21,6 +22,9 @@ $dark-red: #990000
 
 .billed
   text-decoration: line-through
+
+.light
+  color: $medium-grey
 
 .indent
   padding-left: 20px
@@ -105,6 +109,9 @@ table
   tr
     &:hover
       background-color: $medium-grey
+
+      .light
+        color: white
 
     &.total
       border-top: thin solid black
