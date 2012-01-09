@@ -1722,7 +1722,7 @@ module StopTime::Views
 
     table.tasks do
       col.task {}
-      col.hours {}
+      col.reg_hours {}
       col.hourly_rate {}
       col.amount {}
       tr do
