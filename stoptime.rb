@@ -53,6 +53,7 @@ module StopTime
   # for all controllers and views.
   def service(*a)
     @config = StopTime::Models::Config.instance
+    @format = @request.path_info[/.([^.]+)/, 1];
     super(*a)
   end
 
