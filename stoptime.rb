@@ -62,6 +62,9 @@ module StopTime
     Models::Config.instance.reload
   end
 
+  # Add support for PUT and DELETE.
+  use Rack::MethodOverride
+
   # Enable SASS CSS generation from templates/sass.
   use Sass::Plugin::Rack
 
@@ -70,6 +73,23 @@ module StopTime
     StopTime::Models.create_schema
   end
 
+end
+
+# = The Stop… Camping Time! helpers
+module StopTime::Helpers
+  SUPPORTED = %w[get post]
+
+  # Adds a method override for (usually) unsupported methods by browsers
+  # (i.e. PUT and DELETE) by injecting a hidden field to forms.
+  def form(options)
+    meth = options[:method]
+    override = !SUPPORTED.include?(meth)
+    options[:method] = 'post' if override
+    super(options) do
+      input type: 'hidden', name: '_method', value: meth if override
+      yield
+    end
+  end
 end
 
 # = The Stop… Camping Time! models
