@@ -64,7 +64,7 @@ Simply run from the command line:
 and head over to http://localhost:3301/ to view and use the web
 application.
 
-=== Physion Passenger (mod_rails/mod_rack)/Apache
+=== Phusion Passenger (mod_rails/mod_rack)/Apache
 
 Camping applications are Rack applications.  Deployment follows the
 standard way of deploying Rack applications using mod_rack.
@@ -126,7 +126,7 @@ For example:
 
 Now, restart Apache and visit http://some.domain.tld/stoptime.
 
-For more extensive information, please refer to the documentat of
+For more extensive information, please refer to the documentation of
 Phusion Passenger:
 http://www.modrails.com/documentation/Users%20guide%20Apache.html#_deploying_a_rack_based_ruby_application
 
