@@ -19,7 +19,7 @@ invoicing.
 Stop… Camping Time! is a Camping application, so you need:
 
 * Ruby 1.8 (>= 1.8.6) or 1.9 (>= 1.9.1)
-* Camping (>= 2.1) with
+* Camping (>= 2.0) with
   * Active Record (>= 2.3)
   * Markaby, and optionally:
   * Mongrel (for testing and deployment without Apache/Rackup)
