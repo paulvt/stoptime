@@ -87,7 +87,7 @@ module StopTime::Helpers
     override = !SUPPORTED.include?(meth)
     options[:method] = 'post' if override
     super(options) do
-      input type: 'hidden', name: '_method', value: meth if override
+      input :type => 'hidden', :name => '_method', :value => meth if override
       yield
     end
   end
