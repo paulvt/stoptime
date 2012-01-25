@@ -1345,6 +1345,7 @@ module StopTime::Views
 
   # The main layout used by all views.
   def layout
+    doctype!
     html do
       head do
         title "Stop… Camping Time!"
