@@ -78,20 +78,28 @@ module StopTime
 end
 
 # = The Stop… Camping Time! Markaby extensions
-module StopTime::Helpers
+module StopTime::Mab
   SUPPORTED = [:get, :post]
 
-  # Adds a method override field in form tags for (usually) unsupported
-  # methods by browsers (i.e.  PUT and DELETE) by injecting a hidden field.
-  def tag!(tag, *attrs)
-    return super unless tag == :form && block_given?
-    attrs = attrs.last.is_a?(Hash) ? attrs.last : {}
-    meth = attrs[:method]
-    attrs[:method] = 'post' if override = !SUPPORTED.include?(meth)
-    super(tag, attrs) do
-      input :type => 'hidden', :name => '_method', :value => meth if override
-      yield
-    end
+  # # Adds a method override field in form tags for (usually) unsupported
+  # # methods by browsers (i.e.  PUT and DELETE) by injecting a hidden field.
+  # def tag!(tag, *attrs)
+  #   return super unless tag == :form && block_given?
+  #   attrs = attrs.last.is_a?(Hash) ? attrs.last : {}
+  #   meth = attrs[:method]
+  #   attrs[:method] = 'post' if override = !SUPPORTED.include?(meth)
+  #   super(tag, attrs) do
+  #     input :type => 'hidden', :name => '_method', :value => meth if override
+  #     yield
+  #   end
+  # end
+
+  def tag!(name, *args)
+    Kernel.p [name, args]
+    content = args.shift unless args.first.is_a?(Hash)
+    attrs = args.inject { |a,b| a.merge(b) }
+    Kernel.p [name, content, args]
+    super(name, content, attrs)
   end
 
 end
