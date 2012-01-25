@@ -77,16 +77,17 @@ module StopTime
 end
 
 # = The Stop… Camping Time! Markaby extensions
-module StopTime::Mab
+class StopTime::Mab
   SUPPORTED = [:get, :post]
 
   # Adds a method override field in form tags for (usually) unsupported
   # methods by browsers (i.e.  PUT and DELETE) by injecting a hidden field.
-  def tag!(name, attrs={})
-    return super unless name == :form && block_given?
+  def tag!(tag, *attrs)
+    return super unless tag == :form && block_given?
+    attrs = attrs.last.is_a?(Hash) ? attrs.last : {}
     meth = attrs[:method]
     attrs[:method] = 'post' if override = !SUPPORTED.include?(meth)
-    super do
+    super(tag, attrs) do
       input :type => 'hidden', :name => '_method', :value => meth if override
       yield
     end
