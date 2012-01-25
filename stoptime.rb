@@ -13,6 +13,7 @@ require "action_view"
 require "active_support"
 require "camping"
 require "camping/mab"
+require "camping/ar"
 require "pathname"
 require "sass/plugin/rack"
 
