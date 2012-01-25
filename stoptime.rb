@@ -12,6 +12,7 @@
 require "action_view"
 require "active_support"
 require "camping"
+require "camping/ar"
 require "markaby"
 require "pathname"
 require "sass/plugin/rack"
