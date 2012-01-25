@@ -77,7 +77,6 @@ module StopTime
 end
 
 # = The Stop… Camping Time! Markaby extensions
-# FIXME: update for Mab!
 module StopTime::Mab
   SUPPORTED = [:get, :post]
 
