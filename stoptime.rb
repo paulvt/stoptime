@@ -1349,7 +1349,8 @@ module StopTime::Views
 
   # The main layout used by all views.
   def layout
-    xhtml_strict do
+    doctype!
+    html do
       head do
         title "Stop… Camping Time!"
         # FIXME: improve static serving so that the hack below is not needed.
@@ -1383,8 +1384,8 @@ module StopTime::Views
         h3 { a customer.name, :href => R(CustomersN, customer.id) }
         if @tasks[customer].empty?
           p do
-            text "No projects/tasks found! Create one " +
-                 "#{a "here", :href => R(CustomersNTasksNew, customer.id)}."
+            text! "No projects/tasks found! Create one " +
+                  "#{a "here", :href => R(CustomersNTasksNew, customer.id)}."
           end
         else
           table.overview do
@@ -1543,7 +1544,7 @@ module StopTime::Views
     h2 "Customers"
     if @customers.empty?
       p do
-        text "None found! You can create one " +
+        text! "None found! You can create one " +
              "#{a "here", :href => R(CustomersNew)}."
       end
     else
@@ -1705,8 +1706,8 @@ module StopTime::Views
 
     if @invoices.values.flatten.empty?
       p do
-        text "Found none! You can create one by "
-             "#{a "selecting a customer", :href => R(Customers)}."
+        text! "Found none! You can create one by "
+              "#{a "selecting a customer", :href => R(Customers)}."
       end
     else
       @invoices.keys.sort.each do |key|
@@ -1994,7 +1995,7 @@ module StopTime::Views
   # menu item.
   def _menu_link(label, ctrl)
     # FIXME: dirty hack?
-    if self.helpers.class.to_s.match(/^#{ctrl.to_s}/)
+    if self.class.to_s.match(/^#{ctrl.to_s}/)
       li.selected { a label, :href => R(ctrl) }
     else
       li { a label, :href => R(ctrl) }
