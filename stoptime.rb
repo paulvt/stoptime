@@ -1410,7 +1410,7 @@ module StopTime::Views
   # FIXME: This should be done in a nicer way.
   def time_entries(task_id=nil)
     if task_id.present?
-      h2 "Registered #{task.billed? ? "billed" : "unbilled"} time"
+      h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
     else
       h2 "Timeline"
     end
@@ -1500,7 +1500,7 @@ module StopTime::Views
            "what you are doing!"
       end
     end
-    form :action => R(*target), :method => :post do
+    form :action => R(*@target), :method => :post do
       ol do
         li do
           label "Customer", :for => "customer"
@@ -1653,7 +1653,7 @@ module StopTime::Views
     p.warn do
       em "This task is already billed!  Only make changes if you know " +
          "what you are doing!"
-    end if task.billed?
+    end if @task.billed?
     form :action => R(*@target), :method => :post do
       ol do
         li do
@@ -1675,7 +1675,7 @@ module StopTime::Views
             end
           end
         end
-        if task.billed?
+        if @task.billed?
           li do
             label "Billed in invoice"
             a @task.invoice.number,
@@ -1762,7 +1762,7 @@ module StopTime::Views
         tr do
           td do
             a task.comment_or_name,
-              :href => R(CustomersNTasksN, customer.id, task.id)
+              :href => R(CustomersNTasksN, task.customer.id, task.id)
           end
           if line[1].blank?
             # FIXME: information of time spent is available in the summary
