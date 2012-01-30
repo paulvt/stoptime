@@ -77,9 +77,8 @@ module StopTime
 end
 
 # = The Stop… Camping Time! Markaby extensions
-# FIXME: update for Mab!
-module StopTime::Helpers
-  #SUPPORTED = [:get, :post]
+module StopTime::Mab
+  SUPPORTED = [:get, :post]
 
   def mab_done(tag)
     return super unless tag.name == :form
