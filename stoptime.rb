@@ -76,8 +76,9 @@ module StopTime
 end
 
 # = The Stop… Camping Time! Markaby extensions
-module StopTime::Mab
-  SUPPORTED = [:get, :post]
+# FIXME: update for Mab!
+module StopTime::Helpers
+  #SUPPORTED = [:get, :post]
 
   # # Adds a method override field in form tags for (usually) unsupported
   # # methods by browsers (i.e.  PUT and DELETE) by injecting a hidden field.
@@ -91,14 +92,6 @@ module StopTime::Mab
   #     yield
   #   end
   # end
-
-  def tag!(name, *args)
-    Kernel.p [name, args]
-    content = args.shift unless args.first.is_a?(Hash)
-    attrs = args.inject { |a,b| a.merge(b) }
-    Kernel.p [name, content, args]
-    super(name, content, attrs)
-  end
 
 end
 
