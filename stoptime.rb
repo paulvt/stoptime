@@ -12,12 +12,10 @@
 require "action_view"
 require "active_support"
 require "camping"
-require "camping/ar"
-require "markaby"
+require "camping/mab"
 require "pathname"
 require "sass/plugin/rack"
 
-Markaby::Builder.set(:indent, 2)
 Camping.goes :StopTime
 
 unless defined? PUBLIC_DIR
