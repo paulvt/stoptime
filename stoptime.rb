@@ -77,21 +77,24 @@ end
 
 # = The Stop… Camping Time! Markaby extensions
 # FIXME: update for Mab!
-module StopTime::Helpers
-  #SUPPORTED = [:get, :post]
+module StopTime::Mab
+  SUPPORTED = [:get, :post]
 
-  # # Adds a method override field in form tags for (usually) unsupported
-  # # methods by browsers (i.e.  PUT and DELETE) by injecting a hidden field.
-  # def tag!(tag, *attrs)
-  #   return super unless tag == :form && block_given?
-  #   attrs = attrs.last.is_a?(Hash) ? attrs.last : {}
-  #   meth = attrs[:method]
-  #   attrs[:method] = 'post' if override = !SUPPORTED.include?(meth)
-  #   super(tag, attrs) do
-  #     input :type => 'hidden', :name => '_method', :value => meth if override
-  #     yield
-  #   end
-  # end
+  def mab_done(tag)
+    return super unless tag.name == :form
+
+    meth = tag.attributes[:method]
+    tag.attributes[:method] = 'post' if override = !SUPPORTED.include?(meth)
+    # Inject a hidden input element with the proper method to the tag block
+    # if the form method is unsupported.
+    orig_blk = tag.block
+    tag.block = proc do
+      input :type => 'hidden', :name => '_method', :value => meth
+      orig_blk.call
+    end if override
+  end
+
+  include Mab::Indentation
 
 end
 
