@@ -1343,7 +1343,6 @@ module StopTime::Views
 
   # The main layout used by all views.
   def layout
-    doctype!
     html do
       head do
         title "Stop… Camping Time!"
@@ -1539,7 +1538,7 @@ module StopTime::Views
     if @customers.empty?
       p do
         text! "None found! You can create one " +
-             "#{a "here", :href => R(CustomersNew)}."
+              "#{a "here", :href => R(CustomersNew)}."
       end
     else
       table.customers do
