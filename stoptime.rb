@@ -1188,7 +1188,10 @@ module StopTime::Controllers
       @input["start"] = @time_entry.start.to_formatted_s(:time_only)
       @input["end"] = @time_entry.end.to_formatted_s(:time_only)
       @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
-      @task_list = Task.all.map { |t| [t.id, t.name] }
+      @task_list = Task.all(:order =>  "name, invoice_id ASC").map do |t|
+        name = t.billed? ? t.name + " (#{t.invoice.number})" : t.name
+        [t.id, name]
+      end
 
       @target = [TimelineN, entry_id]
       @button = "update"
