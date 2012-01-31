@@ -77,7 +77,7 @@ module StopTime
 end
 
 # = The Stop… Camping Time! Markaby extensions
-class StopTime::Mab
+module StopTime::Helpers
   SUPPORTED = [:get, :post]
 
   # Adds a method override field in form tags for (usually) unsupported
