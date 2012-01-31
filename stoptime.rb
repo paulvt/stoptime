@@ -1624,8 +1624,7 @@ module StopTime::Views
         select :name => "task_id", :size => 10 do
           @tasks.each do |task|
             if task.billed?
-              option(:value => task.id,
-                     :disabled => true) { task.name + " (#{task.invoice.number})" }
+              option(:value => task.id) { task.name + " (#{task.invoice.number})" }
             else
               option(:value => task.id) { task.name }
             end
