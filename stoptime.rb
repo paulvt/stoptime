@@ -87,8 +87,7 @@ module StopTime::Mab
     tag.attributes[:method] = 'post' if override = !SUPPORTED.include?(meth)
     # Inject a hidden input element with the proper method to the tag block
     # if the form method is unsupported.
-    orig_blk = tag.block
-    tag.block = proc do
+    tag.block do |orig_blk|
       input :type => 'hidden', :name => '_method', :value => meth
       orig_blk.call
     end if override
