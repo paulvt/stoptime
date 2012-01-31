@@ -1,0 +1,6 @@
+
+I want to change the task of a time entry, so I go to e.g. /timeline/49
+to so, but in the Task dropdown, most tasks are listed multiple times
+(probably because they have been billed?), with no distinction between
+the duplicate entries, so I don't know which task of the duplicates to
+choose.
