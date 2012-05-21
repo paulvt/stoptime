@@ -4,11 +4,11 @@
 
 \usepackage{array}
 \usepackage[utf8]{inputenc}
+\usepackage{pxfonts}
 \setupdocument{
   %% Language and style,
   dutch,
   fill,
-  fontpackage=pxfonts,
   %% Company info.
   company=<%= @company.name %>,
   who=<%= @company.contact_name %>,
@@ -24,8 +24,8 @@
 <% unless @company.contact_name.blank? %>                \addresswhotext: & \who \\
 <% end %><% end %>                                 & \street\\
                                  & \zip\ \city\\[.2em]
-<% unless @company.phone.blank? %>          \phonetext:      & \lead\phone\\
-<% end %><% unless @company.cell.blank? %>                \cellphonetext:  & \lead\cellphone\\
+<% unless @company.phone.blank? %>          \phonetext:      & \phoneprefix\phone\\
+<% end %><% unless @company.cell.blank? %>                \cellphonetext:  & \phoneprefix\cellphone\\
 <% end %><% unless @company.email.blank? %>                \emailtext:      & \email\\[.2em]
 <% end %><% unless @company.chamber.blank? %>                \chambertext:    & \chamber\\
 <% end %><% unless @company.vatno.blank? %>                \vatnotext:      & \vatno
@@ -86,7 +86,7 @@
 \newcommand{\ihnosubtotal}[1]{\cmidrule[.0em]{4-4}&&&\\}
 \newcommand{\ihvat}[1]{\textit{Btw-heffing <%= "%d\\%%" % @config["vat_rate"] %>}&&&\currency~#1\\}
 \newcommand{\ihtotal}[1]{\cmidrule[.05em]{4-4}%
-  \textbf{\Totaltext}&&&\textbf{\currency~#1}}
+  \textbf{\totaltext}&&&\textbf{\currency~#1}}
 
 \begin{document}
 
