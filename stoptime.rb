@@ -1563,10 +1563,10 @@ module StopTime::Views
             td { customer.short_name  || "–"}
             td do
               if customer.address_street.present?
-                text customer.address_street
+                text! customer.address_street
                 br
-                text customer.address_postal_code + "&nbsp;" +
-                     customer.address_city
+                text! customer.address_postal_code + "&nbsp;" +
+                      customer.address_city
               else
                 "–"
               end
