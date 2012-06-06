@@ -1,4 +1,5 @@
 #!/usr/bin/env camping
+# encoding: UTF-8
 #
 # stoptime.rb - The Stop… Camping Time! time registration and invoicing application.
 #
@@ -30,6 +31,12 @@ unless defined? PUBLIC_DIR
 
   # Set up SASS.
   Sass::Plugin.options[:template_location] = "templates/sass"
+
+  # Set the default encodings.
+  if RUBY_VERSION =~ /^1\.9/
+    Encoding.default_external = Encoding::UTF_8
+    Encoding.default_internal = Encoding::UTF_8
+  end
 
   # Set the default date(/time) format.
   ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.merge!(
@@ -2037,8 +2044,10 @@ module StopTime::Views
   def _format_period(period)
     period = period.map { |m| m.to_formatted_s(:month_and_year) }.uniq
     case period.length
-    when 1: period.first
-    when 2: period.join("–")
+    when 1
+      period.first
+    when 2
+      period.join("–")
     end
   end
 
@@ -2058,11 +2067,11 @@ module StopTime::Views
   def _form_input_radio(name, value, default=false, *opts)
     input_val = @input[name]
     if input_val == value or (input_val.blank? and default)
-      input :type => "radio", :id => "#{name}_#{value}",
-            :name => name, :value => value, :checked => true, *opts
+      input({:type => "radio", :id => "#{name}_#{value}",
+             :name => name, :value => value, :checked => true}, *opts)
     else
-      input :type => "radio", :id => "#{name}_#{value}",
-            :name => name, :value => value, *opts
+      input({:type => "radio", :id => "#{name}_#{value}",
+             :name => name, :value => value}, *opts)
     end
   end
 
@@ -2071,11 +2080,11 @@ module StopTime::Views
   # Additional options can be passed via the collection _opts_.
   def _form_input_checkbox(name, value=true, *opts)
     if @input[name] == value
-      input :type => "checkbox", :id => "#{name}_#{value}", :name => name,
-            :value => value, :checked => true, *opts
+      input({:type => "checkbox", :id => "#{name}_#{value}", :name => name,
+             :value => value, :checked => true}, *opts)
     else
-      input :type => "checkbox", :id => "#{name}_#{value}", :name => name,
-            :value => value, *opts
+      input({:type => "checkbox", :id => "#{name}_#{value}", :name => name,
+             :value => value}, *opts)
     end
   end
 
@@ -2119,12 +2128,12 @@ module StopTime::Views
     else
       select :name => name, :id => name do
         opts.keys.sort.each do |key|
-          option "— #{key} —", :disabled => true
+          option("— #{key} —", {:disabled => true})
           opts[key].sort_by { |o| o.last }.each do |opt_val, opt_str|
             if @input[name] == opt_val
-              option opt_str, :value => opt_val, :selected => true
+              option(opt_str, {:value => opt_val, :selected => true})
             else
-              option opt_str, :value => opt_val
+              option(opt_str, {:value => opt_val})
             end
           end
         end
