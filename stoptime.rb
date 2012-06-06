@@ -12,11 +12,11 @@
 require "action_view"
 require "active_support"
 require "camping"
-require "markaby"
+require "camping/mab"
+require "camping/ar"
 require "pathname"
 require "sass/plugin/rack"
 
-Markaby::Builder.set(:indent, 2)
 Camping.goes :StopTime
 
 unless defined? PUBLIC_DIR
@@ -77,21 +77,23 @@ module StopTime
 end
 
 # = The Stop… Camping Time! Markaby extensions
-module StopTime::Helpers
+module StopTime::Mab
   SUPPORTED = [:get, :post]
 
-  # Adds a method override field in form tags for (usually) unsupported
-  # methods by browsers (i.e.  PUT and DELETE) by injecting a hidden field.
-  def tag!(tag, *attrs)
-    return super unless tag == :form && block_given?
-    attrs = attrs.last.is_a?(Hash) ? attrs.last : {}
-    meth = attrs[:method]
-    attrs[:method] = 'post' if override = !SUPPORTED.include?(meth)
-    super(tag, attrs) do
-      input :type => 'hidden', :name => '_method', :value => meth if override
-      yield
-    end
+  def mab_done(tag)
+    return super unless tag.name == :form
+
+    meth = tag.attributes[:method]
+    tag.attributes[:method] = 'post' if override = !SUPPORTED.include?(meth)
+    # Inject a hidden input element with the proper method to the tag block
+    # if the form method is unsupported.
+    tag.block do |orig_blk|
+      input :type => 'hidden', :name => '_method', :value => meth
+      orig_blk.call
+    end if override
   end
+
+  include Mab::Indentation
 
 end
 
@@ -1343,7 +1345,7 @@ module StopTime::Views
 
   # The main layout used by all views.
   def layout
-    xhtml_strict do
+    html do
       head do
         title "Stop… Camping Time!"
         # FIXME: improve static serving so that the hack below is not needed.
@@ -1377,8 +1379,8 @@ module StopTime::Views
         h3 { a customer.name, :href => R(CustomersN, customer.id) }
         if @tasks[customer].empty?
           p do
-            text "No projects/tasks found! Create one " +
-                 "#{a "here", :href => R(CustomersNTasksNew, customer.id)}."
+            text! "No projects/tasks found! Create one " +
+                  "#{a "here", :href => R(CustomersNTasksNew, customer.id)}."
           end
         else
           table.overview do
@@ -1409,7 +1411,7 @@ module StopTime::Views
   # FIXME: This should be done in a nicer way.
   def time_entries(task_id=nil)
     if task_id.present?
-      h2 "Registered #{task.billed? ? "billed" : "unbilled"} time"
+      h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
     else
       h2 "Timeline"
     end
@@ -1499,7 +1501,7 @@ module StopTime::Views
            "what you are doing!"
       end
     end
-    form :action => R(*target), :method => :post do
+    form :action => R(*@target), :method => :post do
       ol do
         li do
           label "Customer", :for => "customer"
@@ -1537,8 +1539,8 @@ module StopTime::Views
     h2 "Customers"
     if @customers.empty?
       p do
-        text "None found! You can create one " +
-             "#{a "here", :href => R(CustomersNew)}."
+        text! "None found! You can create one " +
+              "#{a "here", :href => R(CustomersNew)}."
       end
     else
       table.customers do
@@ -1561,10 +1563,10 @@ module StopTime::Views
             td { customer.short_name  || "–"}
             td do
               if customer.address_street.present?
-                text customer.address_street
+                text! customer.address_street
                 br
-                text customer.address_postal_code + "&nbsp;" +
-                     customer.address_city
+                text! customer.address_postal_code + "&nbsp;" +
+                      customer.address_city
               else
                 "–"
               end
@@ -1652,7 +1654,7 @@ module StopTime::Views
     p.warn do
       em "This task is already billed!  Only make changes if you know " +
          "what you are doing!"
-    end if task.billed?
+    end if @task.billed?
     form :action => R(*@target), :method => :post do
       ol do
         li do
@@ -1674,7 +1676,7 @@ module StopTime::Views
             end
           end
         end
-        if task.billed?
+        if @task.billed?
           li do
             label "Billed in invoice"
             a @task.invoice.number,
@@ -1698,8 +1700,8 @@ module StopTime::Views
 
     if @invoices.values.flatten.empty?
       p do
-        text "Found none! You can create one by "
-             "#{a "selecting a customer", :href => R(Customers)}."
+        text! "Found none! You can create one by "
+              "#{a "selecting a customer", :href => R(Customers)}."
       end
     else
       @invoices.keys.sort.each do |key|
@@ -1761,7 +1763,7 @@ module StopTime::Views
         tr do
           td do
             a task.comment_or_name,
-              :href => R(CustomersNTasksN, customer.id, task.id)
+              :href => R(CustomersNTasksN, task.customer.id, task.id)
           end
           if line[1].blank?
             # FIXME: information of time spent is available in the summary
@@ -1987,7 +1989,7 @@ module StopTime::Views
   # menu item.
   def _menu_link(label, ctrl)
     # FIXME: dirty hack?
-    if self.helpers.class.to_s.match(/^#{ctrl.to_s}/)
+    if self.class.to_s.match(/^#{ctrl.to_s}/)
       li.selected { a label, :href => R(ctrl) }
     else
       li { a label, :href => R(ctrl) }
