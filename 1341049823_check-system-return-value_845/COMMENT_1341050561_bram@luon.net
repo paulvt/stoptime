@@ -1,0 +1,3 @@
+The return value of system(), which is used for executing rubber, is not
+checked.  So if rubber is not installed, we get an error that the PDF
+file could not be found, instead of an error executing rubber.
