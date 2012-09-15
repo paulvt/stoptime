@@ -1,0 +1,5 @@
+Time entries ending on 0:00 or later have a negative total time; these
+should be interpreted as ending on the following day.
+
+(Should add the "bug" tag to this, but my ticgit apparently has a bug
+that doesn't allow it to set tags.)
