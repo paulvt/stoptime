@@ -259,21 +259,25 @@ module StopTime::Models
     end
 
     # Returns a time and cost summary of the registered time on the task
-    # by means of Array of three values.
-    # In case of a fixed cost task, only the third value is set to the
-    # fixed cost.
+    # by means of Array of four values.
+    # In case of a fixed cost task, the first value is the total of time
+    # (in hours), the third value is the fixed cost, and the fourth value
+    # is the VAT.
     # In case of a task with an hourly rate, the first value is
     # the total of time (in hours), the second value is the hourly rate,
-    # and the third value is the total amount (time times rate).
+    # the third value is the total amount (time times rate), and the fourth
+    # value is the VAT.
     def summary
       case type
       when "fixed_cost"
         total = time_entries.inject(0.0) { |summ, te| summ + te.hours_total }
-        [total, nil, fixed_cost]
+        [total, nil, fixed_cost, fixed_cost * (vat_rate/100.0)]
       when "hourly_rate"
-        time_entries.inject([0.0, hourly_rate, 0.0]) do |summ, te|
+        time_entries.inject([0.0, hourly_rate, 0.0, 0.0]) do |summ, te|
+          total_cost = te.hours_total * hourly_rate
           summ[0] += te.hours_total
-          summ[2] += te.hours_total * hourly_rate
+          summ[2] += total_cost
+          summ[3] += total_cost * (vat_rate/100.0)
           summ
         end
       end
