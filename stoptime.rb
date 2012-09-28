@@ -1049,6 +1049,7 @@ module StopTime::Controllers
 
       @company = @invoice.company_info
       @tasks = @invoice.summary
+      @vat = @invoice.vat_summary
       @period = @invoice.period
 
       if @format == "html"
@@ -1824,28 +1825,29 @@ module StopTime::Views
           end
         end unless task.fixed_cost?
       end
-      if @company.vatno.blank?
-        vat = 0
-      else
+      vattotal = 0.0
+      if @company.vatno.present?
         tr.total do
           td { i "Sub-total" }
           td ""
           td ""
           td.right { "€ %.2f" % subtotal }
         end
-        vat = subtotal * @config["vat_rate"]/100.0
-        tr do
-          td { i "VAT %d%%" % @config["vat_rate"] }
-          td ""
-          td ""
-          td.right { "€ %.2f" % vat }
+        @vat.keys.sort.each do |rate|
+          vattotal += @vat[rate]
+          tr do
+            td { i "VAT %d%%" % rate }
+            td ""
+            td ""
+            td.right { "€ %.2f" % @vat[rate] }
+          end
         end
       end
       tr.total do
         td { b "Total" }
         td ""
         td ""
-        td.right { "€ %.2f" % (subtotal + vat) }
+        td.right { "€ %.2f" % (subtotal + vattotal) }
       end
     end
 
