@@ -205,6 +205,7 @@ module StopTime::Models
   # [name] description (String)
   # [fixed_cost] fixed cost of the task (Float)
   # [hourly_rate] hourly rate for the task (Float)
+  # [vat_rate] VAT rate at time of billing (Float)
   # [invoice_comment] extra comment for the invoice (String)
   # [created_at] time of creation (Time)
   # [updated_at] time of last update (Time)
@@ -621,6 +622,21 @@ module StopTime::Models
     def self.down
       remove_column(CompanyInfo.table_name, :original_id)
       remove_column(Invoice.table_name, :company_info_id)
+    end
+  end
+
+  class VATRatePerTaskSupport < V 1.94 # :nodoc:
+    def self.up
+      add_column(Task.table_name, :vat_rate, :float)
+      config = Config.instance
+      Task.all.each do |t|
+        t.vat_rate = config['vat_rate']
+        t.save
+      end
+    end
+
+    def self.down
+      remove_column(Task.table_name, :vat_rate)
     end
   end
 
