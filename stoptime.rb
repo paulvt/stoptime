@@ -384,12 +384,16 @@ module StopTime::Models
 
     # Returns the total amount (including VAT).
     def total_amount
-      subtotal = summary.inject(0.0) { |tot, (task, summ)| tot + summ[2] }
+      subtotal, vattotal = summary.inject([0.0, 0.0]) do |tot, (task, summ)|
+        tot[0] += summ[2]
+        tot[1] += summ[3]
+        tot
+      end
+
       if company_info.vatno.blank?
         subtotal
       else
-        config = Config.instance
-        subtotal * (1 + config["vat_rate"]/100.0)
+        subtotal + vattotal
       end
     end
   end
