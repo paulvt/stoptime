@@ -835,6 +835,7 @@ module StopTime::Controllers
           @task.hourly_rate = @input.hourly_rate
         # FIXME: catch invalid task types!
         end
+        @task.vat_rate = @input.vat_rate
         @task.save
         if @task.invalid?
           @errors = @task.errors
@@ -867,7 +868,8 @@ module StopTime::Controllers
     def get(customer_id)
       @customer = Customer.find(customer_id)
       @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
-      @task = Task.new(:hourly_rate => @customer.hourly_rate)
+      @task = Task.new(:hourly_rate => @customer.hourly_rate,
+                       :vat_rate => @config["vat_rate"])
       @input = @task.attributes
       @input["type"] = @task.type # FIXME: find nicer way!
       @input["customer"] = @customer.id
@@ -1717,6 +1719,9 @@ module StopTime::Views
               _form_input_with_label("Fixed cost", "fixed_cost", :text)
             end
           end
+        end
+        li do
+          _form_input_with_label("VAT rate", "vat_rate", :text)
         end
         if @task.billed?
           li do
