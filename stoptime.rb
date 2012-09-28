@@ -358,6 +358,16 @@ module StopTime::Models
       return summ
     end
 
+    # Returns a total per VAT rate of the contained tasks (Hash of Float to
+    # Fixnum).
+    def vat_summary
+      vatsumm = Hash.new(0.0)
+      summary.each do |task, summ|
+        vatsumm[task.vat_rate] += summ[3]
+      end
+      return vatsumm
+    end
+
     # Returns the invoice period based on the contained tasks (Array of Time).
     # See also Task#bill_period.
     def period
