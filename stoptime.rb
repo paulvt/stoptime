@@ -39,13 +39,13 @@ unless defined? PUBLIC_DIR
   end
 
   # Set the default date(/time) format.
-  ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.merge!(
+  Time::DATE_FORMATS.merge!(
     :default => "%Y-%m-%d %H:%M",
     :month_and_year => "%B %Y",
     :date_only => "%Y-%m-%d",
     :time_only => "%H:%M",
     :day_code => "%Y%m%d")
-  ActiveSupport::CoreExtensions::Date::Conversions::DATE_FORMATS.merge!(
+  Date::DATE_FORMATS.merge!(
     :default => "%Y-%m-%d",
     :month_and_year => "%B %Y")
 end
