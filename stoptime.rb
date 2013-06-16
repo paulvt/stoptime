@@ -1012,7 +1012,7 @@ module StopTime::Controllers
       tasks.each_key do |task|
         # Create a new (billed) task clone that contains the selected time
         # entries, leave the rest unbilled and associated with their task.
-        bill_task = task.clone # FIXME: depends on rails version!
+        bill_task = task.dup # FIXME: depends on rails version!
         task.time_entries = task.time_entries - tasks[task]
         task.save
         bill_task.time_entries = tasks[task]
