@@ -1,167 +1,86 @@
 /* CSS file for Stop… Camping Time! */
 
-// Colours
-$light-grey: #efefef
-$medium-grey: #cfcfcf
-$dark-grey: #9f9f9f
-$light-red: #cb0000
-$dark-red: #990000
-$white: #ffffff
+/* Bootstrap overrides */
+[class^="icon-"]
+  background-image: url("../images/glyphicons-halflings.png")
+
+.icon-white
+  background-image: url("../images/glyphicons-halflings-white.png")
+
+.text-left
+  text-align: left !important
+.text-center
+  text-align: center !important
+.text-right
+  text-align: right !important
+
+/* Main elements */
+body
+  padding-top: 40px
 
 /* General classes */
-.right
-  text-align: right
-
-.float_left
-  float: left
-  margin-right: 50px
-
-.clear
-  clear: both
-  padding-top: 10px
-
 .billed
   text-decoration: line-through
-
-.light
-  color: $medium-grey
-
-.indent
-  padding-left: 20px
-
-.warn
-  font-weight: bold
-  color: $light-red
-
-/* Basic elements */
-a
-  text-decoration: none
-  color: $dark-red
-
-  &:hover
-    text-decoration: underline
-
-body
-  font-family: sans-serif
-  font-size: 13px
-  margin: 0px
-
-h3
-  margin: 10px 0px
-
-/* Main layout */
-#wrapper
-  width: auto
-  height: auto
-  margin: 10px 10px
-
-#content
-  padding: 10px
-  border: 1px solid
-  background: $light-grey
-
-ol#menu
-  list-style: none
-  padding: 0px
-  margin: 5px
-
-  li
-    display: inline
-    border: solid black
-    border-width: 1px 1px 0 1px
-    padding: 5px 10px
-    margin: 0px 0.5em 0px 0px
-
-    &.selected
-      padding-bottom: 6px
-      background: $light-grey
 
 /* Table layout */
 table
   table-layout: fixed
-  padding: 3px 0px
-  border-spacing: 0px 4px
 
   col.amount, col.hours, col.hourly_rate
-    width: 100px
+    width: 85px
   col.reg_hours
-    width: 130px
+    width: 90px
   col.flag
     width: 30px
   col.date
-    width: 95px
+    width: 100px
   col.start_time, col.end_time
-    width: 55px
+    width: 60px
+  col.customer_short
+    width: 120px
   col.customer, col.name
-    width: 150px
+    width: 160px
   col.task, col.comment
     width: 200px
   col.short_name, col.phone
     width: 120px
-  col.address, col.period
+  col.address
     width: 250px
-  col.email, col.number
+  col.email, col.period
     width: 170px
-
-  th
-    padding: 0px 5px
-    text-align: left
-    background: $dark-grey
-
-  tr
-    &:hover
-      background-color: $medium-grey
-
-      .light
-        color: white
-
-    &.total
-      border-top: thin solid black
+  col.number
+    width: 70px
 
   td
-    padding: 0px 5px
-    vertical-align: top
-    border: inherit
+    text-overflow: ellipsis
+    white-space: nowrap
+    overflow: hidden
 
-    &.key
-      font-weight: bold
-      width: 80px
+    input[type="text"], select
+      margin: 0
+    input.comment, select.task
+      width: 156px
+    input.date
+      width: 76px
+    input.start-time, input.end-time
+      width: 36px
 
-  input
-    width: 90%
-
-  input[type="submit"], input[type="reset"], input[type="checkbox"]
-    width: auto
-
-/* Form layout */
-form
-  ol
-    list-style: none
-    padding: 1px 10px
-    margin: 2px
-
-    label
-      width: 180px
-      margin: 4px 10px 4px 0px
-      float: left
-
-    a, span
-      margin: 4px 0px
-      display: inline-block
-
-  ol.radio
-    margin-left: 195px
-    padding: 0px
-
-    label
-      float: none
-
-    input
+    input[type="submit"], input[type="reset"], input[type="checkbox"]
       width: auto
 
-  li
-    padding-bottom: 5px
-    vertical-align: top
+  td.indent
+    padding-left: 20px
 
-  input[type="text"], select
-    width: 250px
+/* Form layout */
+.form-condensed
+  padding-top: 0px
+
+  .control-group
+    margin-bottom: 8px
+
+.form-inline
+  margin: 0
+
+  label
+    padding-top: 6px
+    margin-bottom: 0px
