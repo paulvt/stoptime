@@ -2253,7 +2253,6 @@ module StopTime::Views
               end
               td { invoice.created_at.to_formatted_s(:date_only) }
               td { _format_period(invoice.period) }
-              # FIXME: really retrieve the paid flag.
               td.text_right { "€ %.2f" % invoice.total_amount }
               td do
                 i(:class => "icon-ok") if invoice.paid?
