@@ -1455,7 +1455,12 @@ module StopTime::Views
         else
           div.span6 do
             @tasks.keys.sort_by { |c| c.name }.each do |customer|
-              h3 { a customer.name, :href => R(CustomersN, customer.id) }
+              inv_klass = "text_info"
+              inv_klass = "text_warning" if customer.invoices.any? { |inv| inv.past_due? }
+              inv_klass = "text_error" if customer.invoices.any? { |inv| inv.way_past_due? }
+              h3 { a customer.name,
+                     :class => inv_klass,
+                     :href => R(CustomersN, customer.id) }
               if @tasks[customer].empty?
                 p do
                   text! "No projects/tasks found! Create one " +
