@@ -88,13 +88,13 @@ module StopTime::Mab
   SUPPORTED = [:get, :post]
 
   def mab_done(tag)
-    return super unless tag.name == :form
+    return super unless tag._name == :form
 
-    meth = tag.attributes[:method]
-    tag.attributes[:method] = 'post' if override = !SUPPORTED.include?(meth)
+    meth = tag._attributes[:method]
+    tag._attributes[:method] = 'post' if override = !SUPPORTED.include?(meth)
     # Inject a hidden input element with the proper method to the tag block
     # if the form method is unsupported.
-    tag.block do |orig_blk|
+    tag._block do |orig_blk|
       input :type => 'hidden', :name => '_method', :value => meth
       orig_blk.call
     end if override
