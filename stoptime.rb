@@ -2154,8 +2154,8 @@ module StopTime::Views
         br
         text! "Only make changes if you know what you are doing!"
       end if @history_warn
-      form.form_horizontal :action => R(Company, :revision => @company.revision),
-                           :method => :post do
+      form.form_horizontal.form_condensed :action => R(Company, :revision => @company.revision),
+        :method => :post do
         _form_input_with_label("Name", "name", :text)
         _form_input_with_label("Contact name", "contact_name", :text)
         _form_input_with_label("Street address", "address_street", :text)
