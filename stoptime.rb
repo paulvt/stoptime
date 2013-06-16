@@ -2238,7 +2238,9 @@ module StopTime::Views
         end
         tbody do
           invoices.each do |invoice|
-            tr do
+            due_class = invoice.past_due? ? "warning" : ""
+            due_class = "error" if invoice.way_past_due?
+            tr(:class => due_class) do
               td do
                 a invoice.number,
                   :href => R(CustomersNInvoicesX,
