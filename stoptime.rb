@@ -88,6 +88,12 @@ module StopTime::Mab
   SUPPORTED = [:get, :post]
 
   def mab_done(tag)
+    # Transform underscores into dashs in class names
+    if tag._attributes.has_key?(:class) and tag._attributes[:class].present?
+      tag._attributes[:class] = tag._attributes[:class].gsub('_', '-')
+    end
+
+    # The followin method processing is only for form tags.
     return super unless tag._name == :form
 
     meth = tag._attributes[:method]
