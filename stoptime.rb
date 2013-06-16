@@ -1789,7 +1789,7 @@ module StopTime::Views
           label.control_label "Project/Task type"
           div.controls do
             label.radio do
-              _form_input_radio("type", "hourly_rate", default=true)
+              _form_input_radio("type", "hourly_rate", true)
               text!("Hourly rate: ")
               _form_input("hourly_rate", :number, "Hourly rate", :class => "input-small")
             end
@@ -1889,7 +1889,7 @@ module StopTime::Views
             div.control_group do
               label.control_label "Paid?"
               div.controls do
-                  _form_input_checkbox("paid")
+                _form_input_checkbox("paid")
               end
             end
             div.form_actions do
@@ -2027,7 +2027,7 @@ module StopTime::Views
                 tbody do
                   @hourly_rate_tasks.keys.each do |task|
                     tr.task do
-                      td { _form_input_checkbox("tasks[]", task.id) }
+                      td { _form_input_checkbox("tasks[]", task.id, true) }
                       td task.name, :colspan => 3
                       td do
                         input :type =>  :text, :name => "task_#{task.id}_comment",
@@ -2038,7 +2038,7 @@ module StopTime::Views
                     end
                     @hourly_rate_tasks[task].each do |entry|
                       tr do
-                        td.indent { _form_input_checkbox("time_entries[]", entry.id) }
+                        td.indent { _form_input_checkbox("time_entries[]", entry.id, true) }
                         td { label entry.date.to_date,
                                    :for => "time_entries[]_#{entry.id}" }
                         td { entry.start.to_formatted_s(:time_only) }
@@ -2073,7 +2073,7 @@ module StopTime::Views
                 tbody do
                   @fixed_cost_tasks.keys.each do |task|
                     tr do
-                      td { _form_input_checkbox("tasks[]", task.id) }
+                      td { _form_input_checkbox("tasks[]", task.id, true) }
                       td { label task.name, :for => "tasks[]_#{task.id}" }
                       td do
                         input :type =>  :text, :name => "task_#{task.id}_comment",
@@ -2293,11 +2293,12 @@ module StopTime::Views
     end
   end
 
-  # Partial view that generates a form checkbox with the given _name_.
-  # Whether it is initiall checked is determined by the _value_ flag.
+  # Partial view that generates a form checkbox with the given _name_ and
+  # _value_.
+  # Whether it is initially checked is determined by the _default_ flag.
   # Additional options can be passed via the collection _opts_.
-  def _form_input_checkbox(name, value=true, *opts)
-    if @input[name] == value
+  def _form_input_checkbox(name, value=true, default=false, *opts)
+    if @input[name] == value or default
       input({:type => "checkbox", :id => "#{name}_#{value}", :name => name,
              :value => value, :checked => true}, *opts)
     else
