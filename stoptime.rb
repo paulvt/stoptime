@@ -1550,7 +1550,7 @@ module StopTime::Views
                      :href => R(TimelineN, entry.id) }
               td { entry.start.to_formatted_s(:time_only) }
               td { entry.end.to_formatted_s(:time_only)}
-              td { span entry.comment, title: entry.comment }
+              td { span entry.comment, :title => entry.comment }
               td { "%.2fh" % entry.hours_total }
               td do
                 _form_input_checkbox("bill_#{entry.id}", true, :disabled => true)
