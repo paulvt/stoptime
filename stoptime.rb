@@ -1189,6 +1189,10 @@ module StopTime::Controllers
           :end => "#{@input.date} #{@input.end}",
           :comment => @input.comment,
           :bill => @input.has_key?("bill"))
+        # Add a day to the end date if the total hours is negative.
+        # It means that the end time was before the begin time, i.e.
+        # overnight.
+        @time_entry.end += 1.day if @time_entry.hours_total < 0
         @time_entry.save
         if @time_entry.invalid?
           @errors = @time_entry.errors
@@ -1268,6 +1272,8 @@ module StopTime::Controllers
         @time_entry.end = "#{@input["date"]} #{@input["end"]}"
         @time_entry.task = Task.find(@input.task)
         @time_entry.bill = @input.has_key? "bill"
+        # Add a day to the end date if the total hours is negative.
+        @time_entry.end += 1.day if @time_entry.hours_total < 0
         @time_entry.save
         if @time_entry.invalid?
           @errors = @time_entry.errors
