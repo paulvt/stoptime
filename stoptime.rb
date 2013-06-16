@@ -1553,7 +1553,7 @@ module StopTime::Views
               td { span entry.comment, :title => entry.comment }
               td { "%.2fh" % entry.hours_total }
               td do
-                _form_input_checkbox("bill_#{entry.id}", true, :disabled => true)
+                i(:class => "icon-ok") if entry.bill?
               end
               td do
                 form.form_inline :action => R(TimelineN, entry.id), :method => :post do
@@ -2231,7 +2231,7 @@ module StopTime::Views
               # FIXME: really retrieve the paid flag.
               td.text_right { "€ %.2f" % invoice.total_amount }
               td do
-                i(:class => "icon_ok") if invoice.paid?
+                i(:class => "icon-ok") if invoice.paid?
               end
             end
           end
