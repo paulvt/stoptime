@@ -4,5 +4,5 @@ htpasswd
 db/*
 public/invoices/*.pdf
 public/invoices/*.tex
-public/stylesheets/*.css
+public/stylesheets/style.css
 tmp/*
