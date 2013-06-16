@@ -88,13 +88,13 @@ module StopTime::Mab
   SUPPORTED = [:get, :post]
 
   def mab_done(tag)
-    return super unless tag.name == :form
+    return super unless tag._name == :form
 
-    meth = tag.attributes[:method]
-    tag.attributes[:method] = 'post' if override = !SUPPORTED.include?(meth)
+    meth = tag._attributes[:method]
+    tag._attributes[:method] = 'post' if override = !SUPPORTED.include?(meth)
     # Inject a hidden input element with the proper method to the tag block
     # if the form method is unsupported.
-    tag.block do |orig_blk|
+    tag._block do |orig_blk|
       input :type => 'hidden', :name => '_method', :value => meth
       orig_blk.call
     end if override
@@ -1428,9 +1428,9 @@ module StopTime::Views
           end
         else
           table.overview do
-            col.task {}
-            col.hours {}
-            col.amount {}
+            col.task
+            col.hours
+            col.amount
             @tasks[customer].each do |task|
               tr do
                 summary = task.summary
@@ -1461,15 +1461,15 @@ module StopTime::Views
     end
     table.timeline do
       unless task_id.present?
-        col.customer {}
-        col.task {}
+        col.customer
+        col.task
       end
-      col.date {}
-      col.start_time {}
-      col.end_time {}
-      col.comment {}
-      col.hours {}
-      col.flag {}
+      col.date
+      col.start_time
+      col.end_time
+      col.comment
+      col.hours
+      col.flag
       tr do
         unless task_id.present?
           th "Customer"
@@ -1588,11 +1588,11 @@ module StopTime::Views
       end
     else
       table.customers do
-         col.name {}
-         col.short_name {}
-         col.address {}
-         col.email {}
-         col.phone {}
+         col.name
+         col.short_name
+         col.address
+         col.email
+         col.phone
          tr do
            th "Name"
            th "Short name"
@@ -1795,10 +1795,10 @@ module StopTime::Views
     end
 
     table.tasks do
-      col.task {}
-      col.reg_hours {}
-      col.hourly_rate {}
-      col.amount {}
+      col.task
+      col.reg_hours
+      col.hourly_rate
+      col.amount
       tr do
         th { "Project/Task" }
         th.right { "Registered time" }
@@ -1881,13 +1881,13 @@ module StopTime::Views
       h3 "Projects/Tasks with an Hourly Rate"
       unless @hourly_rate_tasks.empty?
         table.invoice_select do
-          col.flag {}
-          col.date {}
-          col.start_time {}
-          col.end_time {}
-          col.comment {}
-          col.hours {}
-          col.amount {}
+          col.flag
+          col.date
+          col.start_time
+          col.end_time
+          col.comment
+          col.hours
+          col.amount
           tr do
             th "Bill?"
             th "Date"
@@ -1925,11 +1925,11 @@ module StopTime::Views
       unless @fixed_cost_tasks.empty?
         h3 "Fixed Cost Projects/Tasks"
         table.tasks do
-          col.flag {}
-          col.task {}
-          col.comment {}
-          col.hours {}
-          col.amount {}
+          col.flag
+          col.task
+          col.comment
+          col.hours
+          col.amount
           tr do
             th "Bill?"
             th "Project/Task"
@@ -2050,11 +2050,11 @@ module StopTime::Views
       p "None found!"
     else
       table.invoices do
-        col.number {}
-        col.date {}
-        col.period {}
-        col.amount {}
-        col.flag {}
+        col.number
+        col.date
+        col.period
+        col.amount
+        col.flag
         tr do
           th "Number"
           th "Date"
