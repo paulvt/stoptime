@@ -411,6 +411,18 @@ module StopTime::Models
         subtotal + vattotal
       end
     end
+
+    # Returns if the invoice is past due (i.e. it has not been paid within
+    # the required amount of days).
+    def past_due?
+      not paid? and (Time.now - created_at) > 30.days # FIXME: hardcoded!
+    end
+
+    # Returns if the invoice is past due (i.e. it has not been paid within
+    # the required amount of days).
+    def way_past_due?
+      past_due? and (Time.now - created_at) > 2 * 30.days
+    end
   end
 
   # == The company information class
