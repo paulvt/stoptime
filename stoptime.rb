@@ -925,6 +925,7 @@ module StopTime::Controllers
       @time_entries.each do |te|
         @input["bill_#{te.id}"] = true if te.bill?
       end
+      @input["bill"] = true # Bill new entries by default.
 
       # FIXME: Check that task is of that customer.
       @target = [CustomersNTasksN,  customer_id, task_id]
