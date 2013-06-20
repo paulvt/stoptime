@@ -1426,6 +1426,9 @@ module StopTime::Views
         link :rel => "stylesheet", :type => "text/css",
              :media => "screen",
              :href => (R(Static, "") + "stylesheets/style.css")
+        # Responsive bootstrap CSS
+        link :rel => "stylesheet", :type => "text/css",
+             :href => (R(Static, "") + "stylesheets/bootstrap-responsive.min.css")
       end
       body do
         _menu
