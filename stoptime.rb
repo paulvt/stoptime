@@ -1583,11 +1583,11 @@ module StopTime::Views
                   :href => R(CustomersNTasksN, entry.customer.id, entry.task.id)
               end
             end
-            td { a entry.date.to_date,
-                   :href => R(TimelineN, entry.id) }
+            td { entry.date.to_date }
             td { entry.start.to_formatted_s(:time_only) }
             td { entry.end.to_formatted_s(:time_only)}
-            td { span entry.comment, :title => entry.comment }
+            td { a entry.comment, :href => R(TimelineN, entry.id),
+                                  :title => entry.comment }
             td { "%.2fh" % entry.hours_total }
             td do
               i(:class => "icon-ok") if entry.bill?
