@@ -1182,7 +1182,11 @@ module StopTime::Controllers
     # Retrieves all registered time in descending order to present
     # the timeline using Views#time_entries
     def get
-      @time_entries = TimeEntry.all(:order => "start DESC")
+      if @input["show"] == "all"
+        @time_entries = TimeEntry.all(:order => "start DESC")
+      else
+        @time_entries = TimeEntry.joins(:task).where("stoptime_tasks.invoice_id" => nil)
+      end
       @time_entries.each do |te|
         @input["bill_#{te.id}"] = true if te.bill?
       end
@@ -1518,6 +1522,16 @@ module StopTime::Views
         h1 do
           text! "Timeline"
           small "#{@time_entries.count} time entries"
+          div.btn_group.pull_right do
+            a.btn.btn_small.dropdown_toggle :href => "#", "data-toggle" => "dropdown" do
+              text! @input["show"] == "all" ? "All" : "Unbilled"
+              span.caret
+            end
+            ul.dropdown_menu :role => "menu", :aria_labelledby => "dLabel" do
+              li { a "All", :href => R(Timeline, :show => "all") }
+              li { a "Unbilled", :href => R(Timeline, :show => "unbilled") }
+            end
+          end
         end
       end
     end
