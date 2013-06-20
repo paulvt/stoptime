@@ -61,6 +61,7 @@ module StopTime
   def service(*a)
     @config = StopTime::Models::Config.instance
     @format = @request.path_info[/.([^.]+)/, 1];
+    @headers["Content-Type"] = "text/html; charset=utf-8"
     super(*a)
   end
 
