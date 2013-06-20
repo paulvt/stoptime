@@ -1432,8 +1432,10 @@ module StopTime::Views
       end
       body do
         _menu
-        self << yield
-        footer { br }
+        div.container do
+          self << yield
+          footer { br }
+        end
         # JQuery and Bootstrap JavaScript
         script :src => "http://code.jquery.com/jquery.js"
         script :src => (R(Static, "") + "javascripts/bootstrap.min.js")
@@ -1448,43 +1450,41 @@ module StopTime::Views
         h2 "Overview"
       end
     end
-    div.container do
-      div.row do
-        if @tasks.empty?
-          div.alert.alert_info do
-            text! "No customers, projects or tasks found! Set them up " +
-                  "#{a "here", :href => R(CustomersNew)}."
-          end
-        else
-          div.span6 do
-            @tasks.keys.sort_by { |c| c.name }.each do |customer|
-              inv_klass = "text_info"
-              inv_klass = "text_warning" if customer.invoices.any? { |inv| inv.past_due? }
-              inv_klass = "text_error" if customer.invoices.any? { |inv| inv.way_past_due? }
-              h3 { a customer.name,
-                     :class => inv_klass,
-                     :href => R(CustomersN, customer.id) }
-              if @tasks[customer].empty?
-                p do
-                  text! "No projects/tasks found! Create one " +
-                        "#{a "here", :href => R(CustomersNTasksNew, customer.id)}."
-                end
-              else
-                table.table.table_condensed do
-                  col.task
-                  col.hours
-                  col.amount
-                  @tasks[customer].each do |task|
-                    tr do
-                      summary = task.summary
-                      td do
-                        a task.name,
-                          :href => R(CustomersNTasksN, customer.id, task.id)
-                      end
-                      summary = task.summary
-                      td.text_right { "%.2fh" % summary[0] }
-                      td.text_right { "€ %.2f" % summary[2] }
+    div.row do
+      if @tasks.empty?
+        div.alert.alert_info do
+          text! "No customers, projects or tasks found! Set them up " +
+                "#{a "here", :href => R(CustomersNew)}."
+        end
+      else
+        div.span6 do
+          @tasks.keys.sort_by { |c| c.name }.each do |customer|
+            inv_klass = "text_info"
+            inv_klass = "text_warning" if customer.invoices.any? { |inv| inv.past_due? }
+            inv_klass = "text_error" if customer.invoices.any? { |inv| inv.way_past_due? }
+            h3 { a customer.name,
+                   :class => inv_klass,
+                   :href => R(CustomersN, customer.id) }
+            if @tasks[customer].empty?
+              p do
+                text! "No projects/tasks found! Create one " +
+                      "#{a "here", :href => R(CustomersNTasksNew, customer.id)}."
+              end
+            else
+              table.table.table_condensed do
+                col.task
+                col.hours
+                col.amount
+                @tasks[customer].each do |task|
+                  tr do
+                    summary = task.summary
+                    td do
+                      a task.name,
+                        :href => R(CustomersNTasksN, customer.id, task.id)
                     end
+                    summary = task.summary
+                    td.text_right { "%.2fh" % summary[0] }
+                    td.text_right { "€ %.2f" % summary[2] }
                   end
                 end
               end
@@ -1501,90 +1501,86 @@ module StopTime::Views
   # FIXME: This should be done in a nicer way.
   def time_entries(task_id=nil)
     header do
-      div.container do
-        if task_id.present?
-          h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
-        else
-          h2 "Timeline"
-        end
+      if task_id.present?
+        h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
+      else
+        h2 "Timeline"
       end
     end
-    div.container do
-      table.table.table_condensed.table_striped.table_hover do
-        unless task_id.present?
-          col.customer_short
-          col.task
+    table.table.table_condensed.table_striped.table_hover do
+      unless task_id.present?
+        col.customer_short
+        col.task
+      end
+      col.date
+      col.start_time
+      col.end_time
+      col.comment
+      col.hours
+      col.flag
+      thead do
+        tr do
+          unless task_id.present?
+            th "Customer"
+            th "Project/Task"
+          end
+          th "Date"
+          th "Start"
+          th "End"
+          th "Comment"
+          th "Total"
+          th "Bill?"
+          th {}
         end
-        col.date
-        col.start_time
-        col.end_time
-        col.comment
-        col.hours
-        col.flag
-        thead do
+      end
+      tbody do
+        form.form_inline :action => R(Timeline), :method => :post do
           tr do
-            unless task_id.present?
-              th "Customer"
-              th "Project/Task"
+            if task_id.present?
+              input :type => :hidden, :name => "task", :value => task_id
+            else
+              td { }
+              td { _form_select_nested("task", @task_list, :class => "task") }
             end
-            th "Date"
-            th "Start"
-            th "End"
-            th "Comment"
-            th "Total"
-            th "Bill?"
-            th {}
+            td { input.date :type => :text, :name => "date",
+                            :value => DateTime.now.to_date.to_formatted_s }
+            td { input.start_time :type => :text, :name => "start",
+                                  :value => DateTime.now.to_time.to_formatted_s(:time_only) }
+            td { input.end_time :type => :text, :name => "end" }
+            td { input.comment :type => :text, :name => "comment" }
+            td { "N/A" }
+            td { _form_input_checkbox("bill") }
+            td do
+              button.btn.btn_small.btn_primary "Enter", :type => :submit, :name => "enter", :value => "Enter"
+            end
           end
         end
-        tbody do
-          form.form_inline :action => R(Timeline), :method => :post do
-            tr do
-              if task_id.present?
-                input :type => :hidden, :name => "task", :value => task_id
-              else
-                td { }
-                td { _form_select_nested("task", @task_list, :class => "task") }
-              end
-              td { input.date :type => :text, :name => "date",
-                              :value => DateTime.now.to_date.to_formatted_s }
-              td { input.start_time :type => :text, :name => "start",
-                                    :value => DateTime.now.to_time.to_formatted_s(:time_only) }
-              td { input.end_time :type => :text, :name => "end" }
-              td { input.comment :type => :text, :name => "comment" }
-              td { "N/A" }
-              td { _form_input_checkbox("bill") }
+        @time_entries.each do |entry|
+          tr(:class => entry.task.billed? ? "billed" : nil) do
+            unless task_id.present?
               td do
-                button.btn.btn_small.btn_primary "Enter", :type => :submit, :name => "enter", :value => "Enter"
+                a entry.customer.shortest_name,
+                  :title => entry.customer.shortest_name,
+                  :href => R(CustomersN, entry.customer.id)
+              end
+              td do
+                a entry.task.name,
+                  :title => entry.task.name,
+                  :href => R(CustomersNTasksN, entry.customer.id, entry.task.id)
               end
             end
-          end
-          @time_entries.each do |entry|
-            tr(:class => entry.task.billed? ? "billed" : nil) do
-              unless task_id.present?
-                td do
-                  a entry.customer.shortest_name,
-                    :title => entry.customer.shortest_name,
-                    :href => R(CustomersN, entry.customer.id)
-                end
-                td do
-                  a entry.task.name,
-                    :title => entry.task.name,
-                    :href => R(CustomersNTasksN, entry.customer.id, entry.task.id)
-                end
-              end
-              td { a entry.date.to_date,
-                     :href => R(TimelineN, entry.id) }
-              td { entry.start.to_formatted_s(:time_only) }
-              td { entry.end.to_formatted_s(:time_only)}
-              td { span entry.comment, :title => entry.comment }
-              td { "%.2fh" % entry.hours_total }
-              td do
-                i(:class => "icon-ok") if entry.bill?
-              end
-              td do
-                form.form_inline :action => R(TimelineN, entry.id), :method => :post do
-                  button.btn.btn_mini.btn_danger "Delete", :type => :submit, :name => "delete", :value => "Delete"
-                end
+            td { a entry.date.to_date,
+                   :href => R(TimelineN, entry.id) }
+            td { entry.start.to_formatted_s(:time_only) }
+            td { entry.end.to_formatted_s(:time_only)}
+            td { span entry.comment, :title => entry.comment }
+            td { "%.2fh" % entry.hours_total }
+            td do
+              i(:class => "icon-ok") if entry.bill?
+            end
+            td do
+              form.form_inline :action => R(TimelineN, entry.id), :method => :post do
+                button.btn.btn_mini.btn_danger "Delete", :type => :submit, :name => "delete", :value => "Delete"
               end
             end
           end
@@ -1596,57 +1592,53 @@ module StopTime::Views
   # Form for editing a time entry (Models::TimeEntry).
   def time_entry_form
     header do
-      div.container do
-        h2 "Time Entry Information"
-      end
+      h2 "Time Entry Information"
     end
-    div.container do
-      div.alert do
-        button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
-        strong "Warning!"
-        text! "This time entry is already billed!  Only make changes if you know " +
-              "what you are doing!"
-      end if @time_entry.present? and @time_entry.task.billed?
-      form.form_horizontal.form_condensed :action => R(*@target), :method => :post do
+    div.alert do
+      button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
+      strong "Warning!"
+      text! "This time entry is already billed!  Only make changes if you know " +
+            "what you are doing!"
+    end if @time_entry.present? and @time_entry.task.billed?
+    form.form_horizontal.form_condensed :action => R(*@target), :method => :post do
+      div.control_group do
+        label.control_label "Customer", :for => "customer"
+        div.controls do
+          _form_select("customer", @customer_list)
+        end
+      end
+      div.control_group do
+        label.control_label "Task", :for => "task"
+        div.controls do
+          _form_select("task", @task_list)
+        end
+      end
+      if @time_entry.present? and @time_entry.task.billed?
         div.control_group do
-          label.control_label "Customer", :for => "customer"
+          label.control_label "Billed in invoice"
           div.controls do
-            _form_select("customer", @customer_list)
+            a @time_entry.task.invoice.number,
+              :href => R(CustomersNInvoicesX, @time_entry.customer.id,
+                                              @time_entry.task.invoice.number)
           end
         end
-        div.control_group do
-          label.control_label "Task", :for => "task"
-          div.controls do
-            _form_select("task", @task_list)
-          end
+      end
+      _form_input_with_label("Date", "date", :text, :class => "input-small")
+      _form_input_with_label("Start Time", "start", :text, :class => "input-mini")
+      _form_input_with_label("End Time", "end", :text, :class => "input-mini")
+      _form_input_with_label("Comment", "comment", :text, :class => "input-xxlarge")
+      div.control_group do
+        label.control_label "Bill?", :for => "bill"
+        div.controls do
+          _form_input_checkbox("bill")
         end
-        if @time_entry.present? and @time_entry.task.billed?
-          div.control_group do
-            label.control_label "Billed in invoice"
-            div.controls do
-              a @time_entry.task.invoice.number,
-                :href => R(CustomersNInvoicesX, @time_entry.customer.id,
-                                                @time_entry.task.invoice.number)
-            end
-          end
-        end
-        _form_input_with_label("Date", "date", :text, :class => "input-small")
-        _form_input_with_label("Start Time", "start", :text, :class => "input-mini")
-        _form_input_with_label("End Time", "end", :text, :class => "input-mini")
-        _form_input_with_label("Comment", "comment", :text, :class => "input-xxlarge")
-        div.control_group do
-          label.control_label "Bill?", :for => "bill"
-          div.controls do
-            _form_input_checkbox("bill")
-          end
-        end
-        # FIXME: link to invoice if any
-        div.form_actions do
-          button.btn.btn_primary @button.capitalize, :type => "submit",
-            :name => @button, :value => @button.capitalize
-          button.btn "Cancel", :type => "submit",
-            :name => "cancel", :value => "Cancel"
-        end
+      end
+      # FIXME: link to invoice if any
+      div.form_actions do
+        button.btn.btn_primary @button.capitalize, :type => "submit",
+          :name => @button, :value => @button.capitalize
+        button.btn "Cancel", :type => "submit",
+          :name => "cancel", :value => "Cancel"
       end
     end
   end
@@ -1654,76 +1646,71 @@ module StopTime::Views
   # The main overview of the list of customers.
   def customers
     header do
-      div.container do
-        h2 "Customers"
-      end
+      h2 "Customers"
     end
-    div.container do
-      if @customers.empty?
-        p do
-          text! "None found! You can create one " +
-                "#{a "here", :href => R(CustomersNew)}."
-        end
-      else
-        table.table.table_striped.table_condensed do
-          col.name
-          col.short_name
-          col.address
-          col.email
-          col.phone
-          thead do
-            tr do
-              th "Name"
-              th "Short name"
-              th "Address"
-              th "Email"
-              th "Phone"
-              th {}
-            end
+    if @customers.empty?
+      p do
+        text! "None found! You can create one " +
+              "#{a "here", :href => R(CustomersNew)}."
+      end
+    else
+      table.table.table_striped.table_condensed do
+        col.name
+        col.short_name
+        col.address
+        col.email
+        col.phone
+        thead do
+          tr do
+            th "Name"
+            th "Short name"
+            th "Address"
+            th "Email"
+            th "Phone"
+            th {}
           end
-          tbody do
-            @customers.each do |customer|
-              tr do
-                td { a customer.name, :href => R(CustomersN, customer.id) }
-                td { customer.short_name  || "–"}
-                td do
-                  if customer.address_street.present?
-                    text! customer.address_street
-                    br
-                    text! customer.address_postal_code + "&nbsp;" +
-                          customer.address_city
-                  else
-                    "–"
-                  end
+        end
+        tbody do
+          @customers.each do |customer|
+            tr do
+              td { a customer.name, :href => R(CustomersN, customer.id) }
+              td { customer.short_name  || "–"}
+              td do
+                if customer.address_street.present?
+                  text! customer.address_street
+                  br
+                  text! customer.address_postal_code + "&nbsp;" +
+                        customer.address_city
+                else
+                  "–"
                 end
-                td do
-                  if customer.email.present?
-                    a customer.email, :href => "mailto:#{customer.email}"
-                  else
-                    "–"
-                  end
+              end
+              td do
+                if customer.email.present?
+                  a customer.email, :href => "mailto:#{customer.email}"
+                else
+                  "–"
                 end
-                td do
-                  if customer.phone.present?
-                    # FIXME: hardcoded prefix!
-                    "0#{customer.phone}"
-                  else
-                    "–"
-                  end
+              end
+              td do
+                if customer.phone.present?
+                  # FIXME: hardcoded prefix!
+                  "0#{customer.phone}"
+                else
+                  "–"
                 end
-                td do
-                  form :action => R(CustomersN, customer.id), :method => :post do
-                    button.btn.btn_mini.btn_danger "Delete", :type => :submit,
-                      :name => "delete", :value => "Delete"
-                  end
+              end
+              td do
+                form :action => R(CustomersN, customer.id), :method => :post do
+                  button.btn.btn_mini.btn_danger "Delete", :type => :submit,
+                    :name => "delete", :value => "Delete"
                 end
               end
             end
           end
         end
-
-        a.btn "» Add a new customer", :href=> R(CustomersNew)
       end
+      a.btn "» Add a new customer", :href=> R(CustomersNew)
     end
   end
 
@@ -1731,58 +1718,55 @@ module StopTime::Views
   # for adding/editing/deleting tasks and showing a list of invoices for
   # the customer.
   def customer_form
-    div.container do
-      div.row do
-        div.span6 do
-          h2 "Customer Information"
-          form.form_horizontal.form_condensed :action => R(*@target), :method => :post do
-            _form_input_with_label("Name", "name", :text)
-            _form_input_with_label("Short name", "short_name", :text)
-            _form_input_with_label("Street address", "address_street", :text)
-            _form_input_with_label("Postal code", "address_postal_code", :text)
-            _form_input_with_label("City/town", "address_city", :text)
-            _form_input_with_label("Email address", "email", :email)
-            _form_input_with_label("Phone number", "phone", :tel)
-            _form_input_with_label("Financial contact", "financial_contact", :text)
-            _form_input_with_label("Default hourly rate", "hourly_rate", :text)
-            div.form_actions do
-              button.btn.btn_primary @button.capitalize, :type => "submit",
-                :name => @button, :value => @button.capitalize
-              button.btn "Cancel", :type => "submit",
-                :name => "cancel", :value => "Cancel"
-            end
+    div.row do
+      div.span6 do
+        h2 "Customer Information"
+        form.form_horizontal.form_condensed :action => R(*@target), :method => :post do
+          _form_input_with_label("Name", "name", :text)
+          _form_input_with_label("Short name", "short_name", :text)
+          _form_input_with_label("Street address", "address_street", :text)
+          _form_input_with_label("Postal code", "address_postal_code", :text)
+          _form_input_with_label("City/town", "address_city", :text)
+          _form_input_with_label("Email address", "email", :email)
+          _form_input_with_label("Phone number", "phone", :tel)
+          _form_input_with_label("Financial contact", "financial_contact", :text)
+          _form_input_with_label("Default hourly rate", "hourly_rate", :text)
+          div.form_actions do
+            button.btn.btn_primary @button.capitalize, :type => "submit",
+              :name => @button, :value => @button.capitalize
+            button.btn "Cancel", :type => "submit",
+              :name => "cancel", :value => "Cancel"
           end
         end
+      end
 
-        div.span6 do
-          if @edit_task
-            h2 "Projects & Tasks"
-            # FXIME: the following is not very RESTful!
-            form :action => R(CustomersNTasks, @customer.id), :method => :post do
-              select.input_xlarge :name => "task_id", :size => 10 do
-                @tasks.each do |task|
-                  if task.billed?
-                    option(:value => task.id) { task.name + " (#{task.invoice.number})" }
-                  else
-                    option(:value => task.id) { task.name }
-                  end
+      div.span6 do
+        if @edit_task
+          h2 "Projects & Tasks"
+          # FXIME: the following is not very RESTful!
+          form :action => R(CustomersNTasks, @customer.id), :method => :post do
+            select.input_xlarge :name => "task_id", :size => 10 do
+              @tasks.each do |task|
+                if task.billed?
+                  option(:value => task.id) { task.name + " (#{task.invoice.number})" }
+                else
+                  option(:value => task.id) { task.name }
                 end
               end
-              div.form_actions do
-                button.btn.btn_primary "Edit", :type => :submit,
-                  :name => "edit", :value => "Edit"
-                button.btn.btn_danger "Delete", :type => :submit,
-                  :name => "delete", :value => "Delete"
-                a.btn "» Add a new project/task",
-                  :href => R(CustomersNTasksNew, @customer.id)
-              end
             end
-
-            h2 "Invoices"
-            _invoice_list(@invoices)
-            a.btn "» Create a new invoice",
-              :href => R(CustomersNInvoicesNew, @customer.id)
+            div.form_actions do
+              button.btn.btn_primary "Edit", :type => :submit,
+                :name => "edit", :value => "Edit"
+              button.btn.btn_danger "Delete", :type => :submit,
+                :name => "delete", :value => "Delete"
+              a.btn "» Add a new project/task",
+                :href => R(CustomersNTasksNew, @customer.id)
+            end
           end
+          h2 "Invoices"
+          _invoice_list(@invoices)
+          a.btn "» Create a new invoice",
+            :href => R(CustomersNInvoicesNew, @customer.id)
         end
       end
     end
@@ -1791,85 +1775,77 @@ module StopTime::Views
   # Form for updating the properties of a task (Models::Task).
   def task_form
     header do
-      div.container do
-        h2 "Task Information"
-      end
+      h2 "Task Information"
     end
-    div.container do
-      div.alert do
-        button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
-        strong "Warning!"
-        text! "This task is already billed!  Only make changes if you know " +
-              "what you are doing!"
-      end if @task.billed?
-      form.form_horizontal.form_condensed :action => R(*@target), :method => :post do
-        div.control_group do
-          label.control_label "Customer", :for => "customer"
-          div.controls do
-            _form_select("customer", @customer_list)
-            a.btn "» Go to customer", :href => R(CustomersN, @customer.id)
-          end
-        end
-        _form_input_with_label("Name", "name", :text)
-        div.control_group do
-          label.control_label "Project/Task type"
-          div.controls do
-            label.radio do
-              _form_input_radio("type", "hourly_rate", true)
-              text!("Hourly rate: ")
-              _form_input("hourly_rate", :number, "Hourly rate", :class => "input-small")
-            end
-            label.radio do
-              _form_input_radio("type", "fixed_cost")
-              text!("Fixed cost: ")
-              _form_input("fixed_cost", :number, "Fixed cost", :class => "input-small")
-            end
-          end
-        end
-        _form_input_with_label("VAT rate", "vat_rate", :number, :class => "input-small")
-        if @task.billed?
-          div.control_group do
-            label.control_label "Billed in invoice"
-            div.controls do
-              a @task.invoice.number,
-                :href => R(CustomersNInvoicesX, @customer.id, @task.invoice.number)
-            end
-          end
-          _form_input_with_label("Invoice comment", "invoice_comment", :text)
-        end
-        div.form_actions do
-          button.btn.btn_primary @method.capitalize, :type => "submit",
-            :name => @method, :value => @method.capitalize
-          button.btn "Cancel", :type => "submit",
-            :name => "cancel", :value => "Cancel"
+    div.alert do
+      button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
+      strong "Warning!"
+      text! "This task is already billed!  Only make changes if you know " +
+            "what you are doing!"
+    end if @task.billed?
+    form.form_horizontal.form_condensed :action => R(*@target), :method => :post do
+      div.control_group do
+        label.control_label "Customer", :for => "customer"
+        div.controls do
+          _form_select("customer", @customer_list)
+          a.btn "» Go to customer", :href => R(CustomersN, @customer.id)
         end
       end
-      # Show registered time (ab)using the time_entries view as partial view.
-      time_entries(@task.id) unless @method == "create"
+      _form_input_with_label("Name", "name", :text)
+      div.control_group do
+        label.control_label "Project/Task type"
+        div.controls do
+          label.radio do
+            _form_input_radio("type", "hourly_rate", true)
+            text!("Hourly rate: ")
+            _form_input("hourly_rate", :number, "Hourly rate", :class => "input-small")
+          end
+          label.radio do
+            _form_input_radio("type", "fixed_cost")
+            text!("Fixed cost: ")
+            _form_input("fixed_cost", :number, "Fixed cost", :class => "input-small")
+          end
+        end
+      end
+      _form_input_with_label("VAT rate", "vat_rate", :number, :class => "input-small")
+      if @task.billed?
+        div.control_group do
+          label.control_label "Billed in invoice"
+          div.controls do
+            a @task.invoice.number,
+              :href => R(CustomersNInvoicesX, @customer.id, @task.invoice.number)
+          end
+        end
+        _form_input_with_label("Invoice comment", "invoice_comment", :text)
+      end
+      div.form_actions do
+        button.btn.btn_primary @method.capitalize, :type => "submit",
+          :name => @method, :value => @method.capitalize
+        button.btn "Cancel", :type => "submit",
+          :name => "cancel", :value => "Cancel"
+      end
     end
+    # Show registered time (ab)using the time_entries view as partial view.
+    time_entries(@task.id) unless @method == "create"
   end
 
   # The main overview of the existing invoices.
   def invoices
     header do
-      div.container do
-        h2 "Invoices"
-      end
+      h2 "Invoices"
     end
-    div.container do
-      div.row do
-        div.span7 do
-          if @invoices.values.flatten.empty?
-            p do
-              text! "Found none! You can create one by "
-                    "#{a "selecting a customer", :href => R(Customers)}."
-            end
-          else
-            @invoices.keys.sort.each do |key|
-              next if @invoices[key].empty?
-              h3 { key }
-              _invoice_list(@invoices[key])
-            end
+    div.row do
+      div.span7 do
+        if @invoices.values.flatten.empty?
+          p do
+            text! "Found none! You can create one by "
+                  "#{a "selecting a customer", :href => R(Customers)}."
+          end
+        else
+          @invoices.keys.sort.each do |key|
+            next if @invoices[key].empty?
+            h3 { key }
+            _invoice_list(@invoices[key])
           end
         end
       end
@@ -1881,136 +1857,132 @@ module StopTime::Views
   # property.
   def invoice_form
     header do
-      div.container do
-        h2 do
-          span "Invoice for "
-          a @customer.name, :href => R(CustomersN, @customer.id)
-        end
+      h2 do
+        text! "Invoice for "
+        a @customer.name, :href => R(CustomersN, @customer.id)
       end
     end
-    div.container do
-      div.row do
-        div.span6 do
-          form.form_horizontal.form_condensed :action => R(CustomersNInvoicesX, @customer.id, @invoice.number),
-               :method => :post do
-            _form_input_with_label("Number", "number", :text, :disabled => true,
-              :class => "input-small")
-            div.control_group do
-              label.control_label "Date"
-              div.controls do
-                input.input_medium :type => :text, :name => "created_at",
-                  :id => "created_at",
-                  :value => @invoice.created_at.to_formatted_s(:date_only),
-                  :placeholder => "Date", :disabled => true
+    div.row do
+      div.span6 do
+        form.form_horizontal.form_condensed :action => R(CustomersNInvoicesX, @customer.id, @invoice.number),
+             :method => :post do
+          _form_input_with_label("Number", "number", :text, :disabled => true,
+            :class => "input-small")
+          div.control_group do
+            label.control_label "Date"
+            div.controls do
+              input.input_medium :type => :text, :name => "created_at",
+                :id => "created_at",
+                :value => @invoice.created_at.to_formatted_s(:date_only),
+                :placeholder => "Date", :disabled => true
+            end
+          end
+          div.control_group do
+            label.control_label "Period"
+            div.controls do
+              input.input_large :type => :text, :name => "period", :id => "period",
+                :value => _format_period(@invoice.period),
+                :placeholder => "Period", :disabled => true
+            end
+          end
+          div.control_group do
+            label.control_label "Paid?"
+            div.controls do
+              _form_input_checkbox("paid")
+            end
+          end
+          div.form_actions do
+            button.btn.btn_primary "Update", :type => :submit,
+              :name => "update", :value => "Update"
+            button.btn "Reset", :type => :reset,
+              :name => "reset", :value => "Reset"
+          end
+        end
+      end
+      div.span6 do
+        table.table.table_condensed.table_striped do
+          col.task
+          col.reg_hours
+          col.hourly_rate
+          col.amount
+          thead do
+            tr do
+              th { "Project/Task" }
+              th.text_right { "Registered" }
+              th.text_right { "Hourly rt." }
+              th.text_right { "Amount" }
+            end
+          end
+          tbody do
+            subtotal = 0.0
+            @tasks.each do |task, line|
+              tr do
+                td do
+                  a task.comment_or_name,
+                    :title => task.comment_or_name,
+                    :href => R(CustomersNTasksN, task.customer.id, task.id)
+                end
+                if line[1].blank?
+                  # FIXME: information of time spent is available in the summary
+                  # but show it?
+                  td.text_right { "%.2fh" % line[0] }
+                  td.text_right "–"
+                else
+                  td.text_right { "%.2fh" % line[0] }
+                  td.text_right { "€ %.2f" % line[1] }
+                end
+                td.text_right { "€ %.2f" % line[2] }
+              end
+              subtotal += line[2]
+              task.time_entries.each do |entry|
+                tr do
+                  td.indent do
+                    if entry.comment.present?
+                      "• #{entry.comment}"
+                    else
+                      em.light "• no comment"
+                    end
+                  end
+                  td.text_right { "%.2fh" % entry.hours_total }
+                  td.text_right { "–" }
+                  td.text_right { "–" }
+                end
+              end unless task.fixed_cost?
+            end
+            vattotal = 0.0
+            if @company.vatno.present?
+              tr.total do
+                td { i "Sub-total" }
+                td ""
+                td ""
+                td.text_right { "€ %.2f" % subtotal }
+              end
+              @vat.keys.sort.each do |rate|
+                vattotal += @vat[rate]
+                tr do
+                  td { i "VAT %d%%" % rate }
+                  td ""
+                  td ""
+                  td.text_right { "€ %.2f" % @vat[rate] }
+                end
               end
             end
-            div.control_group do
-              label.control_label "Period"
-              div.controls do
-                input.input_large :type => :text, :name => "period", :id => "period",
-                  :value => _format_period(@invoice.period),
-                  :placeholder => "Period", :disabled => true
-              end
-            end
-            div.control_group do
-              label.control_label "Paid?"
-              div.controls do
-                _form_input_checkbox("paid")
-              end
-            end
-            div.form_actions do
-              button.btn.btn_primary "Update", :type => :submit,
-                :name => "update", :value => "Update"
-              button.btn "Reset", :type => :reset,
-                :name => "reset", :value => "Reset"
+            tr.total do
+              td { b "Total" }
+              td ""
+              td ""
+              td.text_right { "€ %.2f" % (subtotal + vattotal) }
             end
           end
         end
-        div.span6 do
-          table.table.table_condensed.table_striped do
-            col.task
-            col.reg_hours
-            col.hourly_rate
-            col.amount
-            thead do
-              tr do
-                th { "Project/Task" }
-                th.text_right { "Registered" }
-                th.text_right { "Hourly rt." }
-                th.text_right { "Amount" }
-              end
-            end
-            tbody do
-              subtotal = 0.0
-              @tasks.each do |task, line|
-                tr do
-                  td do
-                    a task.comment_or_name,
-                      :title => task.comment_or_name,
-                      :href => R(CustomersNTasksN, task.customer.id, task.id)
-                  end
-                  if line[1].blank?
-                    # FIXME: information of time spent is available in the summary
-                    # but show it?
-                    td.text_right { "%.2fh" % line[0] }
-                    td.text_right "–"
-                  else
-                    td.text_right { "%.2fh" % line[0] }
-                    td.text_right { "€ %.2f" % line[1] }
-                  end
-                  td.text_right { "€ %.2f" % line[2] }
-                end
-                subtotal += line[2]
-                task.time_entries.each do |entry|
-                  tr do
-                    td.indent do
-                      if entry.comment.present?
-                        "• #{entry.comment}"
-                      else
-                        em.light "• no comment"
-                      end
-                    end
-                    td.text_right { "%.2fh" % entry.hours_total }
-                    td.text_right { "–" }
-                    td.text_right { "–" }
-                  end
-                end unless task.fixed_cost?
-              end
-              vattotal = 0.0
-              if @company.vatno.present?
-                tr.total do
-                  td { i "Sub-total" }
-                  td ""
-                  td ""
-                  td.text_right { "€ %.2f" % subtotal }
-                end
-                @vat.keys.sort.each do |rate|
-                  vattotal += @vat[rate]
-                  tr do
-                    td { i "VAT %d%%" % rate }
-                    td ""
-                    td ""
-                    td.text_right { "€ %.2f" % @vat[rate] }
-                  end
-                end
-              end
-              tr.total do
-                td { b "Total" }
-                td ""
-                td ""
-                td.text_right { "€ %.2f" % (subtotal + vattotal) }
-              end
-            end
-          end
 
-          div.btn_group do
-            a.btn.btn_primary "» Download PDF",
-              :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.pdf")
-            a.btn "» Download LaTeX source",
-              :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.tex")
-            a.btn "» View company info",
-              :href => R(Company, :revision => @company.revision)
-          end
+        div.btn_group do
+          a.btn.btn_primary "» Download PDF",
+            :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.pdf")
+          a.btn "» Download LaTeX source",
+            :href => R(CustomersNInvoicesX, @customer.id, "#{@invoice.number}.tex")
+          a.btn "» View company info",
+            :href => R(Company, :revision => @company.revision)
         end
       end
     end
@@ -2020,105 +1992,101 @@ module StopTime::Views
   # an hourly rate that need to be billed.
   def invoice_select_form
     header do
-      div.container do
-        h2 "Registered Time"
-      end
+      h2 "Registered Time"
     end
-    div.container do
-      div.row do
-        div.span10 do
-          form.form_horizontal :action => R(CustomersNInvoices, @customer.id),
-                               :method => :post do
-            h3 "Projects/Tasks with an Hourly Rate"
-            unless @hourly_rate_tasks.empty?
-              table.table.table_striped.table_condensed do
-                col.flag
-                col.date
-                col.start_time
-                col.end_time
-                col.comment
-                col.hours
-                col.amount
-                thead do
-                  tr do
-                    th "Bill?"
-                    th "Date"
-                    th "Start"
-                    th "End"
-                    th "Comment"
-                    th.text_right "Total"
-                    th.text_right "Amount"
-                  end
-                end
-                tbody do
-                  @hourly_rate_tasks.keys.each do |task|
-                    tr.task do
-                      td { _form_input_checkbox("tasks[]", task.id, true) }
-                      td task.name, :colspan => 3
-                      td do
-                        input :type =>  :text, :name => "task_#{task.id}_comment",
-                              :id => "tasks_#{task.id}_comment", :value => task.name
-                      td {}
-                      td {}
-                      end
-                    end
-                    @hourly_rate_tasks[task].each do |entry|
-                      tr do
-                        td.indent { _form_input_checkbox("time_entries[]", entry.id, true) }
-                        td { label entry.date.to_date,
-                                   :for => "time_entries[]_#{entry.id}" }
-                        td { entry.start.to_formatted_s(:time_only) }
-                        td { entry.end.to_formatted_s(:time_only) }
-                        td { entry.comment }
-                        td.text_right { "%.2fh" % entry.hours_total }
-                        td.text_right { "€ %.2f" % (entry.hours_total * entry.task.hourly_rate) }
-                      end
-                    end
-                  end
+    div.row do
+      div.span10 do
+        form.form_horizontal :action => R(CustomersNInvoices, @customer.id),
+                             :method => :post do
+          h3 "Projects/Tasks with an Hourly Rate"
+          unless @hourly_rate_tasks.empty?
+            table.table.table_striped.table_condensed do
+              col.flag
+              col.date
+              col.start_time
+              col.end_time
+              col.comment
+              col.hours
+              col.amount
+              thead do
+                tr do
+                  th "Bill?"
+                  th "Date"
+                  th "Start"
+                  th "End"
+                  th "Comment"
+                  th.text_right "Total"
+                  th.text_right "Amount"
                 end
               end
-            end
-
-            unless @fixed_cost_tasks.empty?
-              h3 "Fixed Cost Projects/Tasks"
-              table.table.table_striped.table_condensed do
-                col.flag
-                col.task
-                col.comment
-                col.hours
-                col.amount
-                thead do
-                  tr do
-                    th "Bill?"
-                    th "Project/Task"
-                    th "Comment"
-                    th.text_right "Registered time"
-                    th.text_right "Amount"
+              tbody do
+                @hourly_rate_tasks.keys.each do |task|
+                  tr.task do
+                    td { _form_input_checkbox("tasks[]", task.id, true) }
+                    td task.name, :colspan => 3
+                    td do
+                      input :type =>  :text, :name => "task_#{task.id}_comment",
+                            :id => "tasks_#{task.id}_comment", :value => task.name
+                    td {}
+                    td {}
+                    end
                   end
-                end
-                tbody do
-                  @fixed_cost_tasks.keys.each do |task|
+                  @hourly_rate_tasks[task].each do |entry|
                     tr do
-                      td { _form_input_checkbox("tasks[]", task.id, true) }
-                      td { label task.name, :for => "tasks[]_#{task.id}" }
-                      td do
-                        input :type =>  :text, :name => "task_#{task.id}_comment",
-                              :id => "tasks_#{task.id}_comment", :value => task.name
-                      end
-                      td.text_right { "%.2fh" % @fixed_cost_tasks[task] }
-                      td.text_right { task.fixed_cost }
+                      td.indent { _form_input_checkbox("time_entries[]", entry.id, true) }
+                      td { label entry.date.to_date,
+                                 :for => "time_entries[]_#{entry.id}" }
+                      td { entry.start.to_formatted_s(:time_only) }
+                      td { entry.end.to_formatted_s(:time_only) }
+                      td { entry.comment }
+                      td.text_right { "%.2fh" % entry.hours_total }
+                      td.text_right { "€ %.2f" % (entry.hours_total * entry.task.hourly_rate) }
                     end
                   end
                 end
               end
             end
+          end
 
-            div.form_actions do
-              button.btn.btn_primary "Create invoice", :type => :submit,
-                :name => "create", :value => "Create invoice"
-              button.btn "Cancel", :type => :submit,
-                :name => "cancel", :value => "Cancel"
+          unless @fixed_cost_tasks.empty?
+            h3 "Fixed Cost Projects/Tasks"
+            table.table.table_striped.table_condensed do
+              col.flag
+              col.task
+              col.comment
+              col.hours
+              col.amount
+              thead do
+                tr do
+                  th "Bill?"
+                  th "Project/Task"
+                  th "Comment"
+                  th.text_right "Registered time"
+                  th.text_right "Amount"
+                end
+              end
+              tbody do
+                @fixed_cost_tasks.keys.each do |task|
+                  tr do
+                    td { _form_input_checkbox("tasks[]", task.id, true) }
+                    td { label task.name, :for => "tasks[]_#{task.id}" }
+                    td do
+                      input :type =>  :text, :name => "task_#{task.id}_comment",
+                            :id => "tasks_#{task.id}_comment", :value => task.name
+                    end
+                    td.text_right { "%.2fh" % @fixed_cost_tasks[task] }
+                    td.text_right { task.fixed_cost }
+                  end
+                end
+              end
             end
+          end
+
+          div.form_actions do
+            button.btn.btn_primary "Create invoice", :type => :submit,
+              :name => "create", :value => "Create invoice"
+            button.btn "Cancel", :type => :submit,
+              :name => "cancel", :value => "Cancel"
           end
         end
       end
@@ -2128,64 +2096,60 @@ module StopTime::Views
   # Form for editing the company information stored in Models::CompanyInfo.
   def company_form
     header do
-      div.container do
-        h2 "Company Information"
+      h2 "Company Information"
+    end
+    div.alert.alert_error.alert_block do
+      button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
+      h4 "There were #{@errors.count} errors in the form!"
+      ul do
+        @errors.each do |attrib, msg|
+          li "#{attrib.to_s.capitalize} #{msg}"
+        end
+      end
+    end if @errors
+    div.alert.alert_info do
+      text! " Viewing revision #{@company.revision}, " +
+            " last update at #{@company.updated_at}."
+      if @company.original.present?
+        a.btn "» View previous revision",
+          :href => R(Company, :revision => @company.original.revision)
       end
     end
-    div.container do
-      div.alert.alert_error.alert_block do
-        button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
-        h4 "There were #{@errors.count} errors in the form!"
-        ul do
-          @errors.each do |attrib, msg|
-            li "#{attrib.to_s.capitalize} #{msg}"
-          end
-        end
-      end if @errors
-      div.alert.alert_info do
-        text! " Viewing revision #{@company.revision}, " +
-              " last update at #{@company.updated_at}."
-        if @company.original.present?
-          a.btn "» View previous revision",
-            :href => R(Company, :revision => @company.original.revision)
-        end
-      end
-      div.alert.alert_block do
-        button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
-        h4 "Warning!"
-        text! "This company information is already associated with some invoices! "
-        br
-        text! "Only make changes if you know what you are doing!"
-      end if @history_warn
-      form.form_horizontal.form_condensed :action => R(Company, :revision => @company.revision),
-        :method => :post do
-        _form_input_with_label("Name", "name", :text)
-        _form_input_with_label("Contact name", "contact_name", :text)
-        _form_input_with_label("Street address", "address_street", :text)
-        _form_input_with_label("Postal code", "address_postal_code", :text)
-        _form_input_with_label("City/town", "address_city", :text)
-        _form_input_with_label("Phone number", "phone", :tel)
-        _form_input_with_label("Cellular number", "cell", :tel)
-        _form_input_with_label("Email address", "email", :email)
-        _form_input_with_label("Web address", "website", :url)
+    div.alert.alert_block do
+      button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
+      h4 "Warning!"
+      text! "This company information is already associated with some invoices! "
+      br
+      text! "Only make changes if you know what you are doing!"
+    end if @history_warn
+    form.form_horizontal.form_condensed :action => R(Company, :revision => @company.revision),
+      :method => :post do
+      _form_input_with_label("Name", "name", :text)
+      _form_input_with_label("Contact name", "contact_name", :text)
+      _form_input_with_label("Street address", "address_street", :text)
+      _form_input_with_label("Postal code", "address_postal_code", :text)
+      _form_input_with_label("City/town", "address_city", :text)
+      _form_input_with_label("Phone number", "phone", :tel)
+      _form_input_with_label("Cellular number", "cell", :tel)
+      _form_input_with_label("Email address", "email", :email)
+      _form_input_with_label("Web address", "website", :url)
 
-        h3 "Corporate information"
-        _form_input_with_label("Chamber number", "chamber", :text)
-        _form_input_with_label("VAT number", "vatno", :text)
+      h3 "Corporate information"
+      _form_input_with_label("Chamber number", "chamber", :text)
+      _form_input_with_label("VAT number", "vatno", :text)
 
-        h3 "Bank information"
-        _form_input_with_label("Name", "bank_name", :text)
-        _form_input_with_label("Identification code", "bank_bic", :text)
-        _form_input_with_label("Account holder", "accountname", :text)
-        _form_input_with_label("Account number", "accountno", :text)
-        _form_input_with_label("Intl. account number", "accountiban", :text)
+      h3 "Bank information"
+      _form_input_with_label("Name", "bank_name", :text)
+      _form_input_with_label("Identification code", "bank_bic", :text)
+      _form_input_with_label("Account holder", "accountname", :text)
+      _form_input_with_label("Account number", "accountno", :text)
+      _form_input_with_label("Intl. account number", "accountiban", :text)
 
-        div.form_actions do
-          button.btn.btn_primary "Update", :type => "submit",
-            :name => "update", :value => "Update"
-          button.tbn "Reset", :type => :reset, :name => "reset",
-            :value => "Reset"
-        end
+      div.form_actions do
+        button.btn.btn_primary "Update", :type => "submit",
+          :name => "update", :value => "Update"
+        button.tbn "Reset", :type => :reset, :name => "reset",
+          :value => "Reset"
       end
     end
   end
