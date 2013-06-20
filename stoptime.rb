@@ -702,8 +702,11 @@ module StopTime::Controllers
     # Views#overview.
     def get
       @tasks = {}
+      @task_count = 0
       Customer.all.each do |customer|
-        @tasks[customer] = customer.unbilled_tasks.sort_by { |t| t.name }
+        tasks = customer.unbilled_tasks.sort_by { |t| t.name }
+        @tasks[customer] = tasks
+        @task_count += tasks.count
       end
       render :overview
     end
@@ -1161,6 +1164,7 @@ module StopTime::Controllers
           @hourly_rate_tasks[task] = time_entries
         end
       end
+      @none_found = @hourly_rate_tasks.empty? and @fixed_cost_tasks.empty?
       render :invoice_select_form
     end
   end
@@ -1307,11 +1311,15 @@ module StopTime::Controllers
     # them using Views#invoices.
     def get
       @invoices = {}
+      @invoice_count = 0
       Customer.all.each do |customer|
-        @invoices[customer.name] = customer.invoices
-        customer.invoices.each do |i|
+        invoices = customer.invoices
+        next if invoices.empty?
+        @invoices[customer.name] = invoices
+        invoices.each do |i|
           @input["paid_#{i.number}"] = true if i.paid?
         end
+        @invoice_count += invoices.count
       end
       render :invoices
     end
@@ -1445,9 +1453,10 @@ module StopTime::Views
 
   # The main overview showing accumulated time per task per customer.
   def overview
-    header do
-      div.container do
-        h2 "Overview"
+    header.page_header do
+      h1 do
+        text! "Overview"
+        small "#{@tasks.count} customers, #{@task_count} active projects/tasks"
       end
     end
     div.row do
@@ -1500,11 +1509,14 @@ module StopTime::Views
   # it will be assumed it is used as a partial view.
   # FIXME: This should be done in a nicer way.
   def time_entries(task_id=nil)
-    header do
-      if task_id.present?
-        h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
-      else
-        h2 "Timeline"
+    if task_id.present?
+      h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
+    else
+      header.page_header do
+        h1 do
+          text! "Timeline"
+          small "#{@time_entries.count} time entries"
+        end
       end
     end
     table.table.table_condensed.table_striped.table_hover do
@@ -1591,8 +1603,11 @@ module StopTime::Views
 
   # Form for editing a time entry (Models::TimeEntry).
   def time_entry_form
-    header do
-      h2 "Time Entry Information"
+    header.page_header do
+      h1 do
+        text! "Time Entry Information"
+        small @input["comment"]
+      end
     end
     div.alert do
       button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
@@ -1645,8 +1660,8 @@ module StopTime::Views
 
   # The main overview of the list of customers.
   def customers
-    header do
-      h2 "Customers"
+    header.page_header do
+      h1 "Customers"
     end
     if @customers.empty?
       p do
@@ -1718,9 +1733,15 @@ module StopTime::Views
   # for adding/editing/deleting tasks and showing a list of invoices for
   # the customer.
   def customer_form
+    header.page_header do
+      h1 do
+        text! "Customer Information"
+        small @input["name"]
+      end
+    end
     div.row do
       div.span6 do
-        h2 "Customer Information"
+        h2 "Details"
         form.form_horizontal.form_condensed :action => R(*@target), :method => :post do
           _form_input_with_label("Name", "name", :text)
           _form_input_with_label("Short name", "short_name", :text)
@@ -1774,8 +1795,11 @@ module StopTime::Views
 
   # Form for updating the properties of a task (Models::Task).
   def task_form
-    header do
-      h2 "Task Information"
+    header.page_header do
+      h1 do
+        text! "Task Information"
+        small @task.name
+      end
     end
     div.alert do
       button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
@@ -1831,8 +1855,11 @@ module StopTime::Views
 
   # The main overview of the existing invoices.
   def invoices
-    header do
-      h2 "Invoices"
+    header.page_header do
+      h1 do
+        text! "Invoices"
+        small "#{@invoices.count} customers, #{@invoice_count} invoices"
+      end
     end
     div.row do
       div.span7 do
@@ -1856,8 +1883,8 @@ module StopTime::Views
   # invoice (Models::Invoice) that also allows for updating the "+paid+"
   # property.
   def invoice_form
-    header do
-      h2 do
+    header.page_header do
+      h1 do
         text! "Invoice for "
         a @customer.name, :href => R(CustomersN, @customer.id)
       end
@@ -1991,15 +2018,23 @@ module StopTime::Views
   # Form for selecting fixed cost tasks and registered time for tasks with
   # an hourly rate that need to be billed.
   def invoice_select_form
-    header do
-      h2 "Registered Time"
+    header.page_header do
+      h1 do
+        text! "Create Invoice for "
+        a @customer.name, :href => R(CustomersN, @customer.id)
+      end
     end
     div.row do
       div.span10 do
+        if @none_found
+          div.alert.alert_info do
+            "No fixed costs tasks or tasks with an hourly rate found!"
+          end
+        end
         form.form_horizontal :action => R(CustomersNInvoices, @customer.id),
                              :method => :post do
-          h3 "Projects/Tasks with an Hourly Rate"
           unless @hourly_rate_tasks.empty?
+            h3 "Projects/Tasks with an Hourly Rate"
             table.table.table_striped.table_condensed do
               col.flag
               col.date
@@ -2084,7 +2119,8 @@ module StopTime::Views
 
           div.form_actions do
             button.btn.btn_primary "Create invoice", :type => :submit,
-              :name => "create", :value => "Create invoice"
+              :name => "create", :value => "Create invoice",
+              :disabled => @none_found
             button.btn "Cancel", :type => :submit,
               :name => "cancel", :value => "Cancel"
           end
@@ -2095,8 +2131,11 @@ module StopTime::Views
 
   # Form for editing the company information stored in Models::CompanyInfo.
   def company_form
-    header do
-      h2 "Company Information"
+    header.page_header do
+      h1 do
+        text! "Company Information"
+        small @company.name
+      end
     end
     div.alert.alert_error.alert_block do
       button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
