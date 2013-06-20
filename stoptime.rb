@@ -131,7 +131,7 @@ module StopTime::Models
     # will be merged with this configuration.
     DefaultConfig = { "invoice_id" => "%Y%N",
                       "hourly_rate" => 20.0,
-                      "vat_rate"    => 19.0 }
+                      "vat_rate"    => 21.0 }
 
     # Creates a new configuration object and loads the configuation.
     # by reading the file @config.yaml@ on disk, parsing it, and
