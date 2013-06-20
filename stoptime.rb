@@ -1216,7 +1216,7 @@ module StopTime::Controllers
           @errors = @time_entry.errors
         end
       end
-      redirect R(Timeline)
+      redirect @request.referer
     end
   end
 
@@ -1298,7 +1298,7 @@ module StopTime::Controllers
           return render :time_entry_form
         end
       end
-      redirect R(Timeline)
+      redirect @request.referer
     end
   end
 
