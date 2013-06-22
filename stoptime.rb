@@ -1185,7 +1185,9 @@ module StopTime::Controllers
       if @input["show"] == "all"
         @time_entries = TimeEntry.all(:order => "start DESC")
       else
-        @time_entries = TimeEntry.joins(:task).where("stoptime_tasks.invoice_id" => nil)
+        @time_entries = TimeEntry.joins(:task)\
+                                 .where("stoptime_tasks.invoice_id" => nil)\
+                                 .order("start DESC")
       end
       @time_entries.each do |te|
         @input["bill_#{te.id}"] = true if te.bill?
