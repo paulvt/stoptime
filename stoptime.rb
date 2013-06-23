@@ -1461,7 +1461,7 @@ module StopTime::Views
           footer { br }
         end
         # JQuery and Bootstrap JavaScript
-        script :src => "http://code.jquery.com/jquery.js"
+        script :src => (R(Static, "") + "javascripts/jquery.min.js")
         script :src => (R(Static, "") + "javascripts/bootstrap.min.js")
       end
     end
