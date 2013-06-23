@@ -86,25 +86,33 @@ end
 
 # = The Stop… Camping Time! Markaby extensions
 module StopTime::Mab
+
   SUPPORTED = [:get, :post]
 
   def mab_done(tag)
+    attrs = tag._attributes
+
+    # Fix up URLs (normally done by Camping::Mab::mab_done
+    [:href, :action, :src].map { |a| attrs[a] &&= self/attrs[a] }
+
     # Transform underscores into dashs in class names
-    if tag._attributes.has_key?(:class) and tag._attributes[:class].present?
-      tag._attributes[:class] = tag._attributes[:class].gsub('_', '-')
+    if attrs.has_key?(:class) and attrs[:class].present?
+      attrs[:class] = attrs[:class].gsub('_', '-')
     end
 
     # The followin method processing is only for form tags.
     return super unless tag._name == :form
 
-    meth = tag._attributes[:method]
-    tag._attributes[:method] = 'post' if override = !SUPPORTED.include?(meth)
+    meth = attrs[:method]
+    attrs[:method] = 'post' if override = !SUPPORTED.include?(meth)
     # Inject a hidden input element with the proper method to the tag block
     # if the form method is unsupported.
     tag._block do |orig_blk|
       input :type => 'hidden', :name => '_method', :value => meth
       orig_blk.call
     end if override
+
+    return super
   end
 
   include Mab::Indentation
