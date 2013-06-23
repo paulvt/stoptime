@@ -1610,8 +1610,12 @@ module StopTime::Views
             td { entry.date.to_date }
             td { entry.start.to_formatted_s(:time_only) }
             td { entry.end.to_formatted_s(:time_only)}
-            td { a entry.comment, :href => R(TimelineN, entry.id),
-                                  :title => entry.comment }
+            if entry.comment.nil?  or entry.comment.empty?
+              td { a(:href => R(TimelineN, entry.id)){ i "None" } }
+            else
+              td { a entry.comment, :href => R(TimelineN, entry.id),
+                                    :title => entry.comment }
+            end
             td { "%.2fh" % entry.hours_total }
             td do
               i(:class => "icon-ok") if entry.bill?
