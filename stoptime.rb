@@ -795,6 +795,20 @@ module StopTime::Controllers
       @customer = Customer.find(customer_id)
       @input = @customer.attributes
       @tasks = @customer.tasks.all(:order => "name, invoice_id ASC")
+      # FIXME: this dirty hack assumes that tasks have unique names,
+      # becasue there is no reference from billed tasks to its original
+      # task.
+      @billed_tasks = {}
+      cur_active_task = nil
+      @tasks.each do |task|
+        if task.billed?
+          @billed_tasks[cur_active_task] << task
+        else
+          cur_active_task = task
+          @billed_tasks[task] = []
+        end
+      end
+
       @invoices = @customer.invoices
       @invoices.each do |i|
         @input["paid_#{i.number}"] = true if i.paid?
@@ -1797,27 +1811,75 @@ module StopTime::Views
 
       div.span6 do
         if @edit_task
-          h2 "Projects & Tasks"
-          # FXIME: the following is not very RESTful!
-          form :action => R(CustomersNTasks, @customer.id), :method => :post do
-            select.input_xlarge :name => "task_id", :size => 10 do
-              @tasks.each do |task|
-                if task.billed?
-                  option(:value => task.id) { task.name + " (#{task.invoice.number})" }
-                else
-                  option(:value => task.id) { task.name }
+          h2 do
+            text! "Projects & Tasks"
+            div.btn_group.pull_right do
+              a.btn.btn_small "» Add a new project/task",
+                              :href => R(CustomersNTasksNew, @customer.id)
+            end
+          end
+          div.accordion.task_list! do
+            @billed_tasks.keys.sort_by { |task| task.name }.each do |task|
+              div.accordion_group do
+                div.accordion_heading do
+                  span.accordion_toggle do
+                    a task.name, "data-toggle" => "collapse",
+                                 "data-parent" => "#task_list",
+                                 :href => "#collapse#{task.id}"
+                    # FXIME: the following is not very RESTful!
+                    form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
+                                     :method => :post do
+                      a.btn.btn_mini "Edit", :href => R(CustomersNTasksN, @customer.id, task.id)
+                      input :type => :hidden, :name => "task_id", :value => task.id
+                      button.btn.btn_danger.btn_mini "Delete", :type => :submit,
+                        :name => "delete", :value => "Delete"
+                    end
+                  end
+                end
+                div.accordion_body.collapse :id => "collapse#{task.id}" do
+                  div.accordion_inner do
+                    if @billed_tasks[task].empty?
+                      i { "No billed projects/tasks found" }
+                    else
+                      table.table.table_condensed do
+                        col.task_list
+                      @billed_tasks[task].each do |billed_task|
+                        tr do
+                          td do
+                          a billed_task.comment_or_name,
+                            :href => R(CustomersNTasksN, @customer.id, billed_task.id)
+                          small do
+                            text! "(billed in invoice "
+                            a billed_task.invoice.number,
+                              :title => billed_task.invoice.number,
+                              :href => R(CustomersNInvoicesX, @customer.id,
+                                                              billed_task.invoice.number)
+                            text! ")"
+                          end
+                          end
+                          td do
+                          # FXIME: the following is not very RESTful!
+                          form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
+                                           :method => :post do
+                            a.btn.btn_mini "Edit",
+                                           :href => R(CustomersNTasksN, @customer.id,
+                                                                        billed_task.id)
+                            input :type => :hidden, :name => "task_id",
+                                  :value => billed_task.id
+                            button.btn.btn_danger.btn_mini "Delete", :type => :submit,
+                              :name => "delete", :value => "Delete"
+                          end
+                          end
+                        end
+                        end
+                      end
+                    end
+                  end
                 end
               end
             end
-            div.form_actions do
-              button.btn.btn_primary "Edit", :type => :submit,
-                :name => "edit", :value => "Edit"
-              button.btn.btn_danger "Delete", :type => :submit,
-                :name => "delete", :value => "Delete"
-              a.btn "» Add a new project/task",
-                :href => R(CustomersNTasksNew, @customer.id)
-            end
           end
+
           h2 "Invoices"
           _invoice_list(@invoices)
           a.btn "» Create a new invoice",
