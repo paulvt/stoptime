@@ -1261,7 +1261,10 @@ module StopTime::Controllers
     # registering time.
     def get
       @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
-      @task_list = Task.all.reject { |t| t.billed? }.map { |t| [t.id, t.name] }
+      @task_list = Hash.new { |h, k| h[k] = Array.new }
+      Task.all.reject { |t| t.billed? }.each do |t|
+        @task_list[t.customer.shortest_name] << [t.id, t.name]
+      end
       @input["bill"] = true
       @input["date"] = DateTime.now.to_date
       @input["start"] = Time.now.to_formatted_s(:time_only)
@@ -1290,9 +1293,10 @@ module StopTime::Controllers
       @input["start"] = @time_entry.start.to_formatted_s(:time_only)
       @input["end"] = @time_entry.end.to_formatted_s(:time_only)
       @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
-      @task_list = Task.all(:order =>  "name, invoice_id ASC").map do |t|
+      @task_list = Hash.new { |h, k| h[k] = Array.new }
+      Task.all(:order =>  "name, invoice_id ASC").each do |t|
         name = t.billed? ? t.name + " (#{t.invoice.number})" : t.name
-        [t.id, name]
+        @task_list[t.customer.shortest_name] << [t.id, name]
       end
 
       @target = [TimelineN, entry_id]
@@ -1669,7 +1673,7 @@ module StopTime::Views
       div.control_group do
         label.control_label "Task", :for => "task"
         div.controls do
-          _form_select("task", @task_list)
+          _form_select_nested("task", @task_list)
         end
       end
       if @time_entry.present? and @time_entry.task.billed?
