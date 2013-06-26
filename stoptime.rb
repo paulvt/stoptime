@@ -1691,7 +1691,12 @@ module StopTime::Views
   # The main overview of the list of customers.
   def customers
     header.page_header do
-      h1 "Customers"
+      h1 do
+        text! "Customers"
+        div.btn_group.pull_right do
+          a.btn.btn_small "» Add a new customer", :href=> R(CustomersNew)
+        end
+      end
     end
     if @customers.empty?
       p do
@@ -1755,7 +1760,6 @@ module StopTime::Views
           end
         end
       end
-      a.btn "» Add a new customer", :href=> R(CustomersNew)
     end
   end
 
