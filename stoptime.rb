@@ -2483,12 +2483,13 @@ module StopTime::Views
       html_options.merge!(:name => name, :id => name)
       select(html_options) do
         opts.keys.sort.each do |key|
-          option("— #{key} —", {:disabled => true})
-          opts[key].sort_by { |o| o.last }.each do |opt_val, opt_str|
-            if @input[name] == opt_val
-              option(opt_str, {:value => opt_val, :selected => true})
-            else
-              option(opt_str, {:value => opt_val})
+          optgroup :label => key do
+            opts[key].sort_by { |o| o.last }.each do |opt_val, opt_str|
+              if @input[name] == opt_val
+                option(opt_str, {:value => opt_val, :selected => true})
+              else
+                option(opt_str, {:value => opt_val})
+              end
             end
           end
         end
