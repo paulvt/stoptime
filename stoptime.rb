@@ -2095,9 +2095,10 @@ module StopTime::Views
                 tr do
                   td.indent do
                     if entry.comment.present?
-                      "• #{entry.comment}"
+                      a "• #{entry.comment}", :href => R(TimelineN, entry.id),
+                                              :title => entry.comment
                     else
-                      em.light "• no comment"
+                      a :href => R(TimelineN, entry.id) { i "• None" }
                     end
                   end
                   td.text_right { "%.2fh" % entry.hours_total }
