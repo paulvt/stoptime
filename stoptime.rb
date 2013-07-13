@@ -851,6 +851,7 @@ module StopTime::Controllers
         attrs.each do |attr|
           @customer[attr] = @input[attr]
         end
+        @customer.time_specification = @input.has_key? "time_specification"
         @customer.save
         if @customer.invalid?
           @errors = @customer.errors
@@ -1819,6 +1820,12 @@ module StopTime::Views
           _form_input_with_label("Phone number", "phone", :tel)
           _form_input_with_label("Financial contact", "financial_contact", :text)
           _form_input_with_label("Default hourly rate", "hourly_rate", :text)
+          div.control_group do
+            label.control_label "Time specifications?"
+            div.controls do
+              _form_input_checkbox("time_specification")
+            end
+          end
           div.form_actions do
             button.btn.btn_primary @button.capitalize, :type => "submit",
               :name => @button, :value => @button.capitalize
