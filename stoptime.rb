@@ -193,6 +193,7 @@ module StopTime::Models
   # [email] email address (String)
   # [phone] phone number (String)
   # [hourly_rate] default hourly rate (Float)
+  # [time_specification] whether the customer requires time specifications (TrueClass/FalseClass)
   # [created_at] time of creation (Time)
   # [updated_at] time of last update (Time)
   #
@@ -358,6 +359,8 @@ module StopTime::Models
   # [id] unique identification number (Fixnum)
   # [number] invoice number (Fixnum)
   # [paid] flag whether the invoice has been paid (TrueClass/FalseClass)
+  # [include_specification] flag whether the invoice should include a time
+  #                         specification (TrueClass/FalseClass)
   # [created_at] time of creation (Time)
   # [updated_at] time of last update (Time)
   #
@@ -691,6 +694,18 @@ module StopTime::Models
 
     def self.down
       remove_column(Task.table_name, :vat_rate)
+    end
+  end
+
+  class TimeSpecificationSupport < V 1.95 # :nodoc:
+    def self.up
+      add_column(Customer.table_name, :time_specification, :boolean)
+      add_column(Invoice.table_name, :include_specification, :boolean)
+    end
+
+    def self.down
+      remove_column(Customer.table_name, :time_specification)
+      remove_column(Invoice.table_name, :include_specification)
     end
   end
 
