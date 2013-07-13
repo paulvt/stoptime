@@ -1056,6 +1056,7 @@ module StopTime::Controllers
       invoice = Invoice.create(:number => number)
       invoice.customer = Customer.find(customer_id)
       invoice.company_info = CompanyInfo.last
+      invoice.include_specification = invoice.customer.time_specification
 
       # Handle the hourly rated tasks first by looking at the selected time
       # entries.
@@ -1143,6 +1144,7 @@ module StopTime::Controllers
     def post(customer_id, invoice_number)
       invoice = Invoice.find_by_number(invoice_number)
       invoice.paid = @input.has_key? "paid"
+      invoice.include_specification = @input.has_key? "include_specification"
       invoice.save
 
       redirect R(CustomersNInvoicesX, customer_id, invoice_number)
@@ -2038,6 +2040,12 @@ module StopTime::Views
             label.control_label "Paid?"
             div.controls do
               _form_input_checkbox("paid")
+            end
+          end
+          div.control_group do
+            label.control_label "Include specification?"
+            div.controls do
+              _form_input_checkbox("include_specification")
             end
           end
           div.form_actions do
