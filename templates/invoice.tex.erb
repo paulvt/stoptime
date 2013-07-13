@@ -61,6 +61,8 @@
 <% end %><% unless @company.vatno.blank? %>  vatno=<%= @company.vatno %>,
 <% end %><% unless @company.chamber.blank? %>  chamber=<%= @company.chamber %>
 <% end %>}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{\medskipamount}
 
 <% if @company.bank_name.present? %>
 \renewcommand{\accountnotext}{<%= @company.bank_name %> rekeningnr}
