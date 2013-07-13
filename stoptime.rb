@@ -193,6 +193,7 @@ module StopTime::Models
   # [email] email address (String)
   # [phone] phone number (String)
   # [hourly_rate] default hourly rate (Float)
+  # [time_specification] whether the customer requires time specifications (TrueClass/FalseClass)
   # [created_at] time of creation (Time)
   # [updated_at] time of last update (Time)
   #
@@ -358,6 +359,8 @@ module StopTime::Models
   # [id] unique identification number (Fixnum)
   # [number] invoice number (Fixnum)
   # [paid] flag whether the invoice has been paid (TrueClass/FalseClass)
+  # [include_specification] flag whether the invoice should include a time
+  #                         specification (TrueClass/FalseClass)
   # [created_at] time of creation (Time)
   # [updated_at] time of last update (Time)
   #
@@ -694,6 +697,18 @@ module StopTime::Models
     end
   end
 
+  class TimeSpecificationSupport < V 1.95 # :nodoc:
+    def self.up
+      add_column(Customer.table_name, :time_specification, :boolean)
+      add_column(Invoice.table_name, :include_specification, :boolean)
+    end
+
+    def self.down
+      remove_column(Customer.table_name, :time_specification)
+      remove_column(Invoice.table_name, :include_specification)
+    end
+  end
+
 end # StopTime::Models
 
 # = The Stop… Camping Time! controllers
@@ -836,6 +851,7 @@ module StopTime::Controllers
         attrs.each do |attr|
           @customer[attr] = @input[attr]
         end
+        @customer.time_specification = @input.has_key? "time_specification"
         @customer.save
         if @customer.invalid?
           @errors = @customer.errors
@@ -1040,6 +1056,7 @@ module StopTime::Controllers
       invoice = Invoice.create(:number => number)
       invoice.customer = Customer.find(customer_id)
       invoice.company_info = CompanyInfo.last
+      invoice.include_specification = invoice.customer.time_specification
 
       # Handle the hourly rated tasks first by looking at the selected time
       # entries.
@@ -1127,6 +1144,7 @@ module StopTime::Controllers
     def post(customer_id, invoice_number)
       invoice = Invoice.find_by_number(invoice_number)
       invoice.paid = @input.has_key? "paid"
+      invoice.include_specification = @input.has_key? "include_specification"
       invoice.save
 
       redirect R(CustomersNInvoicesX, customer_id, invoice_number)
@@ -1804,6 +1822,12 @@ module StopTime::Views
           _form_input_with_label("Phone number", "phone", :tel)
           _form_input_with_label("Financial contact", "financial_contact", :text)
           _form_input_with_label("Default hourly rate", "hourly_rate", :text)
+          div.control_group do
+            label.control_label "Time specifications?"
+            div.controls do
+              _form_input_checkbox("time_specification")
+            end
+          end
           div.form_actions do
             button.btn.btn_primary @button.capitalize, :type => "submit",
               :name => @button, :value => @button.capitalize
@@ -2016,6 +2040,12 @@ module StopTime::Views
             label.control_label "Paid?"
             div.controls do
               _form_input_checkbox("paid")
+            end
+          end
+          div.control_group do
+            label.control_label "Include specification?"
+            div.controls do
+              _form_input_checkbox("include_specification")
             end
           end
           div.form_actions do

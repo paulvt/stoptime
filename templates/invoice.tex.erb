@@ -1,4 +1,4 @@
-\documentclass[a4paper,12pt,oneside,dutch]{isodoc}
+\documentclass[a4paper,oneside,dutch]{isodoc}
 
 % rubber: clean <%= @number %>.out
 
@@ -61,6 +61,8 @@
 <% end %><% unless @company.vatno.blank? %>  vatno=<%= @company.vatno %>,
 <% end %><% unless @company.chamber.blank? %>  chamber=<%= @company.chamber %>
 <% end %>}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{\medskipamount}
 
 <% if @company.bank_name.present? %>
 \renewcommand{\accountnotext}{<%= @company.bank_name %> rekeningnr}
@@ -87,6 +89,13 @@
 \newcommand{\ihvat}[2]{\textit{Btw-heffing #1}&&&\currency~#2\\}
 \newcommand{\ihtotal}[1]{\cmidrule[.05em]{4-4}%
   \textbf{\totaltext}&&&\textbf{\currency~#1}}
+
+\newenvironment{istable}%
+ {\vskip1em\tabularx{\linewidth}{@{}X@{\quad}l@{\qquad}r@{}}
+   \descriptiontext&Datum&Aantal uur\ML}%
+ {\endtabularx}
+\newcommand{\istask}[1]{\textbf{#1}\\}
+\newcommand{\isitem}[3]{\quad #1&#2&#3\\}
 
 \begin{document}
 
@@ -122,10 +131,34 @@
  \end{ihtable}
  \vspace{2em}
 
+<% if @invoice.include_specification?
+%>  Zie bijlage op de volgende pagina voor een nadere specificatie.\\[1em]<%end %>
  Ik verzoek u vriendelijk het verschuldigde bedrag binnen 30 dagen na
  factuurdatum over te maken onder vermelding van het factuurnummer. \\
 
  \accountdata
 }
+
+<% if @invoice.include_specification? %>{
+ \newpage
+
+ {\bfseries\scshape\Large Specificatie}
+
+ Hieronder volgt een specificatie van gemaakte uren per taak per
+ uitgevoerde activiteit.
+
+ \begin{istable}
+ <% @invoice.tasks.each do |task|
+%> \istask{<%= task.comment_or_name %>}<%
+      task.time_entries.each do |time_entry| %>
+  \isitem{<%= time_entry.comment || "Geen opmerking" %>}%
+         {<%= time_entry.date.to_date %>}%
+         {<%= number_with_precision(time_entry.hours_total) %>}<%
+      end %>\\[\medskipamount]<%
+    end %>
+ \end{istable}
+ \label{LastPageOf\thelettercount}
+<% end %>}
+\letter{}
 
 \end{document}
