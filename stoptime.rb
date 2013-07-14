@@ -820,7 +820,7 @@ module StopTime::Controllers
           if cur_active_task.nil?
             # Apparently there is no active task anymore, probably
             # it was a fixed-cost task
-            @billed_tasks[task] = []
+            @billed_tasks[task] = [task]
           else
             @billed_tasks[cur_active_task] << task
           end
