@@ -1877,34 +1877,34 @@ module StopTime::Views
                     else
                       table.table.table_condensed do
                         col.task_list
-                      @billed_tasks[task].each do |billed_task|
-                        tr do
-                          td do
-                          a billed_task.comment_or_name,
-                            :href => R(CustomersNTasksN, @customer.id, billed_task.id)
-                          small do
-                            text! "(billed in invoice "
-                            a billed_task.invoice.number,
-                              :title => billed_task.invoice.number,
-                              :href => R(CustomersNInvoicesX, @customer.id,
-                                                              billed_task.invoice.number)
-                            text! ")"
+                        @billed_tasks[task].sort_by { |t| t.invoice.number }.each do |billed_task|
+                          tr do
+                            td do
+                              a billed_task.comment_or_name,
+                                :href => R(CustomersNTasksN, @customer.id, billed_task.id)
+                              small do
+                                text! "(billed in invoice "
+                                a billed_task.invoice.number,
+                                  :title => billed_task.invoice.number,
+                                  :href => R(CustomersNInvoicesX, @customer.id,
+                                                                  billed_task.invoice.number)
+                                text! ")"
+                              end
+                            end
+                            td do
+                              # FXIME: the following is not very RESTful!
+                              form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
+                                               :method => :post do
+                                a.btn.btn_mini "Edit",
+                                               :href => R(CustomersNTasksN, @customer.id,
+                                                                            billed_task.id)
+                                input :type => :hidden, :name => "task_id",
+                                      :value => billed_task.id
+                                button.btn.btn_danger.btn_mini "Delete", :type => :submit,
+                                  :name => "delete", :value => "Delete"
+                              end
+                            end
                           end
-                          end
-                          td do
-                          # FXIME: the following is not very RESTful!
-                          form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
-                                           :method => :post do
-                            a.btn.btn_mini "Edit",
-                                           :href => R(CustomersNTasksN, @customer.id,
-                                                                        billed_task.id)
-                            input :type => :hidden, :name => "task_id",
-                                  :value => billed_task.id
-                            button.btn.btn_danger.btn_mini "Delete", :type => :submit,
-                              :name => "delete", :value => "Delete"
-                          end
-                          end
-                        end
                         end
                       end
                     end
