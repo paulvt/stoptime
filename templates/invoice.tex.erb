@@ -56,8 +56,8 @@
   term=30,
   accountno=<%= @company.accountno %>,
   accountname=<%= @company.accountname %>,
-<% unless @company.accountiban.blank? %>  iban=<% @company.accountiban %>,
-<% end %><% unless @company.bank_bic.blank? %>  bic=<% @company.bank_bic %>,
+<% unless @company.accountiban.blank? %>  iban=<%= @company.accountiban %>,
+<% end %><% unless @company.bank_bic.blank? %>  bic=<%= @company.bank_bic %>,
 <% end %><% unless @company.vatno.blank? %>  vatno=<%= @company.vatno %>,
 <% end %><% unless @company.chamber.blank? %>  chamber=<%= @company.chamber %>
 <% end %>}
