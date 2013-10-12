@@ -34,7 +34,7 @@ The following Ruby libraries are required:
 and the following LaTeX programs:
 
 * pdflatex, with:
-  * isodoc package
+  * isodoc package (>= 1.00)
 * rubber
 
 == Installation
