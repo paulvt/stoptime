@@ -1918,10 +1918,14 @@ module StopTime::Views
             end
           end
 
-          h2 "Invoices"
+          h2 do
+            text! "Invoices"
+            div.btn_group.pull_right do
+              a.btn.btn_small "» Create a new invoice",
+                              :href => R(CustomersNInvoicesNew, @customer.id)
+            end
+          end
           _invoice_list(@invoices)
-          a.btn "» Create a new invoice",
-            :href => R(CustomersNInvoicesNew, @customer.id)
         end
       end
     end
