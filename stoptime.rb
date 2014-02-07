@@ -376,6 +376,7 @@ module StopTime::Models
     has_many :time_entries, :through => :tasks
     belongs_to :customer
     belongs_to :company_info
+    default_scope order('number DESC')
 
     # Returns a time and cost summary of the contained tasks (Hash of
     # Task to Array).
