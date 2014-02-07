@@ -8,3 +8,6 @@
 
 # The invoice ID format (see strftime(3) and %N for the sequence number)
 #invoice_id: %Y%N
+
+# The invoice template used (without the .tex.erb suffix)
+#invoice_template: invoice

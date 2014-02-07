@@ -137,9 +137,10 @@ module StopTime::Models
 
     # The default configuration. Note that the configuration of the root
     # will be merged with this configuration.
-    DefaultConfig = { "invoice_id" => "%Y%N",
-                      "hourly_rate" => 20.0,
-                      "vat_rate"    => 21.0 }
+    DefaultConfig = { "invoice_id"       => "%Y%N",
+                      "invoice_template" => "invoice",
+                      "hourly_rate"      => 20.0,
+                      "vat_rate"         => 21.0 }
 
     # Creates a new configuration object and loads the configuation.
     # by reading the file @config.yaml@ on disk, parsing it, and
@@ -1165,7 +1166,7 @@ module StopTime::Controllers
 
     # Generates a LaTex document for the invoice with the given _number_.
     def _generate_invoice_tex(number)
-      template = TEMPLATE_DIR + "invoice.tex.erb"
+      template = TEMPLATE_DIR + "#{@config["invoice_template"]}.tex.erb"
       tex_file = PUBLIC_DIR + "invoices/#{number}.tex"
 
       I18n.with_locale :nl do
@@ -1173,7 +1174,7 @@ module StopTime::Controllers
         File.open(tex_file, "w") { |f| f.write(erb.result(binding)) }
       end
     rescue Exception => err
-      tex_file.delete
+      tex_file.delete if File.exist? tex_file
       raise err
     end
 
