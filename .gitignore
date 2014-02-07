@@ -5,4 +5,5 @@ db/*
 public/invoices/*.pdf
 public/invoices/*.tex
 public/stylesheets/style.css
+templates/*_invoice.tex.erb
 tmp/*
