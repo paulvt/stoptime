@@ -1052,7 +1052,7 @@ module StopTime::Controllers
       return redirect R(CustomersN, customer_id) if @input.cancel
 
       # Create the invoice.
-      last = Invoice.last
+      last = Invoice.reorder('number ASC').last
       number = if last
                  last_year = last.number.to_s[0..3].to_i
                  if Time.now.year > last_year
