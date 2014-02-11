@@ -376,6 +376,7 @@ module StopTime::Models
     has_many :time_entries, :through => :tasks
     belongs_to :customer
     belongs_to :company_info
+    default_scope order('number DESC')
 
     # Returns a time and cost summary of the contained tasks (Hash of
     # Task to Array).
@@ -1051,7 +1052,7 @@ module StopTime::Controllers
       return redirect R(CustomersN, customer_id) if @input.cancel
 
       # Create the invoice.
-      last = Invoice.last
+      last = Invoice.reorder('number ASC').last
       number = if last
                  last_year = last.number.to_s[0..3].to_i
                  if Time.now.year > last_year
@@ -1917,10 +1918,14 @@ module StopTime::Views
             end
           end
 
-          h2 "Invoices"
+          h2 do
+            text! "Invoices"
+            div.btn_group.pull_right do
+              a.btn.btn_small "» Create a new invoice",
+                              :href => R(CustomersNInvoicesNew, @customer.id)
+            end
+          end
           _invoice_list(@invoices)
-          a.btn "» Create a new invoice",
-            :href => R(CustomersNInvoicesNew, @customer.id)
         end
       end
     end
