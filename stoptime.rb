@@ -344,9 +344,10 @@ module StopTime::Models
     belongs_to :task
     has_one :customer, :through => :task
 
-    # Returns the total amount of time, the duration, in hours.
+    # Returns the total amount of time, the duration, in hours (up to
+    # 2 decimals only!).
     def hours_total
-      (self.end - self.start) / 1.hour
+      ((self.end - self.start) / 1.hour).round(2)
     end
   end
 
