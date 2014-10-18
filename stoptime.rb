@@ -533,9 +533,10 @@ module StopTime::Models
 
   class HourlyRateSupport < V 1.3 # :nodoc:
     def self.up
+      config = Config.instance
       add_column(Customer.table_name, :hourly_rate, :float,
                                       :null => false,
-                                      :default => @config["hourly_rate"])
+                                      :default => config["hourly_rate"])
     end
 
     def self.down
