@@ -1487,6 +1487,7 @@ module StopTime::Views
 
   # The main layout used by all views.
   def layout
+    doctype!
     html(:lang => "en") do
       head do
         title "Stop… Camping Time!"
