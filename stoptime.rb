@@ -1526,13 +1526,13 @@ module StopTime::Views
         small "#{@tasks.count} customers, #{@task_count} active projects/tasks"
       end
     end
-    div.row do
-      if @tasks.empty?
-        div.alert.alert_info do
-          text! "No customers, projects or tasks found! Set them up " +
-                "#{a "here", :href => R(CustomersNew)}."
-        end
-      else
+    if @tasks.empty?
+      div.alert.alert_info do
+        text! "No customers, projects or tasks found! Set them up " +
+              "#{a "here", :href => R(CustomersNew)}."
+      end
+    else
+      div.row do
         div.span6 do
           @tasks.keys.sort_by { |c| c.name }.each do |customer|
             inv_klass = "text_info"
@@ -1750,7 +1750,7 @@ module StopTime::Views
       end
     end
     if @customers.empty?
-      p do
+      div.alert.alert_info do
         text! "None found! You can create one " +
               "#{a "here", :href => R(CustomersNew)}."
       end
@@ -1861,56 +1861,60 @@ module StopTime::Views
                               :href => R(CustomersNTasksNew, @customer.id)
             end
           end
-          div.accordion.task_list! do
-            @billed_tasks.keys.sort_by { |task| task.name }.each do |task|
-              div.accordion_group do
-                div.accordion_heading do
-                  span.accordion_toggle do
-                    a task.name, "data-toggle" => "collapse",
-                                 "data-parent" => "#task_list",
-                                 :href => "#collapse#{task.id}"
-                    # FXIME: the following is not very RESTful!
-                    form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
-                                     :method => :post do
-                      a.btn.btn_mini "Edit", :href => R(CustomersNTasksN, @customer.id, task.id)
-                      input :type => :hidden, :name => "task_id", :value => task.id
-                      button.btn.btn_danger.btn_mini "Delete", :type => :submit,
-                        :name => "delete", :value => "Delete"
+          if @billed_tasks.empty?
+            p "None found!"
+          else
+            div.accordion.task_list! do
+              @billed_tasks.keys.sort_by { |task| task.name }.each do |task|
+                div.accordion_group do
+                  div.accordion_heading do
+                    span.accordion_toggle do
+                      a task.name, "data-toggle" => "collapse",
+                                   "data-parent" => "#task_list",
+                                   :href => "#collapse#{task.id}"
+                      # FXIME: the following is not very RESTful!
+                      form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
+                                       :method => :post do
+                        a.btn.btn_mini "Edit", :href => R(CustomersNTasksN, @customer.id, task.id)
+                        input :type => :hidden, :name => "task_id", :value => task.id
+                        button.btn.btn_danger.btn_mini "Delete", :type => :submit,
+                          :name => "delete", :value => "Delete"
+                      end
                     end
                   end
-                end
-                div.accordion_body.collapse :id => "collapse#{task.id}" do
-                  div.accordion_inner do
-                    if @billed_tasks[task].empty?
-                      i { "No billed projects/tasks found" }
-                    else
-                      table.table.table_condensed do
-                        col.task_list
-                        @billed_tasks[task].sort_by { |t| t.invoice.number }.each do |billed_task|
-                          tr do
-                            td do
-                              a billed_task.comment_or_name,
-                                :href => R(CustomersNTasksN, @customer.id, billed_task.id)
-                              small do
-                                text! "(billed in invoice "
-                                a billed_task.invoice.number,
-                                  :title => billed_task.invoice.number,
-                                  :href => R(CustomersNInvoicesX, @customer.id,
-                                                                  billed_task.invoice.number)
-                                text! ")"
+                  div.accordion_body.collapse :id => "collapse#{task.id}" do
+                    div.accordion_inner do
+                      if @billed_tasks[task].empty?
+                        i { "No billed projects/tasks found" }
+                      else
+                        table.table.table_condensed do
+                          col.task_list
+                          @billed_tasks[task].sort_by { |t| t.invoice.number }.each do |billed_task|
+                            tr do
+                              td do
+                                a billed_task.comment_or_name,
+                                  :href => R(CustomersNTasksN, @customer.id, billed_task.id)
+                                small do
+                                  text! "(billed in invoice "
+                                  a billed_task.invoice.number,
+                                    :title => billed_task.invoice.number,
+                                    :href => R(CustomersNInvoicesX, @customer.id,
+                                                                    billed_task.invoice.number)
+                                  text! ")"
+                                end
                               end
-                            end
-                            td do
-                              # FXIME: the following is not very RESTful!
-                              form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
-                                               :method => :post do
-                                a.btn.btn_mini "Edit",
-                                               :href => R(CustomersNTasksN, @customer.id,
-                                                                            billed_task.id)
-                                input :type => :hidden, :name => "task_id",
-                                      :value => billed_task.id
-                                button.btn.btn_danger.btn_mini "Delete", :type => :submit,
-                                  :name => "delete", :value => "Delete"
+                              td do
+                                # FXIME: the following is not very RESTful!
+                                form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
+                                                 :method => :post do
+                                  a.btn.btn_mini "Edit",
+                                                 :href => R(CustomersNTasksN, @customer.id,
+                                                                              billed_task.id)
+                                  input :type => :hidden, :name => "task_id",
+                                        :value => billed_task.id
+                                  button.btn.btn_danger.btn_mini "Delete", :type => :submit,
+                                    :name => "delete", :value => "Delete"
+                                end
                               end
                             end
                           end
@@ -2004,14 +2008,14 @@ module StopTime::Views
         small "#{@invoices.count} customers, #{@invoice_count} invoices"
       end
     end
-    div.row do
-      div.span7 do
-        if @invoices.values.flatten.empty?
-          p do
-            text! "Found none! You can create one by "
-                  "#{a "selecting a customer", :href => R(Customers)}."
-          end
-        else
+    if @invoices.values.flatten.empty?
+      div.alert.alert_info do
+        text! "Found none! You can create one by " +
+              "#{a "selecting a customer", :href => R(Customers)}."
+      end
+    else
+      div.row do
+        div.span7 do
           @invoices.keys.sort.each do |key|
             next if @invoices[key].empty?
             h3 { key }
