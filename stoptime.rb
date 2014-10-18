@@ -626,21 +626,11 @@ module StopTime::Models
 
   class PaidFlagTypoFix < V 1.9 # :nodoc:
     def self.up
-      add_column(Invoice.table_name, :paid, :boolean)
-      Invoice.all.each do |i|
-        i.paid = i.payed unless i.payed.blank?
-        i.save
-      end
-      remove_column(Invoice.table_name, :payed)
+      rename_column(Invoice.table_name, :payed, :paid)
     end
 
     def self.down
-      add_column(Invoice.table_name, :payed, :boolean)
-      Invoice.all.each do |i|
-        i.payed = i.paid unless i.paid.blank?
-        i.save
-      end
-      remove_column(Invoice.table_name, :paid)
+      rename_column(Invoice.table_name, :paid, :payed)
     end
   end
 
