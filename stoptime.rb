@@ -215,7 +215,7 @@ module StopTime::Models
 
     # Returns a list of tasks that have not been billed via in invoice.
     def unbilled_tasks
-      tasks.all(:conditions => ["invoice_id IS NULL"], :order => "name ASC")
+      tasks.where("invoice_id IS NULL").order("name ASC")
     end
   end
 
@@ -261,7 +261,7 @@ module StopTime::Models
     # Returns a list of time entries that should be (and are not yet)
     # billed.
     def billable_time_entries
-      time_entries.all(:conditions => ["bill = 't'"], :order => "start ASC")
+      time_entries.where("bill = 't'").order("start ASC")
     end
 
     # Returns the bill period of the task by means of an Array containing
@@ -377,7 +377,7 @@ module StopTime::Models
     has_many :time_entries, :through => :tasks
     belongs_to :customer
     belongs_to :company_info
-    default_scope order('number DESC')
+    default_scope lambda { order('number DESC') }
 
     # Returns a time and cost summary of the contained tasks (Hash of
     # Task to Array).
@@ -749,7 +749,7 @@ module StopTime::Controllers
   class Customers
     # Gets the list of customers and displays them via Views#customers.
     def get
-      @customers = Customer.all(:order => "name ASC")
+      @customers = Customer.order("name ASC")
       render :customers
     end
 
@@ -812,7 +812,7 @@ module StopTime::Controllers
     def get(customer_id)
       @customer = Customer.find(customer_id)
       @input = @customer.attributes
-      @tasks = @customer.tasks.all(:order => "name, invoice_id ASC")
+      @tasks = @customer.tasks.order("name ASC, invoice_id ASC")
       # FIXME: this dirty hack assumes that tasks have unique names,
       # becasue there is no reference from billed tasks to its original
       # task.
@@ -912,7 +912,7 @@ module StopTime::Controllers
           @errors = @task.errors
           @customer = Customer.find(customer_id)
           @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
-          @time_entries = @task.time_entries.all(:order => "start DESC")
+          @time_entries = @task.time_entries.order("start DESC")
           @time_entries.each do |te|
             @input["bill_#{te.id}"] = true if te.bill?
           end
@@ -966,7 +966,7 @@ module StopTime::Controllers
       @customer = Customer.find(customer_id)
       @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
       @task = Task.find(task_id)
-      @time_entries = @task.time_entries.all(:order => "start DESC")
+      @time_entries = @task.time_entries.order("start DESC")
 
       @input = @task.attributes
       @input["type"] = @task.type
@@ -1234,7 +1234,7 @@ module StopTime::Controllers
     # the timeline using Views#time_entries
     def get
       if @input["show"] == "all"
-        @time_entries = TimeEntry.all(:order => "start DESC")
+        @time_entries = TimeEntry.order("start DESC")
       else
         @time_entries = TimeEntry.joins(:task)\
                                  .where("stoptime_tasks.invoice_id" => nil)\
@@ -1323,7 +1323,7 @@ module StopTime::Controllers
       @input["end"] = @time_entry.end.to_formatted_s(:time_only)
       @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
       @task_list = Hash.new { |h, k| h[k] = Array.new }
-      Task.all(:order =>  "name, invoice_id ASC").each do |t|
+      Task.order("name ASC, invoice_id ASC").each do |t|
         name = t.billed? ? t.name + " (#{t.invoice.number})" : t.name
         @task_list[t.customer.shortest_name] << [t.id, name]
       end
@@ -1418,7 +1418,11 @@ module StopTime::Controllers
     # Retrieves the company information and shows a form for updating
     # via Views#company_form.
     def get
-      @company = CompanyInfo.find(@input.revision || :last)
+      @company = if @input.revision.present?
+                   CompanyInfo.find(@input.revision)
+                 else
+                   CompanyInfo.last
+                 end
       @input = @company.attributes
       @history_warn = true if @company != CompanyInfo.last
       render :company_form
@@ -1428,7 +1432,11 @@ module StopTime::Controllers
     # (Views#company_form).
     # If the provided information was invalid, the errors are retrieved.
     def post
-      @company = CompanyInfo.find(@input.revision || :last)
+      @company = if @input.revision.present?
+                   CompanyInfo.find(@input.revision)
+                 else
+                   CompanyInfo.last
+                 end
       # If we are editing the current info and it is already associated
       # with some invoices, create a new revision.
       @history_warn = true if @company != CompanyInfo.last
