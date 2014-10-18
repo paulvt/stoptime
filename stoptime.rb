@@ -696,6 +696,9 @@ module StopTime::Models
     def self.up
       add_column(Customer.table_name, :time_specification, :boolean)
       add_column(Invoice.table_name, :include_specification, :boolean)
+
+      Customer.reset_column_information
+      Invoice.reset_column_information
     end
 
     def self.down
