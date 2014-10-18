@@ -402,8 +402,9 @@ module StopTime::Models
     # See also Task#bill_period.
     def period
       # FIXME: maybe should be updated_at?
-      return [created_at, created_at] if tasks.empty?
-      p = tasks.first.bill_period
+      p = [created_at, created_at]
+      return p if tasks.empty?
+
       tasks.each do |task|
         tp = task.bill_period
         p[0] = tp[0] if tp[0] < p[0]
