@@ -1,4 +1,4 @@
-= Stop… Camping Time!
+= Stop… Camping Time! documentation
 
 A (Camping) web application for task/project time registration and
 invoicing.
@@ -13,12 +13,13 @@ invoicing.
   * hourly rates
 * Administration of invoices
 * Invoice generation in PDF/LaTeX format
+  * can include a time specification if required by the customer
 
 == Requirements
 
 Stop… Camping Time! is a Camping application, so you need:
 
-* Ruby 1.8 (>= 1.8.7) or 1.9 (>= 1.9.3)
+* Ruby 1.9 (>= 1.9.3) or 2.x
 * Camping (>= 2.1.532) with
   * Active Record (>= 3.2)
   * Mab (>= 0.0.3) , and optionally:

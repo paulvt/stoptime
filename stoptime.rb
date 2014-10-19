@@ -53,6 +53,10 @@ end
 # = The main application module
 module StopTime
 
+  # The version of the application
+  VERSION = '1.6'
+  puts "Starting Stop… Camping Time! version #{VERSION}"
+
   # The parsed configuration (Hash).
   attr_reader :config
 
@@ -215,7 +219,7 @@ module StopTime::Models
 
     # Returns a list of tasks that have not been billed via in invoice.
     def unbilled_tasks
-      tasks.all(:conditions => ["invoice_id IS NULL"], :order => "name ASC")
+      tasks.where("invoice_id IS NULL").order("name ASC")
     end
   end
 
@@ -261,7 +265,7 @@ module StopTime::Models
     # Returns a list of time entries that should be (and are not yet)
     # billed.
     def billable_time_entries
-      time_entries.all(:conditions => ["bill = 't'"], :order => "start ASC")
+      time_entries.where("bill = 't'").order("start ASC")
     end
 
     # Returns the bill period of the task by means of an Array containing
@@ -377,7 +381,7 @@ module StopTime::Models
     has_many :time_entries, :through => :tasks
     belongs_to :customer
     belongs_to :company_info
-    default_scope order('number DESC')
+    default_scope lambda { order('number DESC') }
 
     # Returns a time and cost summary of the contained tasks (Hash of
     # Task to Array).
@@ -402,8 +406,9 @@ module StopTime::Models
     # See also Task#bill_period.
     def period
       # FIXME: maybe should be updated_at?
-      return [created_at, created_at] if tasks.empty?
-      p = tasks.first.bill_period
+      p = [created_at, created_at]
+      return p if tasks.empty?
+
       tasks.each do |task|
         tp = task.bill_period
         p[0] = tp[0] if tp[0] < p[0]
@@ -532,9 +537,10 @@ module StopTime::Models
 
   class HourlyRateSupport < V 1.3 # :nodoc:
     def self.up
+      config = Config.instance
       add_column(Customer.table_name, :hourly_rate, :float,
                                       :null => false,
-                                      :default => @config["hourly_rate"])
+                                      :default => config["hourly_rate"])
     end
 
     def self.down
@@ -624,21 +630,11 @@ module StopTime::Models
 
   class PaidFlagTypoFix < V 1.9 # :nodoc:
     def self.up
-      add_column(Invoice.table_name, :paid, :boolean)
-      Invoice.all.each do |i|
-        i.paid = i.payed unless i.payed.blank?
-        i.save
-      end
-      remove_column(Invoice.table_name, :payed)
+      rename_column(Invoice.table_name, :payed, :paid)
     end
 
     def self.down
-      add_column(Invoice.table_name, :payed, :boolean)
-      Invoice.all.each do |i|
-        i.payed = i.paid unless i.paid.blank?
-        i.save
-      end
-      remove_column(Invoice.table_name, :paid)
+      rename_column(Invoice.table_name, :paid, :payed)
     end
   end
 
@@ -704,6 +700,9 @@ module StopTime::Models
     def self.up
       add_column(Customer.table_name, :time_specification, :boolean)
       add_column(Invoice.table_name, :include_specification, :boolean)
+
+      Customer.reset_column_information
+      Invoice.reset_column_information
     end
 
     def self.down
@@ -749,7 +748,7 @@ module StopTime::Controllers
   class Customers
     # Gets the list of customers and displays them via Views#customers.
     def get
-      @customers = Customer.all(:order => "name ASC")
+      @customers = Customer.order("name ASC")
       render :customers
     end
 
@@ -812,7 +811,7 @@ module StopTime::Controllers
     def get(customer_id)
       @customer = Customer.find(customer_id)
       @input = @customer.attributes
-      @tasks = @customer.tasks.all(:order => "name, invoice_id ASC")
+      @tasks = @customer.tasks.order("name ASC, invoice_id ASC")
       # FIXME: this dirty hack assumes that tasks have unique names,
       # becasue there is no reference from billed tasks to its original
       # task.
@@ -912,7 +911,7 @@ module StopTime::Controllers
           @errors = @task.errors
           @customer = Customer.find(customer_id)
           @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
-          @time_entries = @task.time_entries.all(:order => "start DESC")
+          @time_entries = @task.time_entries.order("start DESC")
           @time_entries.each do |te|
             @input["bill_#{te.id}"] = true if te.bill?
           end
@@ -966,7 +965,7 @@ module StopTime::Controllers
       @customer = Customer.find(customer_id)
       @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
       @task = Task.find(task_id)
-      @time_entries = @task.time_entries.all(:order => "start DESC")
+      @time_entries = @task.time_entries.order("start DESC")
 
       @input = @task.attributes
       @input["type"] = @task.type
@@ -1234,7 +1233,7 @@ module StopTime::Controllers
     # the timeline using Views#time_entries
     def get
       if @input["show"] == "all"
-        @time_entries = TimeEntry.all(:order => "start DESC")
+        @time_entries = TimeEntry.order("start DESC")
       else
         @time_entries = TimeEntry.joins(:task)\
                                  .where("stoptime_tasks.invoice_id" => nil)\
@@ -1323,7 +1322,7 @@ module StopTime::Controllers
       @input["end"] = @time_entry.end.to_formatted_s(:time_only)
       @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
       @task_list = Hash.new { |h, k| h[k] = Array.new }
-      Task.all(:order =>  "name, invoice_id ASC").each do |t|
+      Task.order("name ASC, invoice_id ASC").each do |t|
         name = t.billed? ? t.name + " (#{t.invoice.number})" : t.name
         @task_list[t.customer.shortest_name] << [t.id, name]
       end
@@ -1418,7 +1417,11 @@ module StopTime::Controllers
     # Retrieves the company information and shows a form for updating
     # via Views#company_form.
     def get
-      @company = CompanyInfo.find(@input.revision || :last)
+      @company = if @input.revision.present?
+                   CompanyInfo.find(@input.revision)
+                 else
+                   CompanyInfo.last
+                 end
       @input = @company.attributes
       @history_warn = true if @company != CompanyInfo.last
       render :company_form
@@ -1428,7 +1431,11 @@ module StopTime::Controllers
     # (Views#company_form).
     # If the provided information was invalid, the errors are retrieved.
     def post
-      @company = CompanyInfo.find(@input.revision || :last)
+      @company = if @input.revision.present?
+                   CompanyInfo.find(@input.revision)
+                 else
+                   CompanyInfo.last
+                 end
       # If we are editing the current info and it is already associated
       # with some invoices, create a new revision.
       @history_warn = true if @company != CompanyInfo.last
@@ -1484,6 +1491,7 @@ module StopTime::Views
 
   # The main layout used by all views.
   def layout
+    doctype!
     html(:lang => "en") do
       head do
         title "Stop… Camping Time!"
@@ -1522,13 +1530,13 @@ module StopTime::Views
         small "#{@tasks.count} customers, #{@task_count} active projects/tasks"
       end
     end
-    div.row do
-      if @tasks.empty?
-        div.alert.alert_info do
-          text! "No customers, projects or tasks found! Set them up " +
-                "#{a "here", :href => R(CustomersNew)}."
-        end
-      else
+    if @tasks.empty?
+      div.alert.alert_info do
+        text! "No customers, projects or tasks found! Set them up " +
+              "#{a "here", :href => R(CustomersNew)}."
+      end
+    else
+      div.row do
         div.span6 do
           @tasks.keys.sort_by { |c| c.name }.each do |customer|
             inv_klass = "text_info"
@@ -1746,7 +1754,7 @@ module StopTime::Views
       end
     end
     if @customers.empty?
-      p do
+      div.alert.alert_info do
         text! "None found! You can create one " +
               "#{a "here", :href => R(CustomersNew)}."
       end
@@ -1857,56 +1865,60 @@ module StopTime::Views
                               :href => R(CustomersNTasksNew, @customer.id)
             end
           end
-          div.accordion.task_list! do
-            @billed_tasks.keys.sort_by { |task| task.name }.each do |task|
-              div.accordion_group do
-                div.accordion_heading do
-                  span.accordion_toggle do
-                    a task.name, "data-toggle" => "collapse",
-                                 "data-parent" => "#task_list",
-                                 :href => "#collapse#{task.id}"
-                    # FXIME: the following is not very RESTful!
-                    form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
-                                     :method => :post do
-                      a.btn.btn_mini "Edit", :href => R(CustomersNTasksN, @customer.id, task.id)
-                      input :type => :hidden, :name => "task_id", :value => task.id
-                      button.btn.btn_danger.btn_mini "Delete", :type => :submit,
-                        :name => "delete", :value => "Delete"
+          if @billed_tasks.empty?
+            p "None found!"
+          else
+            div.accordion.task_list! do
+              @billed_tasks.keys.sort_by { |task| task.name }.each do |task|
+                div.accordion_group do
+                  div.accordion_heading do
+                    span.accordion_toggle do
+                      a task.name, "data-toggle" => "collapse",
+                                   "data-parent" => "#task_list",
+                                   :href => "#collapse#{task.id}"
+                      # FXIME: the following is not very RESTful!
+                      form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
+                                       :method => :post do
+                        a.btn.btn_mini "Edit", :href => R(CustomersNTasksN, @customer.id, task.id)
+                        input :type => :hidden, :name => "task_id", :value => task.id
+                        button.btn.btn_danger.btn_mini "Delete", :type => :submit,
+                          :name => "delete", :value => "Delete"
+                      end
                     end
                   end
-                end
-                div.accordion_body.collapse :id => "collapse#{task.id}" do
-                  div.accordion_inner do
-                    if @billed_tasks[task].empty?
-                      i { "No billed projects/tasks found" }
-                    else
-                      table.table.table_condensed do
-                        col.task_list
-                        @billed_tasks[task].sort_by { |t| t.invoice.number }.each do |billed_task|
-                          tr do
-                            td do
-                              a billed_task.comment_or_name,
-                                :href => R(CustomersNTasksN, @customer.id, billed_task.id)
-                              small do
-                                text! "(billed in invoice "
-                                a billed_task.invoice.number,
-                                  :title => billed_task.invoice.number,
-                                  :href => R(CustomersNInvoicesX, @customer.id,
-                                                                  billed_task.invoice.number)
-                                text! ")"
+                  div.accordion_body.collapse :id => "collapse#{task.id}" do
+                    div.accordion_inner do
+                      if @billed_tasks[task].empty?
+                        i { "No billed projects/tasks found" }
+                      else
+                        table.table.table_condensed do
+                          col.task_list
+                          @billed_tasks[task].sort_by { |t| t.invoice.number }.each do |billed_task|
+                            tr do
+                              td do
+                                a billed_task.comment_or_name,
+                                  :href => R(CustomersNTasksN, @customer.id, billed_task.id)
+                                small do
+                                  text! "(billed in invoice "
+                                  a billed_task.invoice.number,
+                                    :title => billed_task.invoice.number,
+                                    :href => R(CustomersNInvoicesX, @customer.id,
+                                                                    billed_task.invoice.number)
+                                  text! ")"
+                                end
                               end
-                            end
-                            td do
-                              # FXIME: the following is not very RESTful!
-                              form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
-                                               :method => :post do
-                                a.btn.btn_mini "Edit",
-                                               :href => R(CustomersNTasksN, @customer.id,
-                                                                            billed_task.id)
-                                input :type => :hidden, :name => "task_id",
-                                      :value => billed_task.id
-                                button.btn.btn_danger.btn_mini "Delete", :type => :submit,
-                                  :name => "delete", :value => "Delete"
+                              td do
+                                # FXIME: the following is not very RESTful!
+                                form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
+                                                 :method => :post do
+                                  a.btn.btn_mini "Edit",
+                                                 :href => R(CustomersNTasksN, @customer.id,
+                                                                              billed_task.id)
+                                  input :type => :hidden, :name => "task_id",
+                                        :value => billed_task.id
+                                  button.btn.btn_danger.btn_mini "Delete", :type => :submit,
+                                    :name => "delete", :value => "Delete"
+                                end
                               end
                             end
                           end
@@ -2000,14 +2012,14 @@ module StopTime::Views
         small "#{@invoices.count} customers, #{@invoice_count} invoices"
       end
     end
-    div.row do
-      div.span7 do
-        if @invoices.values.flatten.empty?
-          p do
-            text! "Found none! You can create one by "
-                  "#{a "selecting a customer", :href => R(Customers)}."
-          end
-        else
+    if @invoices.values.flatten.empty?
+      div.alert.alert_info do
+        text! "Found none! You can create one by " +
+              "#{a "selecting a customer", :href => R(Customers)}."
+      end
+    else
+      div.row do
+        div.span7 do
           @invoices.keys.sort.each do |key|
             next if @invoices[key].empty?
             h3 { key }
