@@ -53,6 +53,10 @@ end
 # = The main application module
 module StopTime
 
+  # The version of the application
+  VERSION = '1.6'
+  puts "Starting Stop… Camping Time! version #{VERSION}"
+
   # The parsed configuration (Hash).
   attr_reader :config
 
