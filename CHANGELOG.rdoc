@@ -1,0 +1,71 @@
+= Stop… Camping Time! release news
+
+== 1.6
+
+Application:
+
+* Add support for Ruby 2.x; drop support for Ruby 1.8
+* Add support for ActiveRecord 4
+
+Other bugfixes:
+
+* Round total time of tasks to two decimals
+* Fix missing doctype in main layout
+* Fix column cache being out-of-sync after migration
+* Fix column rename migration
+* Fix broken migration that cannot access config
+* Fix broken period calculation initialisation
+
+== 1.4.1
+
+Features:
+
+* Sort invoices in descending order by default
+* Move the 'Create a new invoice' button to a more consistent location
+
+== 1.4
+
+Features:
+
+* Improvements in IBAN support [#688d33]
+* Suport alternative invoice templates
+* Allow time specifications to be added to invoices [#fb896d]
+* Add a flag for a customer to 
+* Rework the project/task list in the customer view [#9a33e4]
+* Show billed task instances and fixed costs by linking to
+  the invoice
+* Add links to billed time entries in the invoice view
+* Visual tweaks
+
+Application:
+
+* Use isodoc 1.00 (needed for IBAN)
+
+== 1.2
+
+Features:
+
+* Default VAT rate set to 21%
+* Make links on time entry descriptions and tasks more consistent
+* Color customer names on overview and invoices in invoice
+  lists based on invoice status (yellow: too late, red: far too late)
+* Check tasks and time entries by default in the invoice create form
+* Lots of other small view tweaks
+
+Application:
+
+* Port to Camping 2.x and isodoc 0.10 [#26e4aa] [#804d96]
+* Add support for Ruby 1.9
+* Include jQuery 1.0
+* Enable response Bootstrap CSS
+
+Other bug fixes:
+
+* Redirect back to referer after creating/updating time entries [#f08f36]
+* Add a day if the end time is before the start time [#d96685]
+* Check task and time entry checkboxes by default in invoice create form [#4fdf84]
+* Fix the way the DATE_FORMATS are set to suit AR3.2 [#9dfc93]
+
+== 1.0
+
+First release

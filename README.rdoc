@@ -1,4 +1,4 @@
-= Stop… Camping Time!
+= Stop… Camping Time! documentation
 
 A (Camping) web application for task/project time registration and
 invoicing.
@@ -13,6 +13,7 @@ invoicing.
   * hourly rates
 * Administration of invoices
 * Invoice generation in PDF/LaTeX format
+  * can include a time specification if required by the customer
 
 == Requirements
 
