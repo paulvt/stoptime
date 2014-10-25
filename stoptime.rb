@@ -349,10 +349,20 @@ module StopTime::Models
     belongs_to :task
     has_one :customer, :through => :task
 
+    before_validation :round_start_end
+
     # Returns the total amount of time, the duration, in hours (up to
     # 2 decimals only!).
     def hours_total
       ((self.end - self.start) / 1.hour).round(2)
+    end
+
+    #########
+    protected
+
+    def round_start_end
+      self.start = round_time(self.start)
+      self.end = round_time(self.end)
     end
 
     #######
