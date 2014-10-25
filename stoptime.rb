@@ -2022,7 +2022,13 @@ module StopTime::Views
         div.span7 do
           @invoices.keys.sort.each do |customer|
             next if @invoices[customer].empty?
-            h3 { customer.name }
+            h2 do
+              text! customer.name
+              div.btn_group.pull_right do
+                a.btn.btn_small "» Create a new invoice",
+                                :href => R(CustomersNInvoicesNew, customer.id)
+              end
+            end
             _invoice_list(@invoices[customer])
           end
         end
