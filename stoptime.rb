@@ -2131,11 +2131,15 @@ module StopTime::Views
               task.time_entries.each do |entry|
                 tr do
                   td.indent do
+                    time_spec = "from #{entry.start.to_formatted_s(:time_only)} " +
+                                "until #{entry.end.to_formatted_s(:time_only)} " +
+                                "on #{entry.date.to_date}"
                     if entry.comment.present?
                       a "• #{entry.comment}", :href => R(TimelineN, entry.id),
-                                              :title => entry.comment
+                                              :title => "#{entry.comment} (#{time_spec})"
                     else
-                      a :href => R(TimelineN, entry.id) { i "• None" }
+                      a(:href => R(TimelineN, entry.id),
+                        :title => time_spec) { i "• None" }
                     end
                   end
                   td.text_right { "%.2fh" % entry.hours_total }
