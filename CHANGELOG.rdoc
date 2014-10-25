@@ -1,5 +1,14 @@
 = Stop… Camping Time! release news
 
+== 1.8 (WIP)
+
+Features:
+
+* Round start and end time of time entries to a given time
+  resolution [#9f7883]
+* Add goto buttons in the time entry view
+* Add "Create a new invoice" per customer in the invoices list view [#50f182]
+
 == 1.6
 
 Application:
