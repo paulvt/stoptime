@@ -1377,7 +1377,7 @@ module StopTime::Controllers
       Customer.all.each do |customer|
         invoices = customer.invoices
         next if invoices.empty?
-        @invoices[customer.name] = invoices
+        @invoices[customer] = invoices
         invoices.each do |i|
           @input["paid_#{i.number}"] = true if i.paid?
         end
@@ -2020,10 +2020,10 @@ module StopTime::Views
     else
       div.row do
         div.span7 do
-          @invoices.keys.sort.each do |key|
-            next if @invoices[key].empty?
-            h3 { key }
-            _invoice_list(@invoices[key])
+          @invoices.keys.sort.each do |customer|
+            next if @invoices[customer].empty?
+            h3 { customer.name }
+            _invoice_list(@invoices[customer])
           end
         end
       end
