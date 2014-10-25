@@ -144,6 +144,7 @@ module StopTime::Models
     DefaultConfig = { "invoice_id"       => "%Y%N",
                       "invoice_template" => "invoice",
                       "hourly_rate"      => 20.0,
+                      "time_resolution"  => 1,
                       "vat_rate"         => 21.0 }
 
     # Creates a new configuration object and loads the configuation.
@@ -348,10 +349,35 @@ module StopTime::Models
     belongs_to :task
     has_one :customer, :through => :task
 
+    before_validation :round_start_end
+
     # Returns the total amount of time, the duration, in hours (up to
     # 2 decimals only!).
     def hours_total
       ((self.end - self.start) / 1.hour).round(2)
+    end
+
+    #########
+    protected
+
+    def round_start_end
+      self.start = round_time(self.start)
+      self.end = round_time(self.end)
+    end
+
+    #######
+    private
+
+    def round_time(t)
+      config = Config.instance
+      res = config["time_resolution"]
+      down = t - (t.to_i % res.minutes)
+      up = down + res.minutes
+
+      diff_down = t - down
+      diff_up = up - t
+
+      diff_down < diff_up ? down : up
     end
   end
 
