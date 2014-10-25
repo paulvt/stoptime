@@ -1278,7 +1278,7 @@ module StopTime::Controllers
       render :time_entries
     end
 
-    # Registers a time entry and redirects to Timeline.
+    # Registers a time entry and redirects back to the referer.
     # If the provided information was invalid, the errors are retrieved.
     def post
       if @input.has_key? "enter"
