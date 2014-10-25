@@ -1705,12 +1705,16 @@ module StopTime::Views
         label.control_label "Customer", :for => "customer"
         div.controls do
           _form_select("customer", @customer_list)
+          a.btn "» Go to customer", :href => R(CustomersN, @time_entry.customer.id)
         end
       end
       div.control_group do
         label.control_label "Task", :for => "task"
         div.controls do
           _form_select_nested("task", @task_list)
+          a.btn "» Go to project/task", :href => R(CustomersNTasksN,
+                                                   @time_entry.customer.id,
+                                                   @time_entry.task.id)
         end
       end
       if @time_entry.present? and @time_entry.task.billed?
