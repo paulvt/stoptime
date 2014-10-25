@@ -1669,7 +1669,7 @@ module StopTime::Views
               td { a entry.comment, :href => R(TimelineN, entry.id),
                                     :title => entry.comment }
             else
-              td { a(:href => R(TimelineN, entry.id)){ i "None" } }
+              td { a(:href => R(TimelineN, entry.id)) { i "None" } }
             end
             td { "%.2fh" % entry.hours_total }
             td do
@@ -1709,7 +1709,7 @@ module StopTime::Views
         end
       end
       div.control_group do
-        label.control_label "Task", :for => "task"
+        label.control_label "Project/Task", :for => "task"
         div.controls do
           _form_select_nested("task", @task_list)
           a.btn "» Go to project/task", :href => R(CustomersNTasksN,
