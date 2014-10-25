@@ -1016,7 +1016,7 @@ module StopTime::Controllers
       return redirect R(CustomersN, customer_id) if @input.cancel
       @task = Task.find(task_id)
       if @input.has_key? "update"
-        @task["customer"] = Customer.find(@input["customer"])
+        @task.customer = Customer.find(@input["customer"])
         @task.name = @input["name"] unless @input["name"].blank?
         if @task.billed? and @input["invoice_comment"].present?
           @task.invoice_comment = @input["invoice_comment"]
