@@ -354,6 +354,21 @@ module StopTime::Models
     def hours_total
       ((self.end - self.start) / 1.hour).round(2)
     end
+
+    #######
+    private
+
+    def round_time(t)
+      config = Config.instance
+      res = config["time_resolution"]
+      down = t - (t.to_i % res.minutes)
+      up = down + res.minutes
+
+      diff_down = t - down
+      diff_up = up - t
+
+      diff_down < diff_up ? down : up
+    end
   end
 
   # == The invoice class
