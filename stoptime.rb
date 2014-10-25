@@ -144,6 +144,7 @@ module StopTime::Models
     DefaultConfig = { "invoice_id"       => "%Y%N",
                       "invoice_template" => "invoice",
                       "hourly_rate"      => 20.0,
+                      "time_resolution"  => 1,
                       "vat_rate"         => 21.0 }
 
     # Creates a new configuration object and loads the configuation.
