@@ -431,10 +431,9 @@ module StopTime::Models
     # Returns the invoice period based on the contained tasks (Array of Time).
     # See also Task#bill_period.
     def period
-      # FIXME: maybe should be updated_at?
-      p = [created_at, created_at]
-      return p if tasks.empty?
+      return [created_at, created_at] if tasks.empty?
 
+      p = [DateTime.now, DateTime.new(0)]
       tasks.each do |task|
         tp = task.bill_period
         p[0] = tp[0] if tp[0] < p[0]
