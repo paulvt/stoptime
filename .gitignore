@@ -2,8 +2,7 @@
 config.yaml
 htpasswd
 db/*
-public/invoices/*.pdf
-public/invoices/*.tex
+public/invoices/*
 public/stylesheets/style.css
 templates/*_invoice.tex.erb
 tmp/*

@@ -54,7 +54,7 @@ end
 module StopTime
 
   # The version of the application
-  VERSION = '1.6'
+  VERSION = '1.8'
   puts "Starting Stop… Camping Time! version #{VERSION}"
 
   # The parsed configuration (Hash).
@@ -144,6 +144,7 @@ module StopTime::Models
     DefaultConfig = { "invoice_id"       => "%Y%N",
                       "invoice_template" => "invoice",
                       "hourly_rate"      => 20.0,
+                      "time_resolution"  => 1,
                       "vat_rate"         => 21.0 }
 
     # Creates a new configuration object and loads the configuation.
@@ -348,10 +349,35 @@ module StopTime::Models
     belongs_to :task
     has_one :customer, :through => :task
 
+    before_validation :round_start_end
+
     # Returns the total amount of time, the duration, in hours (up to
     # 2 decimals only!).
     def hours_total
       ((self.end - self.start) / 1.hour).round(2)
+    end
+
+    #########
+    protected
+
+    def round_start_end
+      self.start = round_time(self.start)
+      self.end = round_time(self.end)
+    end
+
+    #######
+    private
+
+    def round_time(t)
+      config = Config.instance
+      res = config["time_resolution"]
+      down = t - (t.to_i % res.minutes)
+      up = down + res.minutes
+
+      diff_down = t - down
+      diff_up = up - t
+
+      diff_down < diff_up ? down : up
     end
   end
 
@@ -405,10 +431,9 @@ module StopTime::Models
     # Returns the invoice period based on the contained tasks (Array of Time).
     # See also Task#bill_period.
     def period
-      # FIXME: maybe should be updated_at?
-      p = [created_at, created_at]
-      return p if tasks.empty?
+      return [created_at, created_at] if tasks.empty?
 
+      p = [DateTime.now, DateTime.new(0)]
       tasks.each do |task|
         tp = task.bill_period
         p[0] = tp[0] if tp[0] < p[0]
@@ -990,7 +1015,7 @@ module StopTime::Controllers
       return redirect R(CustomersN, customer_id) if @input.cancel
       @task = Task.find(task_id)
       if @input.has_key? "update"
-        @task["customer"] = Customer.find(@input["customer"])
+        @task.customer = Customer.find(@input["customer"])
         @task.name = @input["name"] unless @input["name"].blank?
         if @task.billed? and @input["invoice_comment"].present?
           @task.invoice_comment = @input["invoice_comment"]
@@ -1135,15 +1160,16 @@ module StopTime::Controllers
       @vat = @invoice.vat_summary
       @period = @invoice.period
 
+      tex_file = PUBLIC_DIR + "invoices/#{@number}.tex"
+      pdf_file = PUBLIC_DIR + "invoices/#{@number}.pdf"
       if @format == "html"
         @input = @invoice.attributes
+        @invoice_file_present = tex_file.exist?
         render :invoice_form
       elsif @format == "tex"
-        tex_file = PUBLIC_DIR + "invoices/#{@number}.tex"
         _generate_invoice_tex(@number) unless tex_file.exist?
         redirect R(Static, "") + "invoices/#{tex_file.basename}"
       elsif @format == "pdf"
-        pdf_file = PUBLIC_DIR + "invoices/#{@number}.pdf"
         _generate_invoice_pdf(@number) unless pdf_file.exist?
         redirect R(Static, "") + "invoices/#{pdf_file.basename}"
       end
@@ -1156,6 +1182,21 @@ module StopTime::Controllers
       invoice.paid = @input.has_key? "paid"
       invoice.include_specification = @input.has_key? "include_specification"
       invoice.save
+
+      redirect R(CustomersNInvoicesX, customer_id, invoice_number)
+    end
+
+    # Find the invoice with the given _invoice_number_ for the customer
+    # with the given _customer_id_ and deletes existing invoice files.
+    def delete(customer_id, invoice_number)
+      @invoice = Invoice.find_by_number(@number)
+      @customer = Customer.find(customer_id)
+
+      tex_file = PUBLIC_DIR + "invoices/#{invoice_number}.tex"
+      File.unlink(tex_file) if tex_file.exist?
+
+      pdf_file = PUBLIC_DIR + "invoices/#{invoice_number}.pdf"
+      File.unlink(pdf_file) if pdf_file.exist?
 
       redirect R(CustomersNInvoicesX, customer_id, invoice_number)
     end
@@ -1252,7 +1293,7 @@ module StopTime::Controllers
       render :time_entries
     end
 
-    # Registers a time entry and redirects to Timeline.
+    # Registers a time entry and redirects back to the referer.
     # If the provided information was invalid, the errors are retrieved.
     def post
       if @input.has_key? "enter"
@@ -1377,7 +1418,7 @@ module StopTime::Controllers
       Customer.all.each do |customer|
         invoices = customer.invoices
         next if invoices.empty?
-        @invoices[customer.name] = invoices
+        @invoices[customer] = invoices
         invoices.each do |i|
           @input["paid_#{i.number}"] = true if i.paid?
         end
@@ -1669,7 +1710,7 @@ module StopTime::Views
               td { a entry.comment, :href => R(TimelineN, entry.id),
                                     :title => entry.comment }
             else
-              td { a(:href => R(TimelineN, entry.id)){ i "None" } }
+              td { a(:href => R(TimelineN, entry.id)) { i "None" } }
             end
             td { "%.2fh" % entry.hours_total }
             td do
@@ -1705,12 +1746,16 @@ module StopTime::Views
         label.control_label "Customer", :for => "customer"
         div.controls do
           _form_select("customer", @customer_list)
+          a.btn "» Go to customer", :href => R(CustomersN, @time_entry.customer.id)
         end
       end
       div.control_group do
-        label.control_label "Task", :for => "task"
+        label.control_label "Project/Task", :for => "task"
         div.controls do
           _form_select_nested("task", @task_list)
+          a.btn "» Go to project/task", :href => R(CustomersNTasksN,
+                                                   @time_entry.customer.id,
+                                                   @time_entry.task.id)
         end
       end
       if @time_entry.present? and @time_entry.task.billed?
@@ -2020,10 +2065,16 @@ module StopTime::Views
     else
       div.row do
         div.span7 do
-          @invoices.keys.sort.each do |key|
-            next if @invoices[key].empty?
-            h3 { key }
-            _invoice_list(@invoices[key])
+          @invoices.keys.sort.each do |customer|
+            next if @invoices[customer].empty?
+            h2 do
+              text! customer.name
+              div.btn_group.pull_right do
+                a.btn.btn_small "» Create a new invoice",
+                                :href => R(CustomersNInvoicesNew, customer.id)
+              end
+            end
+            _invoice_list(@invoices[customer])
           end
         end
       end
@@ -2121,11 +2172,15 @@ module StopTime::Views
               task.time_entries.each do |entry|
                 tr do
                   td.indent do
+                    time_spec = "from #{entry.start.to_formatted_s(:time_only)} " +
+                                "until #{entry.end.to_formatted_s(:time_only)} " +
+                                "on #{entry.date.to_date}"
                     if entry.comment.present?
                       a "• #{entry.comment}", :href => R(TimelineN, entry.id),
-                                              :title => entry.comment
+                                              :title => "#{entry.comment} (#{time_spec})"
                     else
-                      a :href => R(TimelineN, entry.id) { i "• None" }
+                      a(:href => R(TimelineN, entry.id),
+                        :title => time_spec) { i "• None" }
                     end
                   end
                   td.text_right { "%.2fh" % entry.hours_total }
@@ -2169,6 +2224,15 @@ module StopTime::Views
           a.btn "» View company info",
             :href => R(Company, :revision => @company.revision)
         end
+
+        div.alert.alert_danger do
+          form.form_inline :action => R(CustomersNInvoicesX,
+                                        @customer.id, @invoice.number),
+                           :method => :delete do
+            button.btn.btn_danger "» Remove old", :type => "submit"
+            text! "An invoice has already been generated!"
+          end
+        end if @invoice_file_present
       end
     end
   end
