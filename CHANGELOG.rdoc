@@ -1,6 +1,6 @@
 = Stop… Camping Time! release news
 
-== 1.8 (WIP)
+== 1.8
 
 Features:
 
@@ -8,6 +8,11 @@ Features:
   resolution [#9f7883]
 * Add goto buttons in the time entry view
 * Add "Create a new invoice" per customer in the invoices list view [#50f182]
+* Add "Remove old" button to remove an old invoice (and thus regenerate it) [#4235ef]
+
+Other bugfixes:
+* Fix bug preventing any updats to tasks with AR 4
+* Fix invoid period calculation
 
 == 1.6
 
