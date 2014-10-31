@@ -1160,15 +1160,16 @@ module StopTime::Controllers
       @vat = @invoice.vat_summary
       @period = @invoice.period
 
+      tex_file = PUBLIC_DIR + "invoices/#{@number}.tex"
+      pdf_file = PUBLIC_DIR + "invoices/#{@number}.pdf"
       if @format == "html"
         @input = @invoice.attributes
+        @invoice_file_present = tex_file.exist?
         render :invoice_form
       elsif @format == "tex"
-        tex_file = PUBLIC_DIR + "invoices/#{@number}.tex"
         _generate_invoice_tex(@number) unless tex_file.exist?
         redirect R(Static, "") + "invoices/#{tex_file.basename}"
       elsif @format == "pdf"
-        pdf_file = PUBLIC_DIR + "invoices/#{@number}.pdf"
         _generate_invoice_pdf(@number) unless pdf_file.exist?
         redirect R(Static, "") + "invoices/#{pdf_file.basename}"
       end
@@ -1181,6 +1182,21 @@ module StopTime::Controllers
       invoice.paid = @input.has_key? "paid"
       invoice.include_specification = @input.has_key? "include_specification"
       invoice.save
+
+      redirect R(CustomersNInvoicesX, customer_id, invoice_number)
+    end
+
+    # Find the invoice with the given _invoice_number_ for the customer
+    # with the given _customer_id_ and deletes existing invoice files.
+    def delete(customer_id, invoice_number)
+      @invoice = Invoice.find_by_number(@number)
+      @customer = Customer.find(customer_id)
+
+      tex_file = PUBLIC_DIR + "invoices/#{invoice_number}.tex"
+      File.unlink(tex_file) if tex_file.exist?
+
+      pdf_file = PUBLIC_DIR + "invoices/#{invoice_number}.pdf"
+      File.unlink(pdf_file) if pdf_file.exist?
 
       redirect R(CustomersNInvoicesX, customer_id, invoice_number)
     end
@@ -2208,6 +2224,15 @@ module StopTime::Views
           a.btn "» View company info",
             :href => R(Company, :revision => @company.revision)
         end
+
+        div.alert.alert_danger do
+          form.form_inline :action => R(CustomersNInvoicesX,
+                                        @customer.id, @invoice.number),
+                           :method => :delete do
+            button.btn.btn_danger "» Remove old", :type => "submit"
+            text! "An invoice has already been generated!"
+          end
+        end if @invoice_file_present
       end
     end
   end
