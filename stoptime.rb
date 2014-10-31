@@ -1187,6 +1187,21 @@ module StopTime::Controllers
       redirect R(CustomersNInvoicesX, customer_id, invoice_number)
     end
 
+    # Find the invoice with the given _invoice_number_ for the customer
+    # with the given _customer_id_ and deletes existing invoice files.
+    def delete(customer_id, invoice_number)
+      @invoice = Invoice.find_by_number(@number)
+      @customer = Customer.find(customer_id)
+
+      tex_file = PUBLIC_DIR + "invoices/#{invoice_number}.tex"
+      File.unlink(tex_file) if tex_file.exist?
+
+      pdf_file = PUBLIC_DIR + "invoices/#{invoice_number}.pdf"
+      File.unlink(pdf_file) if pdf_file.exist?
+
+      redirect R(CustomersNInvoicesX, customer_id, invoice_number)
+    end
+
     ##############
     # Private helper methods
     #
