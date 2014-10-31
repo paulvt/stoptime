@@ -54,7 +54,7 @@ end
 module StopTime
 
   # The version of the application
-  VERSION = '1.6'
+  VERSION = '1.8'
   puts "Starting Stop… Camping Time! version #{VERSION}"
 
   # The parsed configuration (Hash).
