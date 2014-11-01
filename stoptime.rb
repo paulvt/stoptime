@@ -222,6 +222,12 @@ module StopTime::Models
     def unbilled_tasks
       tasks.where("invoice_id IS NULL").order("name ASC")
     end
+
+    # Returns a list of tasks that are active, i.e. that have not been
+    # billed and are either fixed cost or have some registered time.
+    def active_tasks
+      unbilled_tasks.select { |task| task.fixed_cost? or task.time_entries.present? }
+    end
   end
 
   # == The task class
@@ -755,7 +761,7 @@ module StopTime::Controllers
       @tasks = {}
       @task_count = 0
       Customer.all.each do |customer|
-        tasks = customer.unbilled_tasks.sort_by { |t| t.name }
+        tasks = customer.active_tasks
         @tasks[customer] = tasks
         @task_count += tasks.count
       end
