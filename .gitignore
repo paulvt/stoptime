@@ -4,5 +4,6 @@ htpasswd
 db/*
 public/invoices/*
 public/stylesheets/style.css
+public/stylesheets/style.css.map
 templates/*_invoice.tex.erb
 tmp/*
