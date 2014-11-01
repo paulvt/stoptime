@@ -1591,8 +1591,8 @@ module StopTime::Views
       end
     else
       div.row do
-        div.span6 do
-          @tasks.keys.sort_by { |c| c.name }.each do |customer|
+        @tasks.keys.sort_by { |c| c.name }.each do |customer|
+          div.span6 do
             inv_klass = "text_info"
             inv_klass = "text_warning" if customer.invoices.any? { |inv| inv.past_due? }
             inv_klass = "text_error" if customer.invoices.any? { |inv| inv.way_past_due? }
