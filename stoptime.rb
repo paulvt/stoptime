@@ -2506,7 +2506,7 @@ module StopTime::Views
                   end
                   @hourly_rate_tasks[task].each do |entry|
                     tr do
-                      td.indent { _form_input_checkbox("time_entries[]", entry.id, true) }
+                      td.indent { _form_input_checkbox("time_entries[]", entry.id, !entry.in_current_month?) }
                       td { label entry.date.to_date,
                                  :for => "time_entries[]_#{entry.id}" }
                       td { entry.start.to_formatted_s(:time_only) }
