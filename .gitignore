@@ -1,7 +1,9 @@
 .sass-cache
+.yardoc
 config.yaml
 htpasswd
 db/*
+doc/*
 public/invoices/*
 public/stylesheets/style.css
 public/stylesheets/style.css.map
