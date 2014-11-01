@@ -427,6 +427,10 @@ module StopTime::Models
       ((self.end - self.start) / 1.hour).round(2)
     end
 
+    def in_current_month?
+      self.end.month == Time.now.month
+    end
+
     #########
     protected
 
@@ -1426,7 +1430,7 @@ module StopTime::Controllers
       @customer = Customer.find(customer_id)
       @hourly_rate_tasks = {}
       @fixed_cost_tasks = {}
-      @customer.unbilled_tasks.each do |task|
+      @customer.active_tasks.each do |task|
         case task.type
         when "fixed_cost"
           total = task.time_entries.inject(0.0) { |s, te| s + te.hours_total }
@@ -2502,7 +2506,7 @@ module StopTime::Views
                   end
                   @hourly_rate_tasks[task].each do |entry|
                     tr do
-                      td.indent { _form_input_checkbox("time_entries[]", entry.id, true) }
+                      td.indent { _form_input_checkbox("time_entries[]", entry.id, !entry.in_current_month?) }
                       td { label entry.date.to_date,
                                  :for => "time_entries[]_#{entry.id}" }
                       td { entry.start.to_formatted_s(:time_only) }
