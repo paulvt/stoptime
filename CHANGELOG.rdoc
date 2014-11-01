@@ -1,5 +1,23 @@
 = Stop… Camping Time! release news
 
+== 1.10
+
+Features:
+
+* Invoice select form improvements [#ff83ce]
+  * Hide empty tasks with an hourly rate
+  * Don't select time entries in the current month
+* Improve the main overview [#02ad0e]
+  * Show total of unbilled time and earned money (excl. VAT) per customer
+  * Show only active tasks in the overview
+  * Use two-column layout
+
+Application:
+
+* Reworked all source code documention to use YARD
+* Add YARD documentation rake task (and Rakefile)
+* Remove old, unused files from the source tree
+
 == 1.8
 
 Features:
@@ -11,6 +29,7 @@ Features:
 * Add "Remove old" button to remove an old invoice (and thus regenerate it) [#4235ef]
 
 Other bugfixes:
+
 * Fix bug preventing any updats to tasks with AR 4
 * Fix invoid period calculation
 
