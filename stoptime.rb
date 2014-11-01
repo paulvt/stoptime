@@ -1426,7 +1426,7 @@ module StopTime::Controllers
       @customer = Customer.find(customer_id)
       @hourly_rate_tasks = {}
       @fixed_cost_tasks = {}
-      @customer.unbilled_tasks.each do |task|
+      @customer.active_tasks.each do |task|
         case task.type
         when "fixed_cost"
           total = task.time_entries.inject(0.0) { |s, te| s + te.hours_total }
