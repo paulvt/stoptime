@@ -427,6 +427,10 @@ module StopTime::Models
       ((self.end - self.start) / 1.hour).round(2)
     end
 
+    def in_current_month?
+      self.end.month == Time.now.month
+    end
+
     #########
     protected
 
