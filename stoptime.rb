@@ -759,10 +759,17 @@ module StopTime::Controllers
     # Views#overview.
     def get
       @tasks = {}
+      @tasks_summary = {}
       @task_count = 0
       Customer.all.each do |customer|
         tasks = customer.active_tasks
         @tasks[customer] = tasks
+        @tasks_summary[customer] = tasks.inject([0.0, 0.0]) do |summ, task|
+                                     task_summ = task.summary
+                                     summ[0] += task_summ[0]
+                                     summ[1] += task_summ[2]
+                                     summ
+                                   end
         @task_count += tasks.count
       end
       render :overview
@@ -1613,6 +1620,11 @@ module StopTime::Views
                     td.text_right { "%.2fh" % summary[0] }
                     td.text_right { "€ %.2f" % summary[2] }
                   end
+                end
+                tr do
+                  td { b "Total" }
+                  td.text_right { "%.2fh" % @tasks_summary[customer][0] }
+                  td.text_right { "€ %.2f" % @tasks_summary[customer][1] }
                 end
               end
             end
