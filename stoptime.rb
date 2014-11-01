@@ -222,6 +222,12 @@ module StopTime::Models
     def unbilled_tasks
       tasks.where("invoice_id IS NULL").order("name ASC")
     end
+
+    # Returns a list of tasks that are active, i.e. that have not been
+    # billed and are either fixed cost or have some registered time.
+    def active_tasks
+      unbilled_tasks.select { |task| task.fixed_cost? or task.time_entries.present? }
+    end
   end
 
   # == The task class
@@ -753,10 +759,17 @@ module StopTime::Controllers
     # Views#overview.
     def get
       @tasks = {}
+      @tasks_summary = {}
       @task_count = 0
       Customer.all.each do |customer|
-        tasks = customer.unbilled_tasks.sort_by { |t| t.name }
+        tasks = customer.active_tasks
         @tasks[customer] = tasks
+        @tasks_summary[customer] = tasks.inject([0.0, 0.0]) do |summ, task|
+                                     task_summ = task.summary
+                                     summ[0] += task_summ[0]
+                                     summ[1] += task_summ[2]
+                                     summ
+                                   end
         @task_count += tasks.count
       end
       render :overview
@@ -1578,8 +1591,8 @@ module StopTime::Views
       end
     else
       div.row do
-        div.span6 do
-          @tasks.keys.sort_by { |c| c.name }.each do |customer|
+        @tasks.keys.sort_by { |c| c.name }.each do |customer|
+          div.span6 do
             inv_klass = "text_info"
             inv_klass = "text_warning" if customer.invoices.any? { |inv| inv.past_due? }
             inv_klass = "text_error" if customer.invoices.any? { |inv| inv.way_past_due? }
@@ -1607,6 +1620,11 @@ module StopTime::Views
                     td.text_right { "%.2fh" % summary[0] }
                     td.text_right { "€ %.2f" % summary[2] }
                   end
+                end
+                tr do
+                  td { b "Total" }
+                  td.text_right { "%.2fh" % @tasks_summary[customer][0] }
+                  td.text_right { "€ %.2f" % @tasks_summary[customer][1] }
                 end
               end
             end
