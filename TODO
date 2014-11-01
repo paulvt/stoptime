@@ -1,9 +1,0 @@
-= Stop… Camping Time ToDo list
-
-Some stuff that should still be done, in no particular order.
-
-* Rounding the entries on some resolution (i.e. 5 minutes)
-* Versioning control for invoices
-* Ability for exporting all or specific data
-* Any form of error handling
-* Solve the large amount of FIXMEs
