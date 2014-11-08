@@ -895,18 +895,22 @@ module StopTime::Controllers
     # {Views#overview}.
     def get
       @tasks = {}
-      @tasks_summary = {}
       @task_count = 0
+      @active_tasks = {}
+      @active_tasks_summary = {}
       Customer.all.each do |customer|
-        tasks = customer.active_tasks
+        tasks = customer.unbilled_tasks
         @tasks[customer] = tasks
-        @tasks_summary[customer] = tasks.inject([0.0, 0.0]) do |summ, task|
-                                     task_summ = task.summary
-                                     summ[0] += task_summ[0]
-                                     summ[1] += task_summ[2]
-                                     summ
-                                   end
         @task_count += tasks.count
+        active_tasks = customer.active_tasks
+        @active_tasks[customer] = active_tasks
+        @active_tasks_summary[customer] =
+          active_tasks.inject([0.0, 0.0]) do |summ, task|
+            task_summ = task.summary
+            summ[0] += task_summ[0]
+            summ[1] += task_summ[2]
+            summ
+          end
       end
       render :overview
     end
@@ -1784,12 +1788,22 @@ module StopTime::Views
                 text! "No projects/tasks found! Create one " +
                       "#{a "here", :href => R(CustomersNTasksNew, customer.id)}."
               end
+            elsif @active_tasks[customer].empty?
+              p do
+                text! "No active projects/tasks found! " +
+                      "Register time on one of these tasks: "
+                br
+                @tasks[customer].each do |task|
+                   a task.name, :href => R(CustomersNTasksN, customer.id, task.id)
+                   text! "&centerdot;" unless task == @tasks[customer].last
+                end
+              end
             else
               table.table.table_condensed do
                 col.task
                 col.hours
                 col.amount
-                @tasks[customer].each do |task|
+                @active_tasks[customer].each do |task|
                   tr do
                     summary = task.summary
                     td do
@@ -1803,8 +1817,8 @@ module StopTime::Views
                 end
                 tr do
                   td { b "Total" }
-                  td.text_right { "%.2fh" % @tasks_summary[customer][0] }
-                  td.text_right { "€ %.2f" % @tasks_summary[customer][1] }
+                  td.text_right { "%.2fh" % @active_tasks_summary[customer][0] }
+                  td.text_right { "€ %.2f" % @active_tasks_summary[customer][1] }
                 end
               end
             end
