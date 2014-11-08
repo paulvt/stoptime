@@ -1788,6 +1788,16 @@ module StopTime::Views
                 text! "No projects/tasks found! Create one " +
                       "#{a "here", :href => R(CustomersNTasksNew, customer.id)}."
               end
+            elsif @active_tasks[customer].empty?
+              p do
+                text! "No active projects/tasks found! " +
+                      "Register time on one of these tasks: "
+                br
+                @tasks[customer].each do |task|
+                   a task.name, :href => R(CustomersNTasksN, customer.id, task.id)
+                   text! "&centerdot;" unless task == @tasks[customer].last
+                end
+              end
             else
               table.table.table_condensed do
                 col.task
