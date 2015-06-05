@@ -1386,6 +1386,27 @@ module StopTime::Controllers
     #
     private
 
+    # Escapes the given string such that it can be used as in in
+    # LaTeX.
+    #
+    # @param [String] string the given string
+    def _escape_latex(string)
+     escape_chars = { '#'  => '\#',
+                      '$'  => '\$',
+                      '%'  => '\%',
+                      '&'  => '\&',
+                      '\\' => '\textbackslash{}',
+                      '^'  => '\textasciicircum{}',
+                      '_'  => '\_',
+                      '{'  => '\{',
+                      '}'  => '\}',
+                      '~'  => '\textasciitilde{}' }
+      regexp_str = escape_chars.keys.map { |c| Regexp.escape(c) }.join('|')
+      regexp = Regexp.new(regexp_str)
+      string.to_s.gsub(regexp, escape_chars)
+    end
+    alias_method :l, :_escape_latex
+
     # Generates a LaTex document for the invoice with the given number.
     #
     # @param [Fixnum] number number of the invoice
