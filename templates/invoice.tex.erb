@@ -1,6 +1,6 @@
 \documentclass[a4paper,oneside,dutch]{isodoc}
 
-% rubber: clean <%= @number %>.out
+% rubber: clean <%=l @number %>.out
 
 \usepackage{array}
 \usepackage[utf8]{inputenc}
@@ -10,13 +10,13 @@
   dutch,
   fill,
   %% Company info.
-  company=<%= @company.name %>,
-  who=<%= @company.contact_name %>,
-  street=<%= @company.address_street %>,
-  zip=<%= @company.address_postal_code %>,
-  city=<%= @company.address_city %>,
-  country=<%= @company.country %>,
-  countrycode=<%= @company.country_code %>,
+  company=<%=l @company.name %>,
+  who=<%=l @company.contact_name %>,
+  street=<%=l @company.address_street %>,
+  zip=<%=l @company.address_postal_code %>,
+  city=<%=l @company.address_city %>,
+  country=<%=l @company.country %>,
+  countrycode=<%=l @company.country_code %>,
   logoaddress={\hspace{-4.4em}
                \begin{tabular}{l@{\ }l}
 <% if @company.name.blank? %>                \addresstext:    & \who\\
@@ -33,38 +33,38 @@
   %% Footer.
 <% unless @company.website.blank? %>  footer,<%
    end %>  areacode=31,
-  phone=<%= @company.phone %>,
-  cellphone=<%= @company.cell %>,
-  email=<%= @company.email %>,
-  website=<%= @company.website %>,
+  phone=<%=l @company.phone %>,
+  cellphone=<%=l @company.cell %>,
+  email=<%=l @company.email %>,
+  website=<%=l @company.website %>,
   %% Addressee info.
   %foreign,
-  to={<%= @customer.name %>\\<% unless @customer.financial_contact.blank?
-%><%= @customer.financial_contact
-%>\\<% end %><%= @customer.address_street%>\\
-      <%= @customer.address_postal_code %> <%= @customer.address_city %>},
+  to={<%=l @customer.name %>\\<% unless @customer.financial_contact.blank?
+%><%=l @customer.financial_contact
+%>\\<% end %><%=l @customer.address_street%>\\
+      <%=l @customer.address_postal_code %> <%=l @customer.address_city %>},
   % Headlines.
-  date=<%= @invoice.created_at.to_formatted_s(:day_code) %>,
-  ourref=<%= @number %>,
+  date=<%=l @invoice.created_at.to_formatted_s(:day_code) %>,
+  ourref=<%=l @number %>,
 <% period = @period.map { |p| I18n.l p, :format => :month_and_year }.uniq
    case period.length
-   when 1 %>  subject=Factuur <%= period.first %>,<%
-   when 2 %>  subject=Factuur <%= period.join(" t/m ") %>,<%
+   when 1 %>  subject=Factuur <%=l period.first %>,<%
+   when 2 %>  subject=Factuur <%=l period.join(" t/m ") %>,<%
    end %>
   yourref=,
   %% Payment data.
   term=30,
-  accountname=<%= @company.accountname %>,
-<% unless @company.accountiban.blank? %>  iban=<%= @company.accountiban %>,
-<% end %><% unless @company.bank_bic.blank? %>  bic=<%= @company.bank_bic %>,
-<% end %><% unless @company.vatno.blank? %>  vatno=<%= @company.vatno %>,
-<% end %><% unless @company.chamber.blank? %>  chamber=<%= @company.chamber %>
+  accountname=<%=l @company.accountname %>,
+<% unless @company.accountiban.blank? %>  iban=<%=l @company.accountiban %>,
+<% end %><% unless @company.bank_bic.blank? %>  bic=<%=l @company.bank_bic %>,
+<% end %><% unless @company.vatno.blank? %>  vatno=<%=l @company.vatno %>,
+<% end %><% unless @company.chamber.blank? %>  chamber=<%=l @company.chamber %>
 <% end %>}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{\medskipamount}
 
 <% if @company.bank_name.present? %>
-\renewcommand{\accountnotext}{<%= @company.bank_name %> rekeningnr}
+\renewcommand{\accountnotext}{<%=l @company.bank_name %> rekeningnr}
 <% end %>\newcommand{\addresstext}{adres}
 \newcommand{\addresswhotext}{t.n.v.}
 \renewcommand{\chambertext}{KvK-nr}
@@ -105,14 +105,14 @@
 <% subtotal = 0.0
    @tasks.each do |task, line|
      if line[1].blank?
-%>  \ifcitem{<%= task.comment_or_name %>}%
-          {<%= number_with_precision(line[0]) %>}%
-          {<%= number_with_precision(line[2]) %>}
+%>  \ifcitem{<%=l task.comment_or_name %>}%
+          {<%=l number_with_precision(line[0]) %>}%
+          {<%=l number_with_precision(line[2]) %>}
 <%  else
-%>  \ihitem{<%= task.comment_or_name %>}%
-         {<%= number_with_precision(line[0]) %>}%
-         {<%= number_with_precision(line[1]) %>}%
-         {<%= number_with_precision(line[2]) %>}
+%>  \ihitem{<%=l task.comment_or_name %>}%
+         {<%=l number_with_precision(line[0]) %>}%
+         {<%=l number_with_precision(line[1]) %>}%
+         {<%=l number_with_precision(line[2]) %>}
 <%   end
      subtotal += line[2]
    end
@@ -120,13 +120,13 @@
    if @company.vatno.blank?
 %>  \ihnosubtotal{} <%
    else
-%>  \ihsubtotal{<%= number_with_precision(subtotal) %>}<%
+%>  \ihsubtotal{<%=l number_with_precision(subtotal) %>}<%
      @vat.keys.sort.each do |rate|
        vattotal += @vat[rate] %>
-  \ihvat{<%= "%d\\%%" % rate %>}{<%= number_with_precision(@vat[rate]) %>}<%
+  \ihvat{<%= "%d\\%%" % rate %>}{<%=l number_with_precision(@vat[rate]) %>}<%
      end
    end %>
-  \ihtotal{<%= number_with_precision(subtotal + vattotal) %>}
+  \ihtotal{<%=l number_with_precision(subtotal + vattotal) %>}
  \end{ihtable}
  \vspace{2em}
 
@@ -148,11 +148,11 @@
 
  \begin{istable}
  <% @invoice.tasks.each do |task|
-%> \istask{<%= task.comment_or_name %>}<%
+%> \istask{<%=l task.comment_or_name %>}<%
       task.time_entries.each do |time_entry| %>
-  \isitem{<%= time_entry.comment || "Geen opmerking" %>}%
-         {<%= time_entry.date.to_date %>}%
-         {<%= number_with_precision(time_entry.hours_total) %>}<%
+  \isitem{<%=l time_entry.comment || "Geen opmerking" %>}%
+         {<%=l time_entry.date.to_date %>}%
+         {<%=l number_with_precision(time_entry.hours_total) %>}<%
       end %>\\[\medskipamount]<%
     end %>
  \end{istable}
