@@ -2,7 +2,7 @@
 
 == 1.12
 
- Bugfixes:
+Bugfixes:
 
  * Show a message if there are tasks but no active, don't assume
    no tasks exist yet [#19b3cc]
