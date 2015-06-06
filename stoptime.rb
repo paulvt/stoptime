@@ -54,7 +54,7 @@ end
 module StopTime
 
   # The version of the application
-  VERSION = '1.12'
+  VERSION = '1.12.1'
   puts "Starting Stop… Camping Time! version #{VERSION}"
 
   # @return [Hash{String=>Object}] The parsed configuration.
@@ -1771,6 +1771,14 @@ module StopTime::Views
         div.container do
           self << yield
           footer { br }
+        end
+        footer.footer do
+          div.container do
+            small do
+              text! "Stop… Camping Time! v#{StopTime::VERSION} — by "
+              a "Mozcode", :href => "https://mozcode.nl"
+            end
+          end
         end
         # JQuery and Bootstrap JavaScript
         script :src => (R(Static, "") + "javascripts/jquery.min.js")
