@@ -4,9 +4,9 @@
 
 Bugfixes:
 
- * Show a message if there are tasks but no active, don't assume
-   no tasks exist yet [#19b3cc]
- * Escape strings for LaTeX in the invoice template [#3f9d21]
+* Show a message if there are tasks but no active, don't assume
+  no tasks exist yet [#19b3cc]
+* Escape strings for LaTeX in the invoice template [#3f9d21]
 
 == 1.10
 
