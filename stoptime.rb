@@ -1772,6 +1772,14 @@ module StopTime::Views
           self << yield
           footer { br }
         end
+        footer.footer do
+          div.container do
+            small do
+              text! "Stop… Camping Time! v#{StopTime::VERSION} — by "
+              a "Mozcode", :href => "https://mozcode.nl"
+            end
+          end
+        end
         # JQuery and Bootstrap JavaScript
         script :src => (R(Static, "") + "javascripts/jquery.min.js")
         script :src => (R(Static, "") + "javascripts/bootstrap.min.js")
