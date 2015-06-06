@@ -1,5 +1,18 @@
 = Stop… Camping Time! release news
 
+== 1.12.1
+
+Small update release to include to missing 1.12 change log and added
+a footer with the current version.
+
+== 1.12
+
+Bugfixes:
+
+* Show a message if there are tasks but no active, don't assume
+  no tasks exist yet [#19b3cc]
+* Escape strings for LaTeX in the invoice template [#3f9d21]
+
 == 1.10
 
 Features:
