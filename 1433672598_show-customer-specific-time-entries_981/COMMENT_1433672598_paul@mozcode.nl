@@ -1,0 +1,1 @@
+It is possible to see and add time entries globally for all projects/tasks and all customers.  It is also possible to see and add time entries for a specific project/task for a specific customer.  It should also be possible to see and add time entries for all projects/tasks of a specific customer.
