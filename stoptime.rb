@@ -1014,10 +1014,17 @@ module StopTime::Controllers
         end
       end
 
+      @time_entries = @customer.time_entries.order("start DESC")
       @invoices = @customer.invoices
       @invoices.each do |i|
         @input["paid_#{i.number}"] = true if i.paid?
       end
+      @task_list = Hash.new { |h, k| h[k] = Array.new }
+      @customer.tasks.reject { |t| t.billed? }.each do |t|
+        @task_list[t.customer.shortest_name] << [t.id, t.name]
+      end
+      @input["bill"] = true # Bill by default.
+      @input["task"] = @time_entries.first.task.id if @time_entries.present?
 
       @target = [CustomersN, @customer.id]
       @button = "update"
@@ -1476,10 +1483,10 @@ module StopTime::Controllers
   # also for quickly registering time.
   #
   # path:: +/timeline+
-  # view:: {Views#time_entries}
+  # view:: {Views#timeline}
   class Timeline
     # Retrieves all registered time in descending order to present
-    # the timeline using {Views#time_entries}.
+    # the timeline using {Views#timeline}.
     def get
       if @input["show"] == "all"
         @time_entries = TimeEntry.order("start DESC")
@@ -1498,7 +1505,7 @@ module StopTime::Controllers
       end
       @input["bill"] = true # Bill by default.
       @input["task"] = @time_entries.first.task.id if @time_entries.present?
-      render :time_entries
+      render :timeline
     end
 
     # Registers a time entry and redirects back to the referer.
@@ -1858,118 +1865,26 @@ module StopTime::Views
   end
 
   # The main overview showing the timeline of registered time.
-  # If a task ID is given as an argument, the task column will be hidden
-  # and it will be assumed it is used as a partial view.
   #
-  # FIXME: This should be done in a nicer way.
-  #
-  # @param [Fixnum, nil] task_id ID of a task
   # @return [Mab::Mixin::Tag] the main timeline (time entry list) overview
-  def time_entries(task_id=nil)
-    if task_id.present?
-      h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
-    else
-      header.page_header do
-        h1 do
-          text! "Timeline"
-          small "#{@time_entries.count} time entries"
-          div.btn_group.pull_right do
-            a.btn.btn_small.dropdown_toggle :href => "#", "data-toggle" => "dropdown" do
-              text! @input["show"] == "all" ? "All" : "Unbilled"
-              span.caret
-            end
-            ul.dropdown_menu :role => "menu", :aria_labelledby => "dLabel" do
-              li { a "All", :href => R(Timeline, :show => "all") }
-              li { a "Unbilled", :href => R(Timeline, :show => "unbilled") }
-            end
+  def timeline
+    header.page_header do
+      h1 do
+        text! "Timeline"
+        small "#{@time_entries.count} time entries"
+        div.btn_group.pull_right do
+          a.btn.btn_small.dropdown_toggle :href => "#", "data-toggle" => "dropdown" do
+            text! @input["show"] == "all" ? "All" : "Unbilled"
+            span.caret
+          end
+          ul.dropdown_menu :role => "menu", :aria_labelledby => "dLabel" do
+            li { a "All", :href => R(Timeline, :show => "all") }
+            li { a "Unbilled", :href => R(Timeline, :show => "unbilled") }
           end
         end
       end
     end
-    table.table.table_condensed.table_striped.table_hover do
-      unless task_id.present?
-        col.customer_short
-        col.task
-      end
-      col.date
-      col.start_time
-      col.end_time
-      col.comment
-      col.hours
-      col.flag
-      thead do
-        tr do
-          unless task_id.present?
-            th "Customer"
-            th "Project/Task"
-          end
-          th "Date"
-          th "Start"
-          th "End"
-          th "Comment"
-          th "Total"
-          th "Bill?"
-          th {}
-        end
-      end
-      tbody do
-        form.form_inline :action => R(Timeline), :method => :post do
-          tr do
-            if task_id.present?
-              input :type => :hidden, :name => "task", :value => task_id
-            else
-              td { }
-              td { _form_select_nested("task", @task_list, :class => "task") }
-            end
-            td { input.date :type => :text, :name => "date",
-                            :value => DateTime.now.to_date.to_formatted_s }
-            td { input.start_time :type => :text, :name => "start",
-                                  :value => DateTime.now.to_time.to_formatted_s(:time_only) }
-            td { input.end_time :type => :text, :name => "end" }
-            td { input.comment :type => :text, :name => "comment" }
-            td { "N/A" }
-            td { _form_input_checkbox("bill") }
-            td do
-              button.btn.btn_small.btn_primary "Enter", :type => :submit, :name => "enter", :value => "Enter"
-            end
-          end
-        end
-        @time_entries.each do |entry|
-          tr(:class => entry.task.billed? ? "billed" : nil) do
-            unless task_id.present?
-              td do
-                a entry.customer.shortest_name,
-                  :title => entry.customer.shortest_name,
-                  :href => R(CustomersN, entry.customer.id)
-              end
-              td do
-                a entry.task.name,
-                  :title => entry.task.name,
-                  :href => R(CustomersNTasksN, entry.customer.id, entry.task.id)
-              end
-            end
-            td { entry.date.to_date }
-            td { entry.start.to_formatted_s(:time_only) }
-            td { entry.end.to_formatted_s(:time_only)}
-            if entry.comment.present?
-              td { a entry.comment, :href => R(TimelineN, entry.id),
-                                    :title => entry.comment }
-            else
-              td { a(:href => R(TimelineN, entry.id)) { i "None" } }
-            end
-            td { "%.2fh" % entry.hours_total }
-            td do
-              i(:class => "icon-ok") if entry.bill?
-            end
-            td do
-              form.form_inline :action => R(TimelineN, entry.id), :method => :post do
-                button.btn.btn_mini.btn_danger "Delete", :type => :submit, :name => "delete", :value => "Delete"
-              end
-            end
-          end
-        end
-      end
-    end
+    _time_entries
   end
 
   # Form for editing a time entry ({Models::TimeEntry}).
@@ -2238,6 +2153,14 @@ module StopTime::Views
         end
       end
     end
+
+    div.row do
+      div.span12 do
+        # Show registered time (ab)using the time_entries view as partial view.
+        h2 "Registered time"
+        _time_entries(@customer) unless @method == "create"
+      end
+    end
   end
 
   # Form for updating the properties of a task ({Models::Task}).
@@ -2299,7 +2222,8 @@ module StopTime::Views
       end
     end
     # Show registered time (ab)using the time_entries view as partial view.
-    time_entries(@task.id) unless @method == "create"
+    h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
+    _time_entries(@customer, @task) unless @method == "create"
   end
 
   # The main overview of the existing invoices.
@@ -2910,6 +2834,111 @@ module StopTime::Views
                 option(opt_str, {:value => opt_val, :selected => true})
               else
                 option(opt_str, {:value => opt_val})
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  # Partial view that shows time entries.  If a customer is given,
+  # only time entries of that customer are shown, and if also a task is
+  # given, then only the time entries of that task are shown.
+  #
+  # @param [Customer, nil] customer an customer to show time entries for
+  # @param [Customer, nil] task a task to show time entries for
+  # @return [Mab::Mixin::Tag] the main menu
+  def _time_entries(customer=nil, task=nil)
+    table.table.table_condensed.table_striped.table_hover do
+      if customer.blank?
+        col.customer_short
+      end
+      if task.blank?
+        col.task
+      end
+      col.date
+      col.start_time
+      col.end_time
+      col.comment
+      col.hours
+      col.flag
+      thead do
+        tr do
+          if customer.blank?
+            th "Customer"
+          end
+          if task.blank?
+            th "Project/Task"
+          end
+          th "Date"
+          th "Start"
+          th "End"
+          th "Comment"
+          th "Total"
+          th "Bill?"
+          th {}
+        end
+      end
+      tbody do
+        form.form_inline :action => R(Timeline), :method => :post do
+          tr do
+            if task.present?
+              input :type => :hidden, :name => "task", :value => task.id
+            else
+              if customer.blank?
+                td { }
+              end
+              td { _form_select_nested("task", @task_list, :class => "task") }
+            end
+            td { input.date :type => :text, :name => "date",
+                            :value => DateTime.now.to_date.to_formatted_s }
+            td { input.start_time :type => :text, :name => "start",
+                                  :value => DateTime.now.to_time.to_formatted_s(:time_only) }
+            td { input.end_time :type => :text, :name => "end" }
+            td { input.comment :type => :text, :name => "comment" }
+            td { "N/A" }
+            td { _form_input_checkbox("bill") }
+            td do
+              button.btn.btn_small.btn_primary "Enter",
+                                               :type => :submit,
+                                               :name => "enter",
+                                               :value => "Enter"
+            end
+          end
+        end
+        @time_entries.each do |entry|
+          tr(:class => entry.task.billed? ? "billed" : nil) do
+            if customer.blank?
+              td do
+                a entry.customer.shortest_name,
+                  :title => entry.customer.shortest_name,
+                  :href => R(CustomersN, entry.customer.id)
+              end
+            end
+            if task.blank?
+              td do
+                a entry.task.name,
+                  :title => entry.task.name,
+                  :href => R(CustomersNTasksN, entry.customer.id, entry.task.id)
+              end
+            end
+            td { entry.date.to_date }
+            td { entry.start.to_formatted_s(:time_only) }
+            td { entry.end.to_formatted_s(:time_only)}
+            if entry.comment.present?
+              td { a entry.comment, :href => R(TimelineN, entry.id),
+                                    :title => entry.comment }
+            else
+              td { a(:href => R(TimelineN, entry.id)) { i "None" } }
+            end
+            td { "%.2fh" % entry.hours_total }
+            td do
+              i(:class => "icon-ok") if entry.bill?
+            end
+            td do
+              form.form_inline :action => R(TimelineN, entry.id), :method => :post do
+                button.btn.btn_mini.btn_danger "Delete", :type => :submit, :name => "delete", :value => "Delete"
               end
             end
           end
