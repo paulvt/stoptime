@@ -1014,10 +1014,17 @@ module StopTime::Controllers
         end
       end
 
+      @time_entries = @customer.time_entries.order("start DESC")
       @invoices = @customer.invoices
       @invoices.each do |i|
         @input["paid_#{i.number}"] = true if i.paid?
       end
+      @task_list = Hash.new { |h, k| h[k] = Array.new }
+      @customer.tasks.reject { |t| t.billed? }.each do |t|
+        @task_list[t.customer.shortest_name] << [t.id, t.name]
+      end
+      @input["bill"] = true # Bill by default.
+      @input["task"] = @time_entries.first.task.id if @time_entries.present?
 
       @target = [CustomersN, @customer.id]
       @button = "update"
@@ -2144,6 +2151,14 @@ module StopTime::Views
           end
           _invoice_list(@invoices)
         end
+      end
+    end
+
+    div.row do
+      div.span12 do
+        # Show registered time (ab)using the time_entries view as partial view.
+        h2 "Registered time"
+        _time_entries(@customer) unless @method == "create"
       end
     end
   end
