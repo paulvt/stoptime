@@ -898,6 +898,7 @@ module StopTime::Controllers
       @task_count = 0
       @active_tasks = {}
       @active_tasks_summary = {}
+      @totals = [0.0, 0,0]
       Customer.all.each do |customer|
         tasks = customer.unbilled_tasks
         @tasks[customer] = tasks
@@ -908,7 +909,9 @@ module StopTime::Controllers
           active_tasks.inject([0.0, 0.0]) do |summ, task|
             task_summ = task.summary
             summ[0] += task_summ[0]
+            @totals[0] += task_summ[0]
             summ[1] += task_summ[2]
+            @totals[1] += task_summ[2]
             summ
           end
       end
@@ -1857,6 +1860,20 @@ module StopTime::Views
                   td.text_right { "€ %.2f" % @active_tasks_summary[customer][1] }
                 end
               end
+            end
+          end
+        end
+      end
+      div.row do
+        div.span12 do
+          table.table.table_condensed.grand_total do
+            col
+            col.total_hours
+            col.total_amount
+            tr do
+              td { big { b "Grand total" } }
+              td.text_right { big { b("%.2fh" % @totals[0]) } }
+              td.text_right { big { b("€ %.2f" % @totals[1]) } }
             end
           end
         end
