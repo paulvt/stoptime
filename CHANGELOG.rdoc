@@ -1,5 +1,13 @@
 = Stop… Camping Time! release news
 
+== 1.14.0
+
+Features:
+
+* Show customer specific time entries in the customer form [#08650a]
+  * Also allow for registering time for the customer
+* Show a grand total of unbilled hours and amount in the overview
+
 == 1.12.1
 
 Small update release to include to missing 1.12 change log and added
