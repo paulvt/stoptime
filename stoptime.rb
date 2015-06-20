@@ -2248,7 +2248,7 @@ module StopTime::Views
     end
     # Show registered time using the time_entries view as partial view.
     div.row do
-      div.col_md_12 do
+      div.col_md_10.col_xs_12 do
         h2 "Registered time"
         _time_entries(@customer)
       end
@@ -2338,10 +2338,12 @@ module StopTime::Views
       end
     end
     # Show registered time (ab)using the time_entries view as partial view.
-    unless @method == "create"
-      h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
-      _time_entries(@customer, @task)
-    end
+    div.row do
+      div.col_md_8.col_xs_12 do
+        h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
+        _time_entries(@customer, @task)
+      end
+    end unless @method == "create"
   end
 
   # The main overview of the existing invoices.
