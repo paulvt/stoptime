@@ -2261,13 +2261,13 @@ module StopTime::Views
         end
       end
     end
-
+    # Show registered time using the time_entries view as partial view.
     div.row do
       div.col_md_12 do
         h2 "Registered time"
-        _time_entries(@customer) unless @method == "create"
+        _time_entries(@customer)
       end
-    end
+    end unless @button == "create"
   end
 
   # Form for updating the properties of a task ({Models::Task}).
@@ -2353,8 +2353,10 @@ module StopTime::Views
       end
     end
     # Show registered time (ab)using the time_entries view as partial view.
-    h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
-    _time_entries(@customer, @task) unless @method == "create"
+    unless @method == "create"
+      h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
+      _time_entries(@customer, @task)
+    end
   end
 
   # The main overview of the existing invoices.
