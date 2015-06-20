@@ -2586,7 +2586,7 @@ module StopTime::Views
               end
               tbody do
                 @hourly_rate_tasks.keys.each do |task|
-                  tr.task do
+                  tr.info do
                     td.col_md_1 do
                       label.checkbox do
                         _form_input_checkbox("tasks[]", task.id, true)
