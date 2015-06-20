@@ -1059,6 +1059,7 @@ module StopTime::Controllers
         @customer.save
         if @customer.invalid?
           @errors = @customer.errors
+          @button = "update"
           return render :customer_form
         end
       end
