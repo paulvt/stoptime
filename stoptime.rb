@@ -2285,7 +2285,7 @@ module StopTime::Views
           end
         end
       end
-      _form_input_with_label("Name", "name", :text, :class => "col_sm_3 col_xs_8")
+      _form_input_with_label("Name", "name", :text, :class => "col-sm-3 col-xs-8")
       div.form_group do
         label.control_label.col_sm_2.col_xs_4 "Project/Task type"
         div.col_sm_2.col_xs_6 do
@@ -2312,7 +2312,7 @@ module StopTime::Views
         end
       end
       _form_input_with_label("VAT rate", "vat_rate", :number,
-                             :control_class => "col_sm_2 col_xs_4",
+                             :control_class => "col-sm-2 col-xs-4",
                              :input_addon => "%")
       if @task.billed?
         div.form_group do
@@ -2402,8 +2402,8 @@ module StopTime::Views
           :action => R(CustomersNInvoicesX, @customer.id, @invoice.number),
           :method => :post do
           _form_input_with_label("Number", "number", :text, :disabled => true,
-            :label_class => "col_sm_3 col_xs_4",
-            :control_class => "col_sm_3 col_xs_4")
+            :label_class => "col-sm-3 col-xs-4",
+            :control_class => "col-sm-3 col-xs-4")
           div.form_group do
             label.control_label.col_sm_3.col_xs_4 "Date"
             div.col_sm_3.col_xs_4 do
