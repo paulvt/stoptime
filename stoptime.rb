@@ -2376,8 +2376,8 @@ module StopTime::Views
       end
     else
       div.row do
-        div.col_md_6 do
-          @invoices.keys.sort.each do |customer|
+        @invoices.keys.sort.each do |customer|
+          div.col_md_6 do
             next if @invoices[customer].empty?
             h2 do
               text! customer.name
