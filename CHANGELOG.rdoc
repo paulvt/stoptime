@@ -1,5 +1,31 @@
 = Stop… Camping Time! release news
 
+== 1.16.0
+
+Features:
+
+* Moved to Bootstrap 3! [#c36555]
+  * Reworked all forms, tables, buttons, alerts, etc.
+  * Made all views responsive, should be usable by smartphones and tablets
+  * Made the menu bar responsive 
+  * Added some missing headers in several views
+* Added a Register time button to the timeline view;
+  this can be used on (extra) small form-factor devices where the
+  time entry table row will be hidden
+* Use two-column layout for the invoices view
+
+Application:
+
+* Replaced Bootstrap 2.0 files by the files of version 3.3.5
+* Replace Glyphicon images by the new Glyphicon font files
+* Clean up source code and wrap it to 80 characters
+* Replace hash notation by the more-modern Ruby keyword notation
+
+Other bugfixes:
+
+* Hide registered time header if there are no time enries
+* Many small bugfixes and inconsistencies in the HTML/styling
+
 == 1.14.0
 
 Features:
