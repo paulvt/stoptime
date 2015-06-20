@@ -1820,7 +1820,7 @@ module StopTime::Views
           div.col_md_6 do
             inv_klass = "text_info"
             inv_klass = "text_warning" if customer.invoices.any? { |inv| inv.past_due? }
-            inv_klass = "text_error" if customer.invoices.any? { |inv| inv.way_past_due? }
+            inv_klass = "text_danger" if customer.invoices.any? { |inv| inv.way_past_due? }
             h3 { a customer.name,
                    :class => inv_klass,
                    :href => R(CustomersN, customer.id) }
