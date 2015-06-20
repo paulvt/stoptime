@@ -1,7 +1,8 @@
 #!usr/bin/env camping
 # encoding: UTF-8
 #
-# stoptime.rb - The Stop… Camping Time! time registration and invoicing application.
+# stoptime.rb - The Stop… Camping Time! time registration and invoicing
+#               application
 #
 # Stop… Camping Time! is Copyright © 2011 Paul van Tilburg <paul@luon.net>
 #
@@ -226,7 +227,8 @@ module StopTime::Models
     # @!attribute hourly_rate
     #   @return [Float] default hourly rate
     # @!attribute time_specification
-    #   @return [Boolean] flag whether the customer requires time specifications
+    #   @return [Boolean] flag whether the customer requires time
+    #     specifications
     # @!attribute created_at
     #   @return [Time] time of creation
     # @!attribute updated_at
@@ -1704,7 +1706,7 @@ module StopTime::Controllers
       @history_warn = true if @company != CompanyInfo.last
       if @company == CompanyInfo.last and @company.invoices.length > 0
         old_company = @company
-        @company = old_company.clone # FIXME: depends on rails versioN!
+        @company = old_company.clone # FIXME: depends on rails version!
         @company.original = old_company
       end
 
@@ -1819,11 +1821,16 @@ module StopTime::Views
         @tasks.keys.sort_by { |c| c.name }.each do |customer|
           div.col_md_6 do
             inv_klass = "text_info"
-            inv_klass = "text_warning" if customer.invoices.any? { |inv| inv.past_due? }
-            inv_klass = "text_danger" if customer.invoices.any? { |inv| inv.way_past_due? }
-            h3 { a customer.name,
-                   :class => inv_klass,
-                   :href => R(CustomersN, customer.id) }
+            if customer.invoices.any? { |inv| inv.past_due? }
+              inv_klass = "text_warning"
+            end
+            if customer.invoices.any? { |inv| inv.way_past_due? }
+              inv_klass = "text_danger"
+            end
+            h3 do
+              a customer.name, :class => inv_klass,
+                               :href => R(CustomersN, customer.id)
+            end
             if @tasks[customer].empty?
               p do
                 text! "No projects/tasks found! Create one " +
@@ -1924,10 +1931,11 @@ module StopTime::Views
     div.alert.alert_warning do
       button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
       strong "Warning!"
-      text! "This time entry is already billed!  Only make changes if you know " +
-            "what you are doing!"
+      text! "This time entry is already billed!  Only make changes if you " +
+            "know what you are doing!"
     end if @time_entry.present? and @time_entry.task.billed?
-    form.form_horizontal.form_condensed :action => R(*@target), :method => :post do
+    form.form_horizontal.form_condensed :action => R(*@target),
+                                        :method => :post do
       div.form_group do
         label.control_label.col_sm_2.col_xs_4 "Customer", :for => "customer"
         div.col_sm_3.col_xs_8 do
@@ -2193,20 +2201,24 @@ module StopTime::Views
                             tr do
                               td.col_md_9 do
                                 a billed_task.comment_or_name,
-                                  :href => R(CustomersNTasksN, @customer.id, billed_task.id)
+                                  :href => R(CustomersNTasksN,
+                                             @customer.id,
+                                             billed_task.id)
                                 small do
                                   text! "(billed in invoice "
                                   a billed_task.invoice.number,
                                     :title => billed_task.invoice.number,
-                                    :href => R(CustomersNInvoicesX, @customer.id,
-                                                                    billed_task.invoice.number)
+                                    :href => R(CustomersNInvoicesX,
+                                               @customer.id,
+                                               billed_task.invoice.number)
                                   text! ")"
                                 end
                               end
                               td.col_md_3 do
                                 # FXIME: the following is not very RESTful!
-                                form.form_inline.pull_right :action => R(CustomersNTasks, @customer.id),
-                                                 :method => :post do
+                                form.form_inline.pull_right \
+                                  :action => R(CustomersNTasks, @customer.id),
+                                  :method => :post do
                                   a.btn.btn_default.btn_xs "Edit",
                                     :href => R(CustomersNTasksN,
                                                @customer.id,
@@ -2391,8 +2403,9 @@ module StopTime::Views
     end
     div.row do
       div.col_md_6 do
-        form.form_horizontal.form_condensed :action => R(CustomersNInvoicesX, @customer.id, @invoice.number),
-             :method => :post do
+        form.form_horizontal.form_condensed \
+          :action => R(CustomersNInvoicesX, @customer.id, @invoice.number),
+          :method => :post do
           _form_input_with_label("Number", "number", :text, :disabled => true,
             :label_class => "col_sm_3 col_xs_4",
             :control_class => "col_sm_3 col_xs_4")
@@ -2469,12 +2482,14 @@ module StopTime::Views
               task.time_entries.each do |entry|
                 tr do
                   td.col_md_6.indent do
-                    time_spec = "from #{entry.start.to_formatted_s(:time_only)} " +
-                                "until #{entry.end.to_formatted_s(:time_only)} " +
-                                "on #{entry.date.to_date}"
+                    time_spec =
+                      "from #{entry.start.to_formatted_s(:time_only)} " +
+                      "until #{entry.end.to_formatted_s(:time_only)} " +
+                      "on #{entry.date.to_date}"
                     if entry.comment.present?
-                      a "• #{entry.comment}", :href => R(TimelineN, entry.id),
-                                              :title => "#{entry.comment} (#{time_spec})"
+                      a "• #{entry.comment}",
+                        :href => R(TimelineN, entry.id),
+                        :title => "#{entry.comment} (#{time_spec})"
                     else
                       a(:href => R(TimelineN, entry.id),
                         :title => time_spec) { em "• None" }
@@ -2738,11 +2753,12 @@ module StopTime::Views
     div.alert.alert_warning do
       button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
       h4 "Warning!"
-      text! "This company information is already associated with some invoices! "
+      text! "This company information is already associated with invoices!"
       br
       text! "Only make changes if you know what you are doing!"
     end if @history_warn
-    form.form_horizontal.form_condensed :action => R(Company, :revision => @company.revision),
+    form.form_horizontal.form_condensed \
+      :action => R(Company, :revision => @company.revision),
       :method => :post do
       _form_input_with_label("Name", "name", :text)
       _form_input_with_label("Contact name", "contact_name", :text)
@@ -2811,7 +2827,9 @@ module StopTime::Views
              ["Timeline", Timeline],
              ["Customers", Customers],
              ["Invoices", Invoices],
-             ["Company", Company]].each { |label, ctrl| _menu_link(label, ctrl) }
+             ["Company", Company]].each do |label, ctrl|
+               _menu_link(label, ctrl)
+            end
           end
         end
       end
@@ -3129,7 +3147,9 @@ module StopTime::Views
               td.col_md_2 do
                 a entry.task.name,
                   :title => entry.task.name,
-                  :href => R(CustomersNTasksN, entry.customer.id, entry.task.id)
+                  :href => R(CustomersNTasksN,
+                             entry.customer.id,
+                             entry.task.id)
               end
             end
             td.col_md_1 { entry.date.to_date }
