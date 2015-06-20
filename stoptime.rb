@@ -41,14 +41,14 @@ unless defined? PUBLIC_DIR
 
   # Set the default date(/time) format.
   Time::DATE_FORMATS.merge!(
-    :default => "%Y-%m-%d %H:%M",
-    :month_and_year => "%B %Y",
-    :date_only => "%Y-%m-%d",
-    :time_only => "%H:%M",
-    :day_code => "%Y%m%d")
+    default: "%Y-%m-%d %H:%M",
+    month_and_year: "%B %Y",
+    date_only: "%Y-%m-%d",
+    time_only: "%H:%M",
+    day_code: "%Y%m%d")
   Date::DATE_FORMATS.merge!(
-    :default => "%Y-%m-%d",
-    :month_and_year => "%B %Y")
+    default: "%Y-%m-%d",
+    month_and_year: "%B %Y")
 end
 
 # = The main application module
@@ -114,6 +114,12 @@ module StopTime::Mab
     # Fix up URLs (normally done by Camping::Mab::mab_done)
     [:href, :action, :src].map { |a| attrs[a] &&= self/attrs[a] }
 
+    # Transform underscores into dashes in all attributes
+    attrs.select { |attr_sym, _| attr_sym.to_s =~ /_/ } \
+         .each do |attr_sym, _|
+      new_attr_sym = attr_sym.to_s.gsub('_', '-').to_sym
+      attrs[new_attr_sym] = attrs.delete(attr_sym)
+    end
     # Transform underscores into dashs in class names
     if attrs.has_key?(:class) and attrs[:class].present?
       attrs[:class] = attrs[:class].gsub('_', '-')
@@ -127,7 +133,7 @@ module StopTime::Mab
     # Inject a hidden input element with the proper method to the tag block
     # if the form method is unsupported.
     tag._block do |orig_blk|
-      input :type => 'hidden', :name => '_method', :value => meth
+      input type: "hidden", name: "_method", value: meth
       orig_blk.call
     end if override
 
@@ -242,7 +248,7 @@ module StopTime::Models
     has_many :invoices
     # @!attribute time_entries
     #  @return [Array<TimeEntry>] associated time entries
-    has_many :time_entries, :through => :tasks
+    has_many :time_entries, through: :tasks
 
     # Returns the short name if set, otherwise the full name.
     #
@@ -417,7 +423,7 @@ module StopTime::Models
     belongs_to :task
     # @!attribute customer
     #   @return [Customer] associated customer
-    has_one :customer, :through => :task
+    has_one :customer, through: :task
 
     before_validation :round_start_end
 
@@ -495,7 +501,7 @@ module StopTime::Models
     has_many :tasks
     # @!attribute time_entries
     #   @return [Array<TimeEntry>] associated billed time entries
-    has_many :time_entries, :through => :tasks
+    has_many :time_entries, through: :tasks
 
     default_scope lambda { order('number DESC') }
 
@@ -633,7 +639,7 @@ module StopTime::Models
     has_many :invoices
     # @!attribute original
     #   @return [CompanyInfo] original (previous) revision
-    belongs_to :original, :class_name => "CompanyInfo"
+    belongs_to :original, class_name: "CompanyInfo"
 
     # Returns the revision number.
     # @return [Fixnum] the revision number
@@ -697,8 +703,8 @@ module StopTime::Models
     def self.up
       config = Config.instance
       add_column(Customer.table_name, :hourly_rate, :float,
-                                      :null => false,
-                                      :default => config["hourly_rate"])
+                                      null: false,
+                                      default: config["hourly_rate"])
     end
 
     def self.down
@@ -749,10 +755,10 @@ module StopTime::Models
      end
 
      # Add company info record with defaults.
-     cinfo = CompanyInfo.create(:name => "My Company",
-                                :contact_name => "Me",
-                                :country => "The Netherlands",
-                                :country_code => "NL")
+     cinfo = CompanyInfo.create(name: "My Company",
+                                contact_name: "Me",
+                                country: "The Netherlands",
+                                country_code: "NL")
      cinfo.save
    end
 
@@ -942,15 +948,15 @@ module StopTime::Controllers
     def post
       return redirect R(Customers) if @input.cancel
       @customer = Customer.create(
-        :name => @input.name,
-        :short_name => @input.short_name,
-        :financial_contact => @input.financial_contact,
-        :address_street => @input.address_street,
-        :address_postal_code => @input.address_postal_code,
-        :address_city => @input.address_city,
-        :email => @input.email,
-        :phone => @input.phone,
-        :hourly_rate => @input.hourly_rate)
+        name: @input.name,
+        short_name: @input.short_name,
+        financial_contact: @input.financial_contact,
+        address_street: @input.address_street,
+        address_postal_code: @input.address_postal_code,
+        address_city: @input.address_city,
+        email: @input.email,
+        phone: @input.phone,
+        hourly_rate: @input.hourly_rate)
       @customer.save
       if @customer.invalid?
         @errors = @customer.errors
@@ -972,7 +978,7 @@ module StopTime::Controllers
     # Generates the form to create a new customer object ({Models::Customer})
     # using {Views#customer_form}.
     def get
-      @customer = Customer.new(:hourly_rate => @config['hourly_rate'])
+      @customer = Customer.new(hourly_rate: @config['hourly_rate'])
       @input = @customer.attributes
       @tasks = []
 
@@ -1091,8 +1097,8 @@ module StopTime::Controllers
         return redirect R(CustomersNTasksN, customer_id, @input.task_id)
       else
         @task = Task.create(
-          :customer_id => customer_id,
-          :name => @input.name)
+          customer_id: customer_id,
+          name: @input.name)
         case @input.type
         when "fixed_cost"
           @task.fixed_cost = @input.fixed_cost
@@ -1137,8 +1143,8 @@ module StopTime::Controllers
     def get(customer_id)
       @customer = Customer.find(customer_id)
       @customer_list = Customer.all.map { |c| [c.id, c.shortest_name] }
-      @task = Task.new(:hourly_rate => @customer.hourly_rate,
-                       :vat_rate => @config["vat_rate"])
+      @task = Task.new(hourly_rate: @customer.hourly_rate,
+                       vat_rate: @config["vat_rate"])
       @input = @task.attributes
       @input["type"] = @task.type # FIXME: find nicer way!
       @input["customer"] = @customer.id
@@ -1257,7 +1263,7 @@ module StopTime::Controllers
                else
                  number = ("%d%02d" % [Time.now.year, 1])
                end
-      invoice = Invoice.create(:number => number)
+      invoice = Invoice.create(number: number)
       invoice.customer = Customer.find(customer_id)
       invoice.company_info = CompanyInfo.last
       invoice.include_specification = invoice.customer.time_specification
@@ -1504,12 +1510,12 @@ module StopTime::Controllers
     def post
       if @input.has_key? "enter"
         @time_entry = TimeEntry.create(
-          :task_id => @input.task,
-          :date => @input.date,
-          :start => "#{@input.date} #{@input.start}",
-          :end => "#{@input.date} #{@input.end}",
-          :comment => @input.comment,
-          :bill => @input.has_key?("bill"))
+          task_id: @input.task,
+          date: @input.date,
+          start: "#{@input.date} #{@input.start}",
+          end: "#{@input.date} #{@input.end}",
+          comment: @input.comment,
+          bill: @input.has_key?("bill"))
         # Add a day to the end date if the total hours is negative.
         # It means that the end time was before the begin time, i.e.
         # overnight.
@@ -1747,23 +1753,21 @@ module StopTime::Views
   # @return [Mab::Mixin::Tag] the main layout
   def layout
     doctype!
-    html(:lang => "en") do
+    html(lang: "en") do
       head do
         title "Stop… Camping Time!"
-        meta :name => "viewport",
-             :content => "width=device-width, initial-scale=1.0"
+        meta name: "viewport",
+             content: "width=device-width, initial-scale=1.0"
         # Bootstrap core CSS
-        link :rel => "stylesheet", :type => "text/css",
-             :media => "screen",
-             :href => (R(Static, "") + "stylesheets/bootstrap.min.css")
+        link rel: "stylesheet", type: "text/css", media: "screen",
+             href: (R(Static, "") + "stylesheets/bootstrap.min.css")
         # FIXME: improve static serving so that the hack below is not needed.
-        link :rel => "stylesheet", :type => "text/css",
-             :media => "screen",
-             :href => (R(Static, "") + "stylesheets/style.css")
+        link rel: "stylesheet", type: "text/css", media: "screen",
+             href: (R(Static, "") + "stylesheets/style.css")
         # Enable responsiveness
-        meta :name => "viewport",
-             :content => "width=device-width, initial-scale=1, " +
-                         "maximum-scale=1, user-scalable=no"
+        meta name: "viewport",
+             content: "width=device-width, initial-scale=1, " +
+                      "maximum-scale=1, user-scalable=no"
 
       end
       body do
@@ -1776,13 +1780,13 @@ module StopTime::Views
           div.container do
             small do
               text! "Stop… Camping Time! v#{StopTime::VERSION} — by "
-              a "Mozcode", :href => "https://mozcode.nl"
+              a "Mozcode", href: "https://mozcode.nl"
             end
           end
         end
         # JQuery and Bootstrap JavaScript
-        script :src => (R(Static, "") + "javascripts/jquery.min.js")
-        script :src => (R(Static, "") + "javascripts/bootstrap.min.js")
+        script src: (R(Static, "") + "javascripts/jquery.min.js")
+        script src: (R(Static, "") + "javascripts/bootstrap.min.js")
       end
     end
   end
@@ -1800,7 +1804,7 @@ module StopTime::Views
     if @tasks.empty?
       div.alert.alert_info do
         text! "No customers, projects or tasks found! Set them up " +
-              "#{a "here", :href => R(CustomersNew)}."
+              "#{a "here", href: R(CustomersNew)}."
       end
     else
       div.row do
@@ -1814,13 +1818,13 @@ module StopTime::Views
               inv_klass = "text_danger"
             end
             h3 do
-              a customer.name, :class => inv_klass,
-                               :href => R(CustomersN, customer.id)
+              a customer.name, class: inv_klass,
+                               href: R(CustomersN, customer.id)
             end
             if @tasks[customer].empty?
               p do
                 text! "No projects/tasks found! Create one " +
-                      "#{a "here", :href => R(CustomersNTasksNew, customer.id)}."
+                      "#{a "here", href: R(CustomersNTasksNew, customer.id)}."
               end
             elsif @active_tasks[customer].empty?
               p do
@@ -1828,7 +1832,7 @@ module StopTime::Views
                    "Register time on one of these tasks: "
                 br
                 @tasks[customer].each do |task|
-                   a task.name, :href => R(CustomersNTasksN, customer.id, task.id)
+                   a task.name, href: R(CustomersNTasksN, customer.id, task.id)
                    text! "&centerdot;" unless task == @tasks[customer].last
                 end
               end
@@ -1838,8 +1842,9 @@ module StopTime::Views
                   tr do
                     summary = task.summary
                     td.col_md_4.col_xs_6 do
-                      a task.name,
-                        :href => R(CustomersNTasksN, customer.id, task.id)
+                      a task.name, href: R(CustomersNTasksN,
+                                           customer.id,
+                                           task.id)
                     end
                     summary = task.summary
                     td.col_md_1.col_xs_3.text_right { "%.2fh" % summary[0] }
@@ -1888,19 +1893,19 @@ module StopTime::Views
         text! "Timeline"
         small "#{@time_entries.count} time entries"
         div.btn_group.navbar_right do
-          a.btn.btn_default.btn_sm :role => "button", :href=> R(TimelineNew) do
+          a.btn.btn_default.btn_sm role: "button", href: R(TimelineNew) do
             _icon("time")
             span "Register time"
           end
-          a.btn.btn_default.btn_sm.dropdown_toggle :role => "button",
-            :href => "#", "data-toggle" => "dropdown" do
+          a.btn.btn_default.btn_sm.dropdown_toggle role: "button", href: "#",
+            data_toggle: "dropdown" do
             _icon("filter")
             text! @input["show"] == "all" ? "All" : "Unbilled"
             span.caret
           end
-          ul.dropdown_menu :role => "menu", :aria_labelledby => "dLabel" do
-            li { a "All", :href => R(Timeline, :show => "all") }
-            li { a "Unbilled", :href => R(Timeline, :show => "unbilled") }
+          ul.dropdown_menu role: "menu", aria_labelledby: "dLabel" do
+            li { a "All", href: R(Timeline, show: "all") }
+            li { a "Unbilled", href: R(Timeline, show: "unbilled") }
           end
         end
       end
@@ -1919,22 +1924,21 @@ module StopTime::Views
       end
     end
     div.alert.alert_warning do
-      button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
+      button.close(type: "button", data_dismiss: "alert") { "&times;" }
       strong "Warning!"
       text! "This time entry is already billed!  Only make changes if you " +
             "know what you are doing!"
     end if @time_entry.present? and @time_entry.task.billed?
-    form.form_horizontal.form_condensed :action => R(*@target),
-                                        :method => :post do
+    form.form_horizontal.form_condensed action: R(*@target), method: :post do
       div.form_group do
-        label.control_label.col_sm_2.col_xs_4 "Customer", :for => "customer"
+        label.control_label.col_sm_2.col_xs_4 "Customer", for: "customer"
         div.col_sm_3.col_xs_8 do
           _form_select("customer", @customer_list)
         end
         div.col_sm_offset_1.col_sm_3.hidden_xs do
           if @time_entry.present?
-            a.btn.btn_default :role => "button",
-              :href => R(CustomersN, @time_entry.customer.id) do
+            a.btn.btn_default role: "button",
+              href: R(CustomersN, @time_entry.customer.id) do
               _icon("user")
               span "Show customer"
             end
@@ -1942,16 +1946,16 @@ module StopTime::Views
         end
       end
       div.form_group do
-        label.control_label.col_sm_2.col_xs_4 "Project/Task", :for => "task"
+        label.control_label.col_sm_2.col_xs_4 "Project/Task", for: "task"
         div.col_sm_4.col_xs_8 do
           _form_select_nested("task", @task_list)
         end
         div.col_sm_3.hidden_xs do
           if @time_entry.present?
-            a.btn.btn_default :role => "button",
-                              :href => R(CustomersNTasksN,
-                                         @time_entry.customer.id,
-                                         @time_entry.task.id) do
+            a.btn.btn_default role: "button",
+                              href: R(CustomersNTasksN,
+                                      @time_entry.customer.id,
+                                      @time_entry.task.id) do
               _icon("pencil")
               span "Show project/task"
             end
@@ -1962,10 +1966,10 @@ module StopTime::Views
         div.form_group do
           label.control_label.col_sm_2.col_xs_4 "Billed in invoice"
           div.col_sm_2.col_xs_8 do
-            a.btn.btn_default :role => "button",
-                              :href => R(CustomersNInvoicesX,
-                                         @time_entry.customer.id,
-                                         @time_entry.task.invoice.number) do
+            a.btn.btn_default role: "button",
+                              href: R(CustomersNInvoicesX,
+                                      @time_entry.customer.id,
+                                      @time_entry.task.invoice.number) do
               _icon("file")
               span @time_entry.task.invoice.number
             end
@@ -1973,19 +1977,15 @@ module StopTime::Views
         end
       end
       _form_input_with_label("Date", "date", :text,
-        :label_class => "col-sm-2 col-xs-4",
-        :control_class => "col-sm-2 col-xs-6")
+        label_class: "col-sm-2 col-xs-4", control_class: "col-sm-2 col-xs-6")
       _form_input_with_label("Start time", "start", :text,
-        :label_class => "col-sm-2 col-xs-4",
-        :control_class => "col-sm-1 col-xs-3")
+        label_class: "col-sm-2 col-xs-4", control_class: "col-sm-1 col-xs-3")
       _form_input_with_label("End time", "end", :text,
-        :label_class => "col-sm-2 col-xs-4",
-        :control_class => "col-sm-1 col-xs-3")
+        label_class: "col-sm-2 col-xs-4", control_class: "col-sm-1 col-xs-3")
       _form_input_with_label("Comment", "comment", :text,
-        :label_class => "col-sm-2 col-xs-4",
-        :control_class => "col-sm-6 col-xs-8")
+        label_class: "col-sm-2 col-xs-4", control_class: "col-sm-6 col-xs-8")
       div.form_group do
-        label.control_label.col_sm_2.col_xs_4 "Bill?", :for => "bill"
+        label.control_label.col_sm_2.col_xs_4 "Bill?", for: "bill"
         div.col_sm_2.col_xs_4 do
           div.checkbox do
             _form_input_checkbox("bill")
@@ -1994,10 +1994,10 @@ module StopTime::Views
       end
       div.form_group do
         div.col_sm_offset_2.col_sm_12.col_xs_offset_4.col_xs_8 do
-          button.btn.btn_primary @button.capitalize, :type => "submit",
-            :name => @button, :value => @button.capitalize
-          button.btn.btn_default "Cancel", :type => "submit",
-            :name => "cancel", :value => "Cancel"
+          button.btn.btn_primary @button.capitalize, type: "submit",
+            name: @button, value: @button.capitalize
+          button.btn.btn_default "Cancel", type: "submit",
+            name: "cancel", value: "Cancel"
         end
       end
     end
@@ -2011,7 +2011,7 @@ module StopTime::Views
       h1 do
         text! "Customers"
         div.btn_group.navbar_right do
-          a.btn.btn_default.btn_sm :role => "button", :href=> R(CustomersNew) do
+          a.btn.btn_default.btn_sm role: "button", href: R(CustomersNew) do
             _icon("plus")
             span "Add new customer"
           end
@@ -2021,7 +2021,7 @@ module StopTime::Views
     if @customers.empty?
       div.alert.alert_info do
         text! "None found! You can create one " +
-              "#{a "here", :href => R(CustomersNew)}."
+              "#{a "here", href: R(CustomersNew)}."
       end
     else
       table.table.table_striped.table_condensed do
@@ -2038,7 +2038,7 @@ module StopTime::Views
         tbody do
           @customers.each do |customer|
             tr do
-              td { a customer.name, :href => R(CustomersN, customer.id) }
+              td { a customer.name, href: R(CustomersN, customer.id) }
               td.hidden_xs { customer.short_name  || "–"}
               td do
                 if customer.address_street.present?
@@ -2048,7 +2048,7 @@ module StopTime::Views
                         customer.address_city
                   if customer.email.present?
                     a.visible_xs customer.email,
-                                 :href => "mailto:#{customer.email}"
+                                 href: "mailto:#{customer.email}"
                   end
                   if customer.phone.present?
                     # FIXME: hardcoded prefix!
@@ -2060,7 +2060,7 @@ module StopTime::Views
               end
               td.hidden_xs do
                 if customer.email.present?
-                  a customer.email, :href => "mailto:#{customer.email}"
+                  a customer.email, href: "mailto:#{customer.email}"
                 else
                   "–"
                 end
@@ -2074,9 +2074,9 @@ module StopTime::Views
                 end
               end
               td do
-                form :action => R(CustomersN, customer.id), :method => :post do
-                  button.btn.btn_xs.btn_danger "Delete",
-                    :type => :submit, :name => "delete", :value => "Delete"
+                form action: R(CustomersN, customer.id), method: :post do
+                  button.btn.btn_xs.btn_danger "Delete", type: :submit,
+                    name: "delete", value: "Delete"
                 end
               end
             end
@@ -2101,10 +2101,10 @@ module StopTime::Views
     div.row do
       div.col_md_6 do
         h2 "Details"
-        form.form_horizontal.form_condensed :action => R(*@target),
-                                            :method => :post do
-          html_options = { :label_class => "col-sm-4 col-xs-4",
-                           :control_class => "col-sm-8 col-xs-8" }
+        form.form_horizontal.form_condensed action: R(*@target),
+                                            method: :post do
+          html_options = { label_class: "col-sm-4 col-xs-4",
+                           control_class: "col-sm-8 col-xs-8" }
           _form_input_with_label("Name", "name", :text, html_options)
           _form_input_with_label("Short name", "short_name", :text,
                                  html_options)
@@ -2119,7 +2119,7 @@ module StopTime::Views
           _form_input_with_label("Financial contact", "financial_contact",
                                  :text, html_options)
           _form_input_with_label("Default hourly rate", "hourly_rate", :text,
-                                 html_options.merge(:input_addon => "€ / h"))
+                                 html_options.merge(input_addon: "€ / h"))
           div.form_group do
             label.control_label.col_sm_4.col_xs_4 "Time specifications?"
             div.col_sm_6.col_xs_8 do
@@ -2130,10 +2130,10 @@ module StopTime::Views
           end
           div.form_group do
             div.col_sm_offset_4.col_sm_6.col_xs_offset_4.col_xs_8 do
-              button.btn.btn_primary @button.capitalize, :type => "submit",
-                :name => @button, :value => @button.capitalize
-              button.btn.btn_default "Cancel", :type => "submit",
-                :name => "cancel", :value => "Cancel"
+              button.btn.btn_primary @button.capitalize, type: "submit",
+                name: @button, value: @button.capitalize
+              button.btn.btn_default "Cancel", type: "submit",
+                name: "cancel", value: "Cancel"
             end
           end
         end
@@ -2144,8 +2144,8 @@ module StopTime::Views
           h2 do
             text! "Projects & Tasks"
             div.btn_group.navbar_right do
-              a.btn.btn_default.btn_sm :role => "button",
-                :href => R(CustomersNTasksNew, @customer.id) do
+              a.btn.btn_default.btn_sm role: "button",
+                href: R(CustomersNTasksNew, @customer.id) do
                 _icon("plus")
                 span "Add new project/task"
               end
@@ -2157,29 +2157,28 @@ module StopTime::Views
             div.accordion.task_list! do
               @billed_tasks.keys.sort_by { |task| task.name }.each do |task|
                 div.panel.panel_default do
-                  div.panel_heading role: "tab", :id => "heading#{task.id}" do
+                  div.panel_heading role: "tab", id: "heading#{task.id}" do
                     h3.panel_title do
-                      a task.name, "data-toggle" => "collapse",
-                                   "data-parent" => "#task_list",
-                                   "aria-expanded" => true,
-                                   "aria-controls" => "#collapse#{task.id}",
-                                   "role" => "button",
-                                   :href => "#collapse#{task.id}"
+                      a task.name, data_toggle: "collapse",
+                                   data_parent: "#task_list",
+                                   aria_expanded: true,
+                                   aria_controls: "#collapse#{task.id}",
+                                   role: "button",
+                                   href: "#collapse#{task.id}"
                       # FXIME: the following is not very RESTful!
-                      form.form_inline.pull_right :action => R(CustomersNTasks,
-                                                               @customer.id),
-                                                  :method => :post do
-                        a.btn.btn_default.btn_xs "Edit", :role => "button",
-                          :href => R(CustomersNTasksN, @customer.id, task.id)
-                        input :type => :hidden, :name => "task_id",
-                          :value => task.id
-                        button.btn.btn_danger.btn_xs "Delete", :type => :submit,
-                          :name => "delete", :value => "Delete"
+                      form.form_inline.pull_right action: R(CustomersNTasks,
+                                                           @customer.id),
+                                                  method: :post do
+                        a.btn.btn_default.btn_xs "Edit", role: "button",
+                          href: R(CustomersNTasksN, @customer.id, task.id)
+                        input type: :hidden, name: "task_id", value: task.id
+                        button.btn.btn_danger.btn_xs "Delete", type: :submit,
+                          name: "delete", value: "Delete"
                       end
                     end
                   end
-                  div.panel_collapse.collapse :role => "tabpanel",
-                                              :id => "collapse#{task.id}" do
+                  div.panel_collapse.collapse role: "tabpanel",
+                                              id: "collapse#{task.id}" do
                     div.panel_body do
                       if @billed_tasks[task].empty?
                         em { "No billed projects/tasks found!" }
@@ -2191,34 +2190,34 @@ module StopTime::Views
                             tr do
                               td.col_md_9 do
                                 a billed_task.comment_or_name,
-                                  :href => R(CustomersNTasksN,
-                                             @customer.id,
-                                             billed_task.id)
+                                  href: R(CustomersNTasksN,
+                                          @customer.id,
+                                          billed_task.id)
                                 small do
                                   text! "(billed in invoice "
                                   a billed_task.invoice.number,
-                                    :title => billed_task.invoice.number,
-                                    :href => R(CustomersNInvoicesX,
-                                               @customer.id,
-                                               billed_task.invoice.number)
+                                    title: billed_task.invoice.number,
+                                    href: R(CustomersNInvoicesX,
+                                            @customer.id,
+                                            billed_task.invoice.number)
                                   text! ")"
                                 end
                               end
                               td.col_md_3 do
                                 # FXIME: the following is not very RESTful!
                                 form.form_inline.pull_right \
-                                  :action => R(CustomersNTasks, @customer.id),
-                                  :method => :post do
+                                  action: R(CustomersNTasks, @customer.id),
+                                  method: :post do
                                   a.btn.btn_default.btn_xs "Edit",
-                                    :href => R(CustomersNTasksN,
-                                               @customer.id,
-                                               billed_task.id),
-                                    :role => "button"
-                                  input :type => :hidden, :name => "task_id",
-                                        :value => billed_task.id
+                                    href: R(CustomersNTasksN,
+                                            @customer.id,
+                                            billed_task.id),
+                                    role: "button"
+                                  input type: :hidden, name: "task_id",
+                                        value: billed_task.id
                                   button.btn.btn_danger.btn_xs "Delete",
-                                    :type => :submit, :name => "delete",
-                                    :value => "Delete"
+                                    type: :submit, name: "delete",
+                                    value: "Delete"
                                 end
                               end
                             end
@@ -2235,8 +2234,8 @@ module StopTime::Views
           h2 do
             text! "Invoices"
             div.btn_group.navbar_right do
-              a.btn.btn_default.btn_sm :role => "button",
-                :href => R(CustomersNInvoicesNew, @customer.id) do
+              a.btn.btn_default.btn_sm role: "button",
+                href: R(CustomersNInvoicesNew, @customer.id) do
                 _icon("plus")
                 span "Create new invoice"
               end
@@ -2266,26 +2265,25 @@ module StopTime::Views
       end
     end
     div.alert.alert_warning do
-      button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
+      button.close(type: "button", data_dismiss: "alert") { "&times;" }
       strong "Warning!"
       text! "This task is already billed!  Only make changes if you know " +
             "what you are doing!"
     end if @task.billed?
-    form.form_horizontal.form_condensed :action => R(*@target), :method => :post do
+    form.form_horizontal.form_condensed action: R(*@target), method: :post do
       div.form_group do
-        label.control_label.col_sm_2.col_xs_4 "Customer", :for => "customer"
+        label.control_label.col_sm_2.col_xs_4 "Customer", for: "customer"
         div.col_sm_3.col_xs_8 do
           _form_select("customer", @customer_list)
         end
         div.col_sm_offset_1.col_sm_3.hidden_xs do
-          a.btn.btn_default :role => "button",
-            :href => R(CustomersN, @customer.id) do
+          a.btn.btn_default role: "button", href: R(CustomersN, @customer.id) do
             _icon("user")
             span "Show customer"
           end
         end
       end
-      _form_input_with_label("Name", "name", :text, :class => "col-sm-3 col-xs-8")
+      _form_input_with_label("Name", "name", :text, class: "col-sm-3 col-xs-8")
       div.form_group do
         label.control_label.col_sm_2.col_xs_4 "Project/Task type"
         div.col_sm_2.col_xs_6 do
@@ -2312,16 +2310,15 @@ module StopTime::Views
         end
       end
       _form_input_with_label("VAT rate", "vat_rate", :number,
-                             :control_class => "col-sm-2 col-xs-4",
-                             :input_addon => "%")
+                             control_class: "col-sm-2 col-xs-4",
+                             input_addon: "%")
       if @task.billed?
         div.form_group do
           label.control_label.col_sm_2.col_xs_4 "Billed in invoice"
           div.col_sm_2.col_xs_8 do
-            a.btn.btn_default :role => "button",
-                              :href => R(CustomersNInvoicesX,
-                                         @customer.id,
-                                         @task.invoice.number) do
+            a.btn.btn_default role: "button",
+                              href: R(CustomersNInvoicesX,
+                                      @customer.id, @task.invoice.number) do
               _icon("file")
               span @task.invoice.number
             end
@@ -2332,9 +2329,9 @@ module StopTime::Views
       div.form_group do
         div.col_sm_offset_2.col_sm_6.col_xs_offset_4.col_xs_8 do
           button.btn.btn_primary @method.capitalize,
-            :type => "submit", :name => @method, :value => @method.capitalize
-          button.btn.btn_default "Cancel", :type => "submit",
-            :name => "cancel", :value => "Cancel"
+            type: "submit", name: @method, value: @method.capitalize
+          button.btn.btn_default "Cancel", type: "submit",
+            name: "cancel", value: "Cancel"
         end
       end
     end
@@ -2360,7 +2357,7 @@ module StopTime::Views
     if @invoices.values.flatten.empty?
       div.alert.alert_info do
         text! "Found none! You can create one by " +
-              "#{a "selecting a customer", :href => R(Customers)}."
+              "#{a "selecting a customer", href: R(Customers)}."
       end
     else
       div.row do
@@ -2370,8 +2367,8 @@ module StopTime::Views
             h2 do
               text! customer.name
               div.btn_group.navbar_right do
-                a.btn.btn_default.btn_sm :role => "button",
-                  :href => R(CustomersNInvoicesNew, customer.id) do
+                a.btn.btn_default.btn_sm role: "button",
+                  href: R(CustomersNInvoicesNew, customer.id) do
                   _icon("plus")
                   span "Create new invoice"
                 end
@@ -2393,32 +2390,34 @@ module StopTime::Views
     header.page_header do
       h1 do
         text! "Invoice for "
-        a @customer.name, :href => R(CustomersN, @customer.id)
+        a @customer.name, href: R(CustomersN, @customer.id)
       end
     end
     div.row do
       div.col_md_6 do
         form.form_horizontal.form_condensed \
-          :action => R(CustomersNInvoicesX, @customer.id, @invoice.number),
-          :method => :post do
-          _form_input_with_label("Number", "number", :text, :disabled => true,
-            :label_class => "col-sm-3 col-xs-4",
-            :control_class => "col-sm-3 col-xs-4")
+          action: R(CustomersNInvoicesX, @customer.id, @invoice.number),
+          method: :post do
+          _form_input_with_label("Number", "number", :text,
+            disabled: true,
+            label_class: "col-sm-3 col-xs-4",
+            control_class: "col-sm-3 col-xs-4")
           div.form_group do
             label.control_label.col_sm_3.col_xs_4 "Date"
             div.col_sm_3.col_xs_4 do
-              input.form_control :type => :text, :name => "created_at",
-                :id => "created_at",
-                :value => @invoice.created_at.to_formatted_s(:date_only),
-                :placeholder => "Date", :disabled => true
+              input.form_control type: :text, name: "created_at",
+                id: "created_at",
+                value: @invoice.created_at.to_formatted_s(:date_only),
+                placeholder: "Date", disabled: true
             end
           end
           div.form_group do
             label.control_label.col_sm_3.col_xs_4 "Period"
             div.col_sm_6.col_xs_8 do
-              input.form_control :type => :text, :name => "period",
-                :id => "period", :value => _format_period(@invoice.period),
-                :placeholder => "Period", :disabled => true
+              input.form_control type: :text, name: "period",
+                id: "period",
+                value: _format_period(@invoice.period),
+                placeholder: "Period", disabled: true
             end
           end
           div.form_group do
@@ -2435,10 +2434,10 @@ module StopTime::Views
           end
           div.form_group do
             div.col_sm_offset_3.col_sm_4.col_xs_offset_4.col_xs_8 do
-              button.btn.btn_primary "Update", :type => :submit,
-                :name => "update", :value => "Update"
-              button.btn.btn_default "Reset", :type => :reset,
-                :name => "reset", :value => "Reset"
+              button.btn.btn_primary "Update", type: :submit,
+                name: "update", value: "Update"
+              button.btn.btn_default "Reset", type: :reset,
+                name: "reset", value: "Reset"
             end
           end
         end
@@ -2458,9 +2457,9 @@ module StopTime::Views
             @tasks.each do |task, line|
               tr do
                 td.col_md_6 do
-                  a task.comment_or_name,
-                    :title => task.comment_or_name,
-                    :href => R(CustomersNTasksN, task.customer.id, task.id)
+                  a task.comment_or_name, title: task.comment_or_name,
+                                          href: R(CustomersNTasksN,
+                                                  task.customer.id, task.id)
                 end
                 if line[1].blank?
                   # FIXME: information of time spent is available in the summary
@@ -2483,11 +2482,11 @@ module StopTime::Views
                       "on #{entry.date.to_date}"
                     if entry.comment.present?
                       a "• #{entry.comment}",
-                        :href => R(TimelineN, entry.id),
-                        :title => "#{entry.comment} (#{time_spec})"
+                        href: R(TimelineN, entry.id),
+                        title: "#{entry.comment} (#{time_spec})"
                     else
-                      a(:href => R(TimelineN, entry.id),
-                        :title => time_spec) { em "• None" }
+                      a(href: R(TimelineN, entry.id),
+                        title: time_spec) { em "• None" }
                     end
                   end
                   td.col_md_2.text_right { "%.2fh" % entry.hours_total }
@@ -2524,32 +2523,30 @@ module StopTime::Views
         end
 
         div.btn_group do
-          a.btn.btn_primary :role => "button",
-            :href => R(CustomersNInvoicesX,
-                       @customer.id,
-                       "#{@invoice.number}.pdf") do
+          a.btn.btn_primary role: "button",
+            href: R(CustomersNInvoicesX,
+                    @customer.id, "#{@invoice.number}.pdf") do
             _icon("download")
             span "Download PDF"
           end
-          a.btn.btn_default :role => "button",
-            :href => R(CustomersNInvoicesX,
-                       @customer.id,
-                       "#{@invoice.number}.tex") do
+          a.btn.btn_default role: "button",
+            href: R(CustomersNInvoicesX,
+                    @customer.id, "#{@invoice.number}.tex") do
             _icon("download")
             span "Download LaTeX source"
           end
-          a.btn.btn_default :role => "button",
-            :href => R(Company, :revision => @company.revision) do
+          a.btn.btn_default role: "button",
+            href: R(Company, revision: @company.revision) do
             _icon("briefcase")
             span "Show company info"
           end
         end
 
         div.alert.alert_danger do
-          form.form_inline :action => R(CustomersNInvoicesX,
-                                        @customer.id, @invoice.number),
-                           :method => :delete do
-            button.btn.btn_danger :type => "submit" do
+          form.form_inline action: R(CustomersNInvoicesX,
+                                     @customer.id, @invoice.number),
+                           method: :delete do
+            button.btn.btn_danger type: "submit" do
               _icon("trash")
               span "Remove old"
             end
@@ -2568,7 +2565,7 @@ module StopTime::Views
     header.page_header do
       h1 do
         text! "Create Invoice for "
-        a @customer.name, :href => R(CustomersN, @customer.id)
+        a @customer.name, href: R(CustomersN, @customer.id)
       end
     end
     div.row do
@@ -2578,8 +2575,8 @@ module StopTime::Views
             em "No fixed costs tasks or tasks with an hourly rate found!"
           end
         end
-        form.form_horizontal :action => R(CustomersNInvoices, @customer.id),
-                             :method => :post do
+        form.form_horizontal action: R(CustomersNInvoices, @customer.id),
+                             method: :post do
           unless @hourly_rate_tasks.empty?
             h3 "Projects/Tasks with an Hourly Rate"
             table.table.table_striped.table_condensed do
@@ -2602,13 +2599,13 @@ module StopTime::Views
                         _form_input_checkbox("tasks[]", task.id, true)
                       end
                     end
-                    td.col_md_2 :colspan => 3 do
+                    td.col_md_2 colspan: 3 do
                       label.control_label { task.name }
                     end
                     td.col_md_1 do
-                      input.form_control.input_sm :type =>  :text,
-                        :name => "task_#{task.id}_comment", :value => task.name,
-                        :id => "tasks_#{task.id}_comment"
+                      input.form_control.input_sm type:  :text,
+                        name: "task_#{task.id}_comment", value: task.name,
+                        id: "tasks_#{task.id}_comment"
                     end
                     td.col_md_1 {}
                     td.col_md_2 {}
@@ -2623,7 +2620,7 @@ module StopTime::Views
                       end
                       td.col_md_2 do
                         label.control_label entry.date.to_date,
-                                            :for => "time_entries[]_#{entry.id}"
+                                            for: "time_entries[]_#{entry.id}"
                       end
                       td.col_md_1 do
                         label.control_label do
@@ -2637,8 +2634,8 @@ module StopTime::Views
                       end
                       td.col_md_4 do
                         label.control_label do
-                          a entry.comment, :href => R(TimelineN, entry.id),
-                                           :title => entry.comment
+                          a entry.comment, href: R(TimelineN, entry.id),
+                                           title: entry.comment
                         end
                       end
                       td.col_md_1.text_right do
@@ -2678,14 +2675,13 @@ module StopTime::Views
                       end
                     end
                     td.col_md_4 do
-                      label.control_label task.name,
-                        :for => "tasks[]_#{task.id}"
+                      label.control_label task.name, for: "tasks[]_#{task.id}"
                     end
                     td.col_md_4 do
-                      input.form_control.input_sm :type =>  :text,
-                        :name => "task_#{task.id}_comment",
-                        :value => task.name, :class => "form-control",
-                        :id => "tasks_#{task.id}_comment"
+                      input.form_control.input_sm type: :text,
+                        name: "task_#{task.id}_comment",
+                        value: task.name, class: "form-control",
+                        id: "tasks_#{task.id}_comment"
                     end
                     td.col_md_1.text_right do
                       label.control_label do
@@ -2703,11 +2699,11 @@ module StopTime::Views
 
           div.form_group do
             div.col_md_12 do
-              button.btn.btn_primary "Create invoice", :type => :submit,
-                :name => "create", :value => "Create invoice",
-                :disabled => @none_found
-              button.btn.btn_default "Cancel", :type => :submit,
-                :name => "cancel", :value => "Cancel"
+              button.btn.btn_primary "Create invoice", type: :submit,
+                name: "create", value: "Create invoice",
+                disabled: @none_found
+              button.btn.btn_default "Cancel", type: :submit, name: "cancel", 
+                value: "Cancel"
             end
           end
         end
@@ -2726,7 +2722,7 @@ module StopTime::Views
       end
     end
     div.alert.alert_danger do
-      button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
+      button.close(type: "button", data_dismiss: "alert") { "&times;" }
       h4 "There were #{@errors.count} errors in the form!"
       ul do
         @errors.each do |attrib, msg|
@@ -2738,23 +2734,23 @@ module StopTime::Views
       text! " Viewing revision #{@company.revision}, " +
             " last update at #{@company.updated_at}."
       if @company.original.present?
-        a.btn.btn_default :role => "button",
-          :href => R(Company, :revision => @company.original.revision) do
+        a.btn.btn_default role: "button",
+          href: R(Company, revision: @company.original.revision) do
           _icon("backward")
           span "View previous revision"
         end
       end
     end
     div.alert.alert_warning do
-      button.close(:type => "button", "data-dismiss" => "alert") { "&times;" }
+      button.close(type: "button", data_dismiss: "alert") { "&times;" }
       h4 "Warning!"
       text! "This company information is already associated with invoices!"
       br
       text! "Only make changes if you know what you are doing!"
     end if @history_warn
     form.form_horizontal.form_condensed \
-      :action => R(Company, :revision => @company.revision),
-      :method => :post do
+      action: R(Company, revision: @company.revision),
+      method: :post do
       _form_input_with_label("Name", "name", :text)
       _form_input_with_label("Contact name", "contact_name", :text)
       _form_input_with_label("Street address", "address_street", :text)
@@ -2778,10 +2774,10 @@ module StopTime::Views
 
       div.form_group do
         div.col_sm_offset_2.col_sm_2.col_xs_offset_4.col_xs_8 do
-          button.btn.btn_primary "Update", :type => "submit",
-            :name => "update", :value => "Update"
-          button.btn.btn_default "Reset", :type => :reset, :name => "reset",
-            :value => "Reset"
+          button.btn.btn_primary "Update", type: "submit",
+            name: "update", value: "Update"
+          button.btn.btn_default "Reset", type: :reset,
+            name: "reset", value: "Reset"
         end
       end
     end
@@ -2796,7 +2792,7 @@ module StopTime::Views
   #
   # @return [Mab::Mixin::Tag] the icon
   def _icon(name)
-    span.glyphicon.send("glyphicon_#{name}", {:"aria-hidden" => true})
+    span.glyphicon.send("glyphicon_#{name}", { aria_hidden: true })
   end
 
   # Partial view that generates the menu.
@@ -2806,15 +2802,15 @@ module StopTime::Views
     nav.navbar.navbar_inverse.navbar_fixed_top do
       div.container do
         div.navbar_header do
-          button.navbar_toggle.collapsed("data-toggle" => "collapse",
-                                         "data-target" => "#menu",
-                                         "aria-expanded" => false) do
+          button.navbar_toggle.collapsed(data_toggle: "collapse",
+                                         data_target: "#menu",
+                                         aria_expanded: false) do
             span.sr_only "Toggle navigation"
             span.icon_bar {}
             span.icon_bar {}
             span.icon_bar {}
           end
-          a.navbar_brand(:href => R(Index)) { "Stop… Camping Time!" }
+          a.navbar_brand(href: R(Index)) { "Stop… Camping Time!" }
         end
         div.navbar_collapse.collapse.menu! do
           ul.nav.navbar_nav do
@@ -2840,9 +2836,9 @@ module StopTime::Views
   def _menu_link(label, ctrl)
     # FIXME: dirty hack?
     if self.class.to_s.match(/^#{ctrl.to_s}/)
-      li.active { a label, :href => R(ctrl) }
+      li.active { a label, href: R(ctrl) }
     else
-      li { a label, :href => R(ctrl) }
+      li { a label, href: R(ctrl) }
     end
   end
 
@@ -2868,11 +2864,11 @@ module StopTime::Views
           invoices.each do |invoice|
             due_class = invoice.past_due? ? "warning" : ""
             due_class = "error" if invoice.way_past_due?
-            tr(:class => due_class) do
+            tr(class: due_class) do
               td do
                 a invoice.number,
-                  :href => R(CustomersNInvoicesX,
-                             invoice.customer.id, invoice.number)
+                  href: R(CustomersNInvoicesX,
+                          invoice.customer.id, invoice.number)
               end
               td.hidden_xs { invoice.created_at.to_formatted_s(:date_only) }
               td { _format_period(invoice.period) }
@@ -2911,10 +2907,10 @@ module StopTime::Views
   # @return [Mab::Mixin::Tag] a form input tag
   def _form_input(input_name, type, placeholder, html_options={})
     html_class = html_options.delete(:class)
-    html_options.merge!(:type => type, :name => input_name,
-                        :id => input_name, :value => @input[input_name],
-                        :class => "form-control #{html_class}",
-                        :placeholder => placeholder)
+    html_options.merge!(type: type, name: input_name, id: input_name,
+                        value: @input[input_name],
+                        class: "form-control #{html_class}",
+                        placeholder: placeholder)
     input(html_options)
   end
 
@@ -2935,7 +2931,7 @@ module StopTime::Views
     div.form_group do
       label.control_label(label_name,
                           class: "control-label #{label_class}",
-                          :for => input_name)
+                          for: input_name)
       div(class: controls_class) do
         if input_addon
           div.input_group do
@@ -2959,11 +2955,11 @@ module StopTime::Views
   def _form_input_radio(name, value, default=false, *opts)
     input_val = @input[name]
     if input_val == value or (input_val.blank? and default)
-      input({:type => "radio", :id => "#{name}_#{value}",
-             :name => name, :value => value, :checked => true}, *opts)
+      input({ type: "radio", id: "#{name}_#{value}", name: name,
+              value: value, checked: true }, *opts)
     else
-      input({:type => "radio", :id => "#{name}_#{value}",
-             :name => name, :value => value}, *opts)
+      input({ type: "radio", id: "#{name}_#{value}", name: name,
+              value: value }, *opts)
     end
   end
 
@@ -2978,11 +2974,11 @@ module StopTime::Views
   # @return [Mab::Mixin::Tag] a form checkbox input tag
   def _form_input_checkbox(name, value=true, default=false, *opts)
     if @input[name] == value or default
-      input({:type => "checkbox", :id => "#{name}_#{value}", :name => name,
-             :value => value, :checked => true}, *opts)
+      input({ type: "checkbox", id: "#{name}_#{value}", name: name,
+              value: value, checked: true }, *opts)
     else
-      input({:type => "checkbox", :id => "#{name}_#{value}", :name => name,
-             :value => value}, *opts)
+      input({ type: "checkbox", id: "#{name}_#{value}", name: name,
+              value: value }, *opts)
     end
   end
 
@@ -3000,20 +2996,20 @@ module StopTime::Views
   def _form_select(name, opts_list, html_options={})
     html_class = html_options.delete(:class)
     if opts_list.blank?
-      html_options.merge!(:name => name, :id => name,
-                          :class => "form-control", :disabled => true)
+      html_options.merge!(name: name, id: name,
+                          class: "form-control", disabled: true)
       select(html_options) do
-        option "None found", :value => "none", :selected => true
+        option "None found", value: "none", selected: true
       end
     else
-      html_options.merge!(:name => name, :id => name,
-                          :class => "form-control #{html_class}")
+      html_options.merge!(name: name, id: name,
+                          class: "form-control #{html_class}")
       select(html_options) do
         opts_list.sort_by { |o| o.last }.each do |opt_val, opt_str|
           if @input[name] == opt_val
-            option opt_str, :value => opt_val, :selected => true
+            option opt_str, value: opt_val, selected: true
           else
-            option opt_str, :value => opt_val
+            option opt_str, value: opt_val
           end
         end
       end
@@ -3040,22 +3036,22 @@ module StopTime::Views
   def _form_select_nested(name, opts, html_options={})
     html_class = html_options.delete(:class)
     if opts.blank?
-      html_options.merge!(:name => name, :id => name, :disabled => true,
-                          :class => "form-control")
+      html_options.merge!(name: name, id: name, disabled: true,
+                          class: "form-control")
       select(html_options) do
-        option "None found", :value => "none", :selected => true
+        option "None found", value: "none", selected: true
       end
     else
-      html_options.merge!(:name => name, :id => name,
-                          :class => "form-control #{html_class}")
+      html_options.merge!(name: name, id: name,
+                          class: "form-control #{html_class}")
       select(html_options) do
         opts.keys.sort.each do |key|
-          optgroup :label => key do
+          optgroup label: key do
             opts[key].sort_by { |o| o.last }.each do |opt_val, opt_str|
               if @input[name] == opt_val
-                option(opt_str, {:value => opt_val, :selected => true})
+                option(opt_str, { value: opt_val, selected: true })
               else
-                option(opt_str, {:value => opt_val})
+                option(opt_str, { value: opt_val })
               end
             end
           end
@@ -3072,7 +3068,7 @@ module StopTime::Views
   # @param [Customer, nil] task a task to show time entries for
   # @return [Mab::Mixin::Tag] the main menu
   def _time_entries(customer=nil, task=nil)
-    form.form_inline :action => R(Timeline), :method => :post do
+    form.form_inline action: R(Timeline), method: :post do
       table.table.table_condensed.table_striped.table_hover do
         thead do
           tr do
@@ -3094,7 +3090,7 @@ module StopTime::Views
         tbody do
           tr.hidden_xs do
             if task.present?
-              input :type => :hidden, :name => "task", :value => task.id
+              input type: :hidden, name: "task", value: task.id
             else
               if customer.blank?
                 td.col_md_1.hidden_xs { }
@@ -3104,18 +3100,18 @@ module StopTime::Views
               end
             end
             td.col_md_1 do
-              input.form_control :type => :text, :name => "date",
-                :value => DateTime.now.to_date.to_formatted_s
+              input.form_control type: :text, name: "date",
+                value: DateTime.now.to_date.to_formatted_s
             end
             td.col_md_1 do
-              input.form_control :type => :text, :name => "start",
-                :value => DateTime.now.to_time.to_formatted_s(:time_only)
+              input.form_control type: :text, name: "start",
+                value: DateTime.now.to_time.to_formatted_s(:time_only)
             end
             td.col_md_1 do
-              input.form_control :type => :text, :name => "end"
+              input.form_control type: :text, name: "end"
             end
             td.col_md_2 do
-              input.form_control :type => :text, :name => "comment"
+              input.form_control type: :text, name: "comment"
             end
             td.col_md_1 do
               p.form_control_static "N/A"
@@ -3124,27 +3120,25 @@ module StopTime::Views
               label.checkbox {_form_input_checkbox("bill") }
             end
             td.col_md_1 do
-              button.btn.btn_primary.btn_sm "Enter", :type => :submit,
-                :name => "enter", :value => "Enter"
+              button.btn.btn_primary.btn_sm "Enter", type: :submit,
+                name: "enter", value: "Enter"
             end
           end
         end
         @time_entries.each do |entry|
-          tr(:class => entry.task.billed? ? "billed" : nil) do
+          tr(class: entry.task.billed? ? "billed" : nil) do
             if customer.blank?
               td.col_md_1.hidden_xs do
                 a entry.customer.shortest_name,
-                  :title => entry.customer.shortest_name,
-                  :href => R(CustomersN, entry.customer.id)
+                  title: entry.customer.shortest_name,
+                  href: R(CustomersN, entry.customer.id)
               end
             end
             if task.blank?
               td.col_md_2 do
                 a entry.task.name,
-                  :title => entry.task.name,
-                  :href => R(CustomersNTasksN,
-                             entry.customer.id,
-                             entry.task.id)
+                  title: entry.task.name,
+                  href: R(CustomersNTasksN, entry.customer.id, entry.task.id)
               end
             end
             td.col_md_1 { entry.date.to_date }
@@ -3152,21 +3146,21 @@ module StopTime::Views
             td.col_md_1.hidden_xs { entry.end.to_formatted_s(:time_only)}
             if entry.comment.present?
               td.col_md_2 do
-                a entry.comment, :href => R(TimelineN, entry.id),
-                                 :title => entry.comment
+                a entry.comment, href: R(TimelineN, entry.id),
+                                 title: entry.comment
               end
             else
-              td.col_md_2 { a(:href => R(TimelineN, entry.id)) { em "None" } }
+              td.col_md_2 { a(href: R(TimelineN, entry.id)) { em "None" } }
             end
             td.col_md_1 { "%.2fh" % entry.hours_total }
             td.col_md_1 do
               _icon("ok") if entry.bill?
             end
             td.col_md_1 do
-              form.form_inline :action => R(TimelineN, entry.id),
-                               :method => :post do
-                button.btn.btn_xs.btn_danger "Delete",
-                  :type => :submit, :name => "delete", :value => "Delete"
+              form.form_inline action: R(TimelineN, entry.id),
+                               method: :post do
+                button.btn.btn_xs.btn_danger "Delete", type: :submit,
+                  name: "delete", value: "Delete"
               end
             end
           end
