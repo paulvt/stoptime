@@ -2232,9 +2232,12 @@ module StopTime::Views
 
           h2 do
             text! "Invoices"
-            div.btn_group.pull_right do
-              a.btn.btn_small "» Create a new invoice",
-                              :href => R(CustomersNInvoicesNew, @customer.id)
+            div.btn_group.navbar_right do
+              a.btn.btn_default.btn_sm :role => "button",
+                :href => R(CustomersNInvoicesNew, @customer.id) do
+                _icon("plus")
+                span "Create new invoice"
+              end
             end
           end
           _invoice_list(@invoices)
