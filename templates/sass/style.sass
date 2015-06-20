@@ -1,22 +1,5 @@
 /* CSS file for Stop… Camping Time! */
 
-/* Bootstrap overrides */
-[class^="icon-"]
-  background-image: url("../images/glyphicons-halflings.png")
-
-.icon-white
-  background-image: url("../images/glyphicons-halflings-white.png")
-
-.text-left
-  text-align: left !important
-.text-center
-  text-align: center !important
-.text-right
-  text-align: right !important
-
-.btn-group
-  margin-bottom: 8px
-
 /* Main elements */
 html
   position: relative
@@ -26,6 +9,15 @@ body
   padding-top: 40px
   margin-bottom: 24px
   overflow-x: hidden
+
+header
+  .btn-group
+    margin-top: 4px
+    margin-bottom: 0px
+
+h1, h2, h3, h4, h5, h6
+  .navbar-right
+    margin-right: 0px
 
 footer
   position: absolute
@@ -42,72 +34,55 @@ footer
 .billed
   text-decoration: line-through
 
+.btn-group
+  margin-bottom: 8px
+
 /* Table layout */
 table
   table-layout: fixed
-
-  col.amount, col.hours, col.hourly_rate
-    width: 85px
-  col.total_hours, col.total_amount
-    width: 130px
-  col.reg_hours
-    width: 90px
-  col.flag
-    width: 30px
-  col.date
-    width: 100px
-  col.start_time, col.end_time
-    width: 60px
-  col.customer_short
-    width: 120px
-  col.customer, col.name
-    width: 160px
-  col.task, col.comment
-    width: 200px
-  col.short_name, col.phone
-    width: 120px
-  col.address
-    width: 250px
-  col.email, col.period
-    width: 170px
-  col.task_list
-    width: 330px
-  col.number
-    width: 70px
 
   td
     text-overflow: ellipsis
     white-space: nowrap
     overflow: hidden
 
-    input[type="text"], select
-      margin: 0
-    input.comment, select.task
-      width: 156px
-    input.date
-      width: 76px
-    input.start-time, input.end-time
-      width: 36px
+    label
+      font-weight: normal
 
-    input[type="submit"], input[type="reset"], input[type="checkbox"]
-      width: auto
+  th
+    overflow: hidden
 
+
+table.table-condensed
   td.indent
     padding-left: 20px
 
 table.grand-total
   margin-top: 30px
 
-/* Form layout */
+/* Panel layout tweaks */
+.panel
+  margin-bottom: 6px
+
+  .form-inline
+    margin-top: -3px
+
+/* Form layout tweaks */
+.form-horizontal
+  input[type="checkbox"]
+    margin-left: 0
+
 .form-condensed
   padding-top: 0px
 
-  .control-group
+  .form-group
     margin-bottom: 8px
 
 .form-inline
-  margin: 0
-
   label
     padding-top: 6px
     margin-bottom: 0px
+
+  table
+    .form-control
+      max-width: 100%
