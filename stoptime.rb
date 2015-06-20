@@ -1841,9 +1841,6 @@ module StopTime::Views
               end
             else
               table.table.table_condensed do
-                col.task
-                col.hours
-                col.amount
                 @active_tasks[customer].each do |task|
                   tr do
                     summary = task.summary
@@ -1870,12 +1867,10 @@ module StopTime::Views
           end
         end
       end
+
       div.row do
         div.col_md_12 do
           table.table.table_condensed.grand_total do
-            col
-            col.total_hours
-            col.total_amount
             tr do
               td.col_md_10.col_xs_6 { big { strong "Grand total" } }
               td.col_md_1.col_xs_3.text_right do
@@ -2027,11 +2022,6 @@ module StopTime::Views
       end
     else
       table.table.table_striped.table_condensed do
-        col.name
-        col.short_name
-        col.address
-        col.email
-        col.phone
         thead do
           tr do
             th.col_md_2.col_xs_5 "Name"
@@ -2435,10 +2425,6 @@ module StopTime::Views
       end
       div.col_md_6 do
         table.table.table_condensed.table_striped do
-          col.task
-          col.reg_hours
-          col.hourly_rate
-          col.amount
           thead do
             tr do
               th.col_md_6 { "Project/Task" }
@@ -2571,13 +2557,6 @@ module StopTime::Views
           unless @hourly_rate_tasks.empty?
             h3 "Projects/Tasks with an Hourly Rate"
             table.table.table_striped.table_condensed do
-              col.flag
-              col.date
-              col.start_time
-              col.end_time
-              col.comment
-              col.hours
-              col.amount
               thead do
                 tr do
                   th.col_md_1 "Bill?"
@@ -2839,11 +2818,6 @@ module StopTime::Views
       p "None found!"
     else
       table.table.table_striped.table_condensed do
-        col.number
-        col.date
-        col.period
-        col.amount
-        col.flag
         thead do
           tr do
             th.col_md_2.col_xs_3 "Number"
