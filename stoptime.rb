@@ -1903,6 +1903,10 @@ module StopTime::Views
         text! "Timeline"
         small "#{@time_entries.count} time entries"
         div.btn_group.navbar_right do
+          a.btn.btn_default.btn_sm :role => "button", :href=> R(TimelineNew) do
+            _icon("time")
+            span "Register time"
+          end
           a.btn.btn_default.btn_sm.dropdown_toggle :role => "button",
             :href => "#", "data-toggle" => "dropdown" do
             _icon("filter")
