@@ -10,6 +10,15 @@ body
   margin-bottom: 24px
   overflow-x: hidden
 
+header
+  .btn-group
+    margin-top: 4px
+    margin-bottom: 0px
+
+h1, h2, h3, h4, h5, h6
+  .navbar-right
+    margin-right: 0px
+
 footer
   position: absolute
   width: 100%
@@ -63,34 +72,43 @@ table
     white-space: nowrap
     overflow: hidden
 
-    input[type="text"], select
-      margin: 0
-    input.comment, select.task
-      width: 156px
-    input.date
-      width: 76px
-    input.start-time, input.end-time
-      width: 36px
+    label
+      font-weight: normal
 
-    input[type="submit"], input[type="reset"], input[type="checkbox"]
-      width: auto
+  th
+    overflow: hidden
 
+
+table.table-condensed
   td.indent
     padding-left: 20px
 
 table.grand-total
   margin-top: 30px
 
-/* Form layout */
+/* Panel layout tweaks */
+.panel
+  margin-bottom: 6px
+
+  .form-inline
+    margin-top: -3px
+
+/* Form layout tweaks */
+.form-horizontal
+  input[type="checkbox"]
+    margin-left: 0
+
 .form-condensed
   padding-top: 0px
 
-  .control-group
+  .form-group
     margin-bottom: 8px
 
 .form-inline
-  margin: 0
-
   label
     padding-top: 6px
     margin-bottom: 0px
+
+  table
+    .form-control
+      max-width: 100%
