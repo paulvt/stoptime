@@ -1228,21 +1228,6 @@ module StopTime::Controllers
   # path:: +/customers/+_customer_id_+/invoices+
   # view:: {Views#invoices}
   class CustomersNInvoices
-    # Gets the list of invoices for the customer with the given customer ID
-    # and displays them using {Views#invoices}.
-    #
-    # @param [Fixnum] customer_id ID of the customer
-    def get(customer_id)
-      # FIXME: quick hack! is this URL even used?
-      customer = Customer.find(customer_id)
-      customer.invoices.each do |i|
-        @input["paid_#{i.number}"] = true if i.paid?
-      end
-      @invoices = {customer.name => customer.invoices}
-
-      render :invoices
-    end
-
     # Creates a new invoice object ({Models::Invoice}) for the customer
     # with the given customer ID if the input is valid and redirects to
     # {CustomersNInvoicesX}.
