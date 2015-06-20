@@ -1929,75 +1929,79 @@ module StopTime::Views
       text! "This time entry is already billed!  Only make changes if you " +
             "know what you are doing!"
     end if @time_entry.present? and @time_entry.task.billed?
-    form.form_horizontal.form_condensed action: R(*@target), method: :post do
-      div.form_group do
-        label.control_label.col_sm_2.col_xs_4 "Customer", for: "customer"
-        div.col_sm_3.col_xs_8 do
-          _form_select("customer", @customer_list)
-        end
-        div.col_sm_offset_1.col_sm_3.hidden_xs do
-          if @time_entry.present?
-            a.btn.btn_default role: "button",
-              href: R(CustomersN, @time_entry.customer.id) do
-              _icon("user")
-              span "Show customer"
+    div.row do
+      div.col_md_6.col_xs_12 do
+        form.form_horizontal.form_condensed action: R(*@target), method: :post do
+          div.form_group do
+            label.control_label.col_sm_3.col_xs_4 "Customer", for: "customer"
+            div.col_sm_4.col_xs_8 do
+              _form_select("customer", @customer_list)
+            end
+            div.col_sm_offset_2.col_sm_3.hidden_xs do
+              if @time_entry.present?
+                a.btn.btn_default role: "button",
+                  href: R(CustomersN, @time_entry.customer.id) do
+                  _icon("user")
+                  span "Show customer"
+                end
+              end
             end
           end
-        end
-      end
-      div.form_group do
-        label.control_label.col_sm_2.col_xs_4 "Project/Task", for: "task"
-        div.col_sm_4.col_xs_8 do
-          _form_select_nested("task", @task_list)
-        end
-        div.col_sm_3.hidden_xs do
-          if @time_entry.present?
-            a.btn.btn_default role: "button",
-                              href: R(CustomersNTasksN,
-                                      @time_entry.customer.id,
-                                      @time_entry.task.id) do
-              _icon("pencil")
-              span "Show project/task"
+          div.form_group do
+            label.control_label.col_sm_3.col_xs_4 "Project/Task", for: "task"
+            div.col_sm_6.col_xs_8 do
+              _form_select_nested("task", @task_list)
+            end
+            div.col_sm_3.hidden_xs do
+              if @time_entry.present?
+                a.btn.btn_default role: "button",
+                                  href: R(CustomersNTasksN,
+                                          @time_entry.customer.id,
+                                          @time_entry.task.id) do
+                  _icon("pencil")
+                  span "Show project/task"
+                end
+              end
             end
           end
-        end
-      end
-      if @time_entry.present? and @time_entry.task.billed?
-        div.form_group do
-          label.control_label.col_sm_2.col_xs_4 "Billed in invoice"
-          div.col_sm_2.col_xs_8 do
-            a.btn.btn_default role: "button",
-                              href: R(CustomersNInvoicesX,
-                                      @time_entry.customer.id,
-                                      @time_entry.task.invoice.number) do
-              _icon("file")
-              span @time_entry.task.invoice.number
+          if @time_entry.present? and @time_entry.task.billed?
+            div.form_group do
+              label.control_label.col_sm_3.col_xs_4 "Billed in invoice"
+              div.col_sm_6.col_xs_8 do
+                a.btn.btn_default role: "button",
+                                  href: R(CustomersNInvoicesX,
+                                          @time_entry.customer.id,
+                                          @time_entry.task.invoice.number) do
+                  _icon("file")
+                  span @time_entry.task.invoice.number
+                end
+              end
             end
           end
-        end
-      end
-      _form_input_with_label("Date", "date", :text,
-        label_class: "col-sm-2 col-xs-4", control_class: "col-sm-2 col-xs-6")
-      _form_input_with_label("Start time", "start", :text,
-        label_class: "col-sm-2 col-xs-4", control_class: "col-sm-1 col-xs-3")
-      _form_input_with_label("End time", "end", :text,
-        label_class: "col-sm-2 col-xs-4", control_class: "col-sm-1 col-xs-3")
-      _form_input_with_label("Comment", "comment", :text,
-        label_class: "col-sm-2 col-xs-4", control_class: "col-sm-6 col-xs-8")
-      div.form_group do
-        label.control_label.col_sm_2.col_xs_4 "Bill?", for: "bill"
-        div.col_sm_2.col_xs_4 do
-          div.checkbox do
-            _form_input_checkbox("bill")
+          _form_input_with_label("Date", "date", :text,
+                                 control_class: "col-sm-3 col-xs-5")
+          _form_input_with_label("Start time", "start", :text,
+                                 control_class: "col-sm-2 col-xs-3")
+          _form_input_with_label("End time", "end", :text,
+                                 control_class: "col-sm-2 col-xs-3")
+          _form_input_with_label("Comment", "comment", :text,
+                                 control_class: "col-sm-6 col-xs-8")
+          div.form_group do
+            label.control_label.col_sm_3.col_xs_4 "Bill?", for: "bill"
+            div.col_sm_3.col_xs_5 do
+              div.checkbox do
+                _form_input_checkbox("bill")
+              end
+            end
           end
-        end
-      end
-      div.form_group do
-        div.col_sm_offset_2.col_sm_12.col_xs_offset_4.col_xs_8 do
-          button.btn.btn_primary @button.capitalize, type: "submit",
-            name: @button, value: @button.capitalize
-          button.btn.btn_default "Cancel", type: "submit",
-            name: "cancel", value: "Cancel"
+          div.form_group do
+            div.col_sm_offset_3.col_sm_6.col_xs_offset_4.col_xs_8 do
+              button.btn.btn_primary @button.capitalize, type: "submit",
+                name: @button, value: @button.capitalize
+              button.btn.btn_default "Cancel", type: "submit",
+                name: "cancel", value: "Cancel"
+            end
+          end
         end
       end
     end
@@ -2103,23 +2107,25 @@ module StopTime::Views
         h2 "Details"
         form.form_horizontal.form_condensed action: R(*@target),
                                             method: :post do
-          html_options = { label_class: "col-sm-4 col-xs-4",
-                           control_class: "col-sm-8 col-xs-8" }
-          _form_input_with_label("Name", "name", :text, html_options)
+          _form_input_with_label("Name", "name", :text,
+                                 control_class: "col-sm-6 col-xs-8")
           _form_input_with_label("Short name", "short_name", :text,
-                                 html_options)
-          _form_input_with_label("Street address", "address_street",
-                                 :text, html_options)
-          _form_input_with_label("Postal code", "address_postal_code",
-                                 :text, html_options)
-          _form_input_with_label("City/town", "address_city",
-                                 :text, html_options)
-          _form_input_with_label("Email address", "email", :email, html_options)
-          _form_input_with_label("Phone number", "phone", :tel, html_options)
-          _form_input_with_label("Financial contact", "financial_contact",
-                                 :text, html_options)
+                                 control_class: "col-sm-4 col-xs-6")
+          _form_input_with_label("Street address", "address_street", :text,
+                                 control_class: "col-sm-6 col-xs-8")
+          _form_input_with_label("Postal code", "address_postal_code", :text,
+                                 control_class: "col-sm-3 col-xs-4")
+          _form_input_with_label("City/town", "address_city", :text,
+                                 control_class: "col-sm-6 col-xs-8")
+          _form_input_with_label("Email address", "email", :email,
+                                 control_class: "col-sm-6 col-xs-8")
+          _form_input_with_label("Phone number", "phone", :tel,
+                                 control_class: "col-sm-3 col-xs-4")
+          _form_input_with_label("Financial contact", "financial_contact", :text,
+                                 control_class: "col-sm-6 col-xs-8")
           _form_input_with_label("Default hourly rate", "hourly_rate", :text,
-                                 html_options.merge(input_addon: "€ / h"))
+                                 control_class: "col-sm-3 col-xs-4",
+                                 input_addon: "€ / h")
           div.form_group do
             label.control_label.col_sm_4.col_xs_4 "Time specifications?"
             div.col_sm_6.col_xs_8 do
@@ -2245,6 +2251,7 @@ module StopTime::Views
         end
       end
     end
+
     # Show registered time using the time_entries view as partial view.
     div.row do
       div.col_md_10.col_xs_12 do
@@ -2270,71 +2277,76 @@ module StopTime::Views
       text! "This task is already billed!  Only make changes if you know " +
             "what you are doing!"
     end if @task.billed?
-    form.form_horizontal.form_condensed action: R(*@target), method: :post do
-      div.form_group do
-        label.control_label.col_sm_2.col_xs_4 "Customer", for: "customer"
-        div.col_sm_3.col_xs_8 do
-          _form_select("customer", @customer_list)
-        end
-        div.col_sm_offset_1.col_sm_3.hidden_xs do
-          a.btn.btn_default role: "button", href: R(CustomersN, @customer.id) do
-            _icon("user")
-            span "Show customer"
-          end
-        end
-      end
-      _form_input_with_label("Name", "name", :text, class: "col-sm-3 col-xs-8")
-      div.form_group do
-        label.control_label.col_sm_2.col_xs_4 "Project/Task type"
-        div.col_sm_2.col_xs_6 do
-          div.radio do
-            label do
-              _form_input_radio("type", "hourly_rate", true)
-              text!("Hourly rate: ")
-              div.input_group do
-                _form_input("hourly_rate", :number, "Hourly rate")
-                span.input_group_addon "€ / h"
+    div.row do
+      div.col_md_6.col_xs_12 do
+        form.form_horizontal.form_condensed action: R(*@target), method: :post do
+          div.form_group do
+            label.control_label.col_sm_3.col_xs_4 "Customer", for: "customer"
+            div.col_sm_4.col_xs_8 do
+              _form_select("customer", @customer_list)
+            end
+            div.col_sm_offset_2.col_sm_3.hidden_xs do
+              a.btn.btn_default role: "button", href: R(CustomersN, @customer.id) do
+                _icon("user")
+                span "Show customer"
               end
             end
           end
-          div.radio do
-            label do
-              _form_input_radio("type", "fixed_cost")
-              text!("Fixed cost: ")
-              div.input_group do
-                _form_input("fixed_cost", :number, "Fixed cost")
-                span.input_group_addon "€"
+          _form_input_with_label("Name", "name", :text)
+          div.form_group do
+            label.control_label.col_sm_3.col_xs_4 "Project/Task type"
+            div.col_sm_4.col_xs_8 do
+              div.radio do
+                label do
+                  _form_input_radio("type", "hourly_rate", true)
+                  text!("Hourly rate: ")
+                  div.input_group do
+                    _form_input("hourly_rate", :number, "Hourly rate")
+                    span.input_group_addon "€ / h"
+                  end
+                end
+              end
+              div.radio do
+                label do
+                  _form_input_radio("type", "fixed_cost")
+                  text!("Fixed cost: ")
+                  div.input_group do
+                    _form_input("fixed_cost", :number, "Fixed cost")
+                    span.input_group_addon "€"
+                  end
+                end
               end
             end
           end
-        end
-      end
-      _form_input_with_label("VAT rate", "vat_rate", :number,
-                             control_class: "col-sm-2 col-xs-4",
-                             input_addon: "%")
-      if @task.billed?
-        div.form_group do
-          label.control_label.col_sm_2.col_xs_4 "Billed in invoice"
-          div.col_sm_2.col_xs_8 do
-            a.btn.btn_default role: "button",
-                              href: R(CustomersNInvoicesX,
-                                      @customer.id, @task.invoice.number) do
-              _icon("file")
-              span @task.invoice.number
+          _form_input_with_label("VAT rate", "vat_rate", :number,
+                                 control_class: "col-sm-3 col-xs-6",
+                                 input_addon: "%")
+          if @task.billed?
+            div.form_group do
+              label.control_label.col_sm_3.col_xs_4 "Billed in invoice"
+              div.col_sm_6.col_xs_8 do
+                a.btn.btn_default role: "button",
+                                  href: R(CustomersNInvoicesX,
+                                          @customer.id, @task.invoice.number) do
+                  _icon("file")
+                  span @task.invoice.number
+                end
+              end
+            end
+            _form_input_with_label("Invoice comment", "invoice_comment", :text)
+          end
+          div.form_group do
+            div.col_sm_offset_3.col_sm_6.col_xs_offset_4.col_xs_8 do
+              button.btn.btn_primary @method.capitalize,
+                type: "submit", name: @method, value: @method.capitalize
+              button.btn.btn_default "Cancel", type: "submit",
+                name: "cancel", value: "Cancel"
             end
           end
-        end
-        _form_input_with_label("Invoice comment", "invoice_comment", :text)
-      end
-      div.form_group do
-        div.col_sm_offset_2.col_sm_6.col_xs_offset_4.col_xs_8 do
-          button.btn.btn_primary @method.capitalize,
-            type: "submit", name: @method, value: @method.capitalize
-          button.btn.btn_default "Cancel", type: "submit",
-            name: "cancel", value: "Cancel"
         end
       end
     end
+
     # Show registered time (ab)using the time_entries view as partial view.
     div.row do
       div.col_md_8.col_xs_12 do
@@ -2394,14 +2406,13 @@ module StopTime::Views
       end
     end
     div.row do
-      div.col_md_6 do
+      div.col_md_6.col_xs_12 do
+        h2 "Details"
         form.form_horizontal.form_condensed \
           action: R(CustomersNInvoicesX, @customer.id, @invoice.number),
           method: :post do
-          _form_input_with_label("Number", "number", :text,
-            disabled: true,
-            label_class: "col-sm-3 col-xs-4",
-            control_class: "col-sm-3 col-xs-4")
+          _form_input_with_label("Number", "number", :text, disabled: true,
+                                 control_class: "col-sm-3 col-xs-4")
           div.form_group do
             label.control_label.col_sm_3.col_xs_4 "Date"
             div.col_sm_3.col_xs_4 do
@@ -2442,7 +2453,8 @@ module StopTime::Views
           end
         end
       end
-      div.col_md_6 do
+      div.col_md_6.col_xs_12 do
+        h2 "Billed time"
         table.table.table_condensed.table_striped do
           thead do
             tr do
@@ -2748,36 +2760,55 @@ module StopTime::Views
       br
       text! "Only make changes if you know what you are doing!"
     end if @history_warn
-    form.form_horizontal.form_condensed \
-      action: R(Company, revision: @company.revision),
-      method: :post do
-      _form_input_with_label("Name", "name", :text)
-      _form_input_with_label("Contact name", "contact_name", :text)
-      _form_input_with_label("Street address", "address_street", :text)
-      _form_input_with_label("Postal code", "address_postal_code", :text)
-      _form_input_with_label("City/town", "address_city", :text)
-      _form_input_with_label("Phone number", "phone", :tel)
-      _form_input_with_label("Cellular number", "cell", :tel)
-      _form_input_with_label("Email address", "email", :email)
-      _form_input_with_label("Web address", "website", :url)
+    div.row do
+      div.col_md_6.col_xs_12 do
+        form.form_horizontal.form_condensed \
+          action: R(Company, revision: @company.revision),
+          method: :post do
+          _form_input_with_label("Name", "name", :text,
+                                 control_class: "col-sm-6 col-xs-8")
+          _form_input_with_label("Contact name", "contact_name", :text,
+                                 control_class: "col-sm-6 col-xs-8")
+          _form_input_with_label("Street address", "address_street", :text,
+                                 control_class: "col-sm-6 col-xs-8")
+          _form_input_with_label("Postal code", "address_postal_code", :text,
+                                 control_class: "col-sm-3 col-xs-4")
+          _form_input_with_label("City/town", "address_city", :text,
+                                 control_class: "col-sm-6 col-xs-8")
+          _form_input_with_label("Phone number", "phone", :tel,
+                                 control_class: "col-sm-3 col-xs-4")
+          _form_input_with_label("Cellular number", "cell", :tel,
+                                 control_class: "col-sm-3 col-xs-4")
+          _form_input_with_label("Email address", "email", :email,
+                                 control_class: "col-sm-6 col-xs-8")
+          _form_input_with_label("Web address", "website", :url,
+                                 control_class: "col-sm-6 col-xs-8")
 
-      h3 "Corporate information"
-      _form_input_with_label("Chamber number", "chamber", :text)
-      _form_input_with_label("VAT number", "vatno", :text)
+          h3 "Corporate information"
+          _form_input_with_label("Chamber number", "chamber", :text,
+                                 control_class: "col-sm-3 col-xs-4")
+          _form_input_with_label("VAT number", "vatno", :text,
+                                 control_class: "col-sm-5 col-xs-6")
 
-      h3 "Bank information"
-      _form_input_with_label("Name", "bank_name", :text)
-      _form_input_with_label("Identification code", "bank_bic", :text)
-      _form_input_with_label("Account holder", "accountname", :text)
-      _form_input_with_label("Account number", "accountno", :text)
-      _form_input_with_label("Intl. account number", "accountiban", :text)
+          h3 "Bank information"
+          _form_input_with_label("Name", "bank_name", :text,
+                                 control_class: "col-sm-4 col-xs-5")
+          _form_input_with_label("Identification code", "bank_bic", :text,
+                                 control_class: "col-sm-3 col-xs-4")
+          _form_input_with_label("Account holder", "accountname", :text)
+          _form_input_with_label("Account number", "accountno", :text,
+                                 control_class: "col-sm-5 col-xs-6")
+          _form_input_with_label("Intl. account number", "accountiban", :text,
+                                 control_class: "col-sm-5 col-xs-6")
 
-      div.form_group do
-        div.col_sm_offset_2.col_sm_2.col_xs_offset_4.col_xs_8 do
-          button.btn.btn_primary "Update", type: "submit",
-            name: "update", value: "Update"
-          button.btn.btn_default "Reset", type: :reset,
-            name: "reset", value: "Reset"
+          div.form_group do
+            div.col_sm_offset_3.col_sm_6.col_xs_offset_4.col_xs_8 do
+              button.btn.btn_primary "Update", type: "submit",
+                name: "update", value: "Update"
+              button.btn.btn_default "Reset", type: :reset,
+                name: "reset", value: "Reset"
+            end
+          end
         end
       end
     end
@@ -2924,9 +2955,8 @@ module StopTime::Views
   #   Markaby/Mab tag
   # @return [Mab::Mixin::Tag] a form input tag
   def _form_input_with_label(label_name, input_name, type, html_options={})
-    html_options = html_options.dup
-    controls_class = html_options.delete(:control_class) || "col-sm-4 col-xs-8"
-    label_class = html_options.delete(:label_class) || "col-sm-2 col-xs-4"
+    controls_class = html_options.delete(:control_class) || "col-sm-6 col-xs-8"
+    label_class = html_options.delete(:label_class) || "col-sm-3 col-xs-4"
     input_addon = html_options.delete(:input_addon)
     div.form_group do
       label.control_label(label_name,
