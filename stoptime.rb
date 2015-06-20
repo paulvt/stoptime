@@ -1831,8 +1831,8 @@ module StopTime::Views
               end
             elsif @active_tasks[customer].empty?
               p do
-                text! "No active projects/tasks found! " +
-                      "Register time on one of these tasks: "
+                em "No active projects/tasks found! " +
+                   "Register time on one of these tasks: "
                 br
                 @tasks[customer].each do |task|
                    a task.name, :href => R(CustomersNTasksN, customer.id, task.id)
@@ -2154,7 +2154,7 @@ module StopTime::Views
             end
           end
           if @billed_tasks.empty?
-            p "None found!"
+            p { em "None found!" }
           else
             div.accordion.task_list! do
               @billed_tasks.keys.sort_by { |task| task.name }.each do |task|
@@ -2184,7 +2184,7 @@ module StopTime::Views
                                               :id => "collapse#{task.id}" do
                     div.panel_body do
                       if @billed_tasks[task].empty?
-                        i { "No billed projects/tasks found" }
+                        em { "No billed projects/tasks found!" }
                       else
                         table.table.table_condensed do
                           @billed_tasks[task] \
@@ -2474,7 +2474,7 @@ module StopTime::Views
                                               :title => "#{entry.comment} (#{time_spec})"
                     else
                       a(:href => R(TimelineN, entry.id),
-                        :title => time_spec) { i "• None" }
+                        :title => time_spec) { em "• None" }
                     end
                   end
                   td.col_md_2.text_right { "%.2fh" % entry.hours_total }
@@ -2486,7 +2486,7 @@ module StopTime::Views
             vattotal = 0.0
             if @company.vatno.present?
               tr.total do
-                td { i "Sub-total" }
+                td { em "Sub-total" }
                 td ""
                 td ""
                 td.text_right { "€ %.2f" % subtotal }
@@ -2494,7 +2494,7 @@ module StopTime::Views
               @vat.keys.sort.each do |rate|
                 vattotal += @vat[rate]
                 tr do
-                  td { i "VAT %d%%" % rate }
+                  td { em "VAT %d%%" % rate }
                   td ""
                   td ""
                   td.text_right { "€ %.2f" % @vat[rate] }
@@ -2502,7 +2502,7 @@ module StopTime::Views
               end
             end
             tr.total do
-              td { b "Total" }
+              td { strong "Total" }
               td ""
               td ""
               td.text_right { "€ %.2f" % (subtotal + vattotal) }
@@ -2562,7 +2562,7 @@ module StopTime::Views
       div.col_md_10.col_xs_12 do
         if @none_found
           div.alert.alert_info do
-            "No fixed costs tasks or tasks with an hourly rate found!"
+            em "No fixed costs tasks or tasks with an hourly rate found!"
           end
         end
         form.form_horizontal :action => R(CustomersNInvoices, @customer.id),
@@ -2836,7 +2836,7 @@ module StopTime::Views
   # @return [Mab::Mixin::Tag] a list of invoices
   def _invoice_list(invoices)
     if invoices.empty?
-      p "None found!"
+      p { em "None found!" }
     else
       table.table.table_striped.table_condensed do
         thead do
