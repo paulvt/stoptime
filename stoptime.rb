@@ -2312,7 +2312,8 @@ module StopTime::Views
         end
       end
       _form_input_with_label("VAT rate", "vat_rate", :number,
-                             :class => "col_sm_2 col_xs_4", :input_addon => "%")
+                             :control_class => "col_sm_2 col_xs_4",
+                             :input_addon => "%")
       if @task.billed?
         div.form_group do
           label.control_label.col_sm_2.col_xs_4 "Billed in invoice"
