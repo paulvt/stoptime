@@ -1768,14 +1768,15 @@ module StopTime::Views
         link :rel => "stylesheet", :type => "text/css",
              :media => "screen",
              :href => (R(Static, "") + "stylesheets/bootstrap.min.css")
-        # Bootstrap theme CSS
-        link :rel => "stylesheet", :type => "text/css",
-             :media => "screen",
-             :href => (R(Static, "") + "stylesheets/bootstrap-theme.min.css")
         # FIXME: improve static serving so that the hack below is not needed.
         link :rel => "stylesheet", :type => "text/css",
              :media => "screen",
              :href => (R(Static, "") + "stylesheets/style.css")
+        # Enable responsiveness
+        meta :name => "viewport",
+             :content => "width=device-width, initial-scale=1, " +
+                         "maximum-scale=1, user-scalable=no"
+
       end
       body do
         _menu
