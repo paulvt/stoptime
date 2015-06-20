@@ -2029,59 +2029,63 @@ module StopTime::Views
               "#{a "here", href: R(CustomersNew)}."
       end
     else
-      table.table.table_striped.table_condensed do
-        thead do
-          tr do
-            th.col_md_2.col_xs_5 "Name"
-            th.col_md_1.hidden_xs "Short name"
-            th.col_md_4.col_xs_5 "Address"
-            th.col_md_2.hidden_xs "Email"
-            th.col_md_2.hidden_xs "Phone"
-            th.col_md_1.col_xs_2 {}
-          end
-        end
-        tbody do
-          @customers.each do |customer|
-            tr do
-              td { a customer.name, href: R(CustomersN, customer.id) }
-              td.hidden_xs { customer.short_name  || "–"}
-              td do
-                if customer.address_street.present?
-                  text! customer.address_street
-                  br
-                  text! customer.address_postal_code + "&nbsp;" +
-                        customer.address_city
-                  if customer.email.present?
-                    a.visible_xs customer.email,
-                                 href: "mailto:#{customer.email}"
+      div.row do
+        div.col_md_9.col_xs_12 do
+          table.table.table_striped.table_condensed do
+            thead do
+              tr do
+                th.col_md_2.col_xs_5 "Name"
+                th.col_md_2.hidden_xs "Short name"
+                th.col_md_3.col_xs_5 "Address"
+                th.col_md_2.hidden_xs "Email"
+                th.col_md_2.hidden_xs "Phone"
+                th.col_md_1.col_xs_2 {}
+              end
+            end
+            tbody do
+              @customers.each do |customer|
+                tr do
+                  td { a customer.name, href: R(CustomersN, customer.id) }
+                  td.hidden_xs { customer.short_name  || "–"}
+                  td do
+                    if customer.address_street.present?
+                      text! customer.address_street
+                      br
+                      text! customer.address_postal_code + "&nbsp;" +
+                            customer.address_city
+                      if customer.email.present?
+                        a.visible_xs customer.email,
+                                     href: "mailto:#{customer.email}"
+                      end
+                      if customer.phone.present?
+                        # FIXME: hardcoded prefix!
+                        span.visible_xs "0#{customer.phone}"
+                      end
+                    else
+                      "–"
+                    end
                   end
-                  if customer.phone.present?
-                    # FIXME: hardcoded prefix!
-                    span.visible_xs "0#{customer.phone}"
+                  td.hidden_xs do
+                    if customer.email.present?
+                      a customer.email, href: "mailto:#{customer.email}"
+                    else
+                      "–"
+                    end
                   end
-                else
-                  "–"
-                end
-              end
-              td.hidden_xs do
-                if customer.email.present?
-                  a customer.email, href: "mailto:#{customer.email}"
-                else
-                  "–"
-                end
-              end
-              td.hidden_xs do
-                if customer.phone.present?
-                  # FIXME: hardcoded prefix!
-                  "0#{customer.phone}"
-                else
-                  "–"
-                end
-              end
-              td do
-                form action: R(CustomersN, customer.id), method: :post do
-                  button.btn.btn_xs.btn_danger "Delete", type: :submit,
-                    name: "delete", value: "Delete"
+                  td.hidden_xs do
+                    if customer.phone.present?
+                      # FIXME: hardcoded prefix!
+                      "0#{customer.phone}"
+                    else
+                      "–"
+                    end
+                  end
+                  td do
+                    form action: R(CustomersN, customer.id), method: :post do
+                      button.btn.btn_xs.btn_danger "Delete", type: :submit,
+                        name: "delete", value: "Delete"
+                    end
+                  end
                 end
               end
             end
@@ -2776,7 +2780,7 @@ module StopTime::Views
       text! "Only make changes if you know what you are doing!"
     end if @history_warn
     div.row do
-      div.col_md_6.col_xs_12 do
+      div.col_md_8.col_xs_12 do
         form.form_horizontal.form_condensed \
           action: R(Company, revision: @company.revision),
           method: :post do
