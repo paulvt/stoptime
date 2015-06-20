@@ -1897,6 +1897,7 @@ module StopTime::Views
         div.btn_group.navbar_right do
           a.btn.btn_default.btn_sm.dropdown_toggle :role => "button",
             :href => "#", "data-toggle" => "dropdown" do
+            _icon("filter")
             text! @input["show"] == "all" ? "All" : "Unbilled"
             span.caret
           end
@@ -1936,6 +1937,7 @@ module StopTime::Views
           if @time_entry.present?
             a.btn.btn_default :role => "button",
               :href => R(CustomersN, @time_entry.customer.id) do
+              _icon("user")
               span "Show customer"
             end
           end
@@ -1952,6 +1954,7 @@ module StopTime::Views
                               :href => R(CustomersNTasksN,
                                          @time_entry.customer.id,
                                          @time_entry.task.id) do
+              _icon("pencil")
               span "Show project/task"
             end
           end
@@ -1965,6 +1968,7 @@ module StopTime::Views
                               :href => R(CustomersNInvoicesX,
                                          @time_entry.customer.id,
                                          @time_entry.task.invoice.number) do
+              _icon("file")
               span @time_entry.task.invoice.number
             end
           end
@@ -2010,6 +2014,7 @@ module StopTime::Views
         text! "Customers"
         div.btn_group.navbar_right do
           a.btn.btn_default.btn_sm :role => "button", :href=> R(CustomersNew) do
+            _icon("plus")
             span "Add new customer"
           end
         end
@@ -2143,6 +2148,7 @@ module StopTime::Views
             div.btn_group.navbar_right do
               a.btn.btn_default.btn_sm :role => "button",
                 :href => R(CustomersNTasksNew, @customer.id) do
+                _icon("plus")
                 span "Add new project/task"
               end
             end
@@ -2269,6 +2275,7 @@ module StopTime::Views
         div.col_sm_offset_1.col_sm_3.hidden_xs do
           a.btn.btn_default :role => "button",
             :href => R(CustomersN, @customer.id) do
+            _icon("user")
             span "Show customer"
           end
         end
@@ -2309,6 +2316,7 @@ module StopTime::Views
                               :href => R(CustomersNInvoicesX,
                                          @customer.id,
                                          @task.invoice.number) do
+              _icon("file")
               span @task.invoice.number
             end
           end
@@ -2354,6 +2362,7 @@ module StopTime::Views
               div.btn_group.navbar_right do
                 a.btn.btn_default.btn_sm :role => "button",
                   :href => R(CustomersNInvoicesNew, customer.id) do
+                  _icon("plus")
                   span "Create new invoice"
                 end
               end
@@ -2506,16 +2515,19 @@ module StopTime::Views
             :href => R(CustomersNInvoicesX,
                        @customer.id,
                        "#{@invoice.number}.pdf") do
+            _icon("download")
             span "Download PDF"
           end
           a.btn.btn_default :role => "button",
             :href => R(CustomersNInvoicesX,
                        @customer.id,
                        "#{@invoice.number}.tex") do
+            _icon("download")
             span "Download LaTeX source"
           end
           a.btn.btn_default :role => "button",
             :href => R(Company, :revision => @company.revision) do
+            _icon("briefcase")
             span "Show company info"
           end
         end
@@ -2525,6 +2537,7 @@ module StopTime::Views
                                         @customer.id, @invoice.number),
                            :method => :delete do
             button.btn.btn_danger :type => "submit" do
+              _icon("trash")
               span "Remove old"
             end
             text! "An invoice has already been generated!"
@@ -2714,6 +2727,7 @@ module StopTime::Views
       if @company.original.present?
         a.btn.btn_default :role => "button",
           :href => R(Company, :revision => @company.original.revision) do
+          _icon("backward")
           span "View previous revision"
         end
       end
@@ -2763,6 +2777,13 @@ module StopTime::Views
   # Partial views
   #
   private
+
+  # Parial view that generates an icon.
+  #
+  # @return [Mab::Mixin::Tag] the icon
+  def _icon(name)
+    span.glyphicon.send("glyphicon_#{name}", {:"aria-hidden" => true})
+  end
 
   # Partial view that generates the menu.
   #
@@ -2841,7 +2862,7 @@ module StopTime::Views
               td { _format_period(invoice.period) }
               td.text_right { "€ %.2f" % invoice.total_amount }
               td do
-                i(:class => "icon-ok") if invoice.paid?
+                _icon("ok") if invoice.paid?
               end
             end
           end
@@ -3121,7 +3142,7 @@ module StopTime::Views
             end
             td.col_md_1 { "%.2fh" % entry.hours_total }
             td.col_md_1 do
-              i(:class => "icon-ok") if entry.bill?
+              _icon("ok") if entry.bill?
             end
             td.col_md_1 do
               form.form_inline :action => R(TimelineN, entry.id),
