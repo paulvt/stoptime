@@ -1679,6 +1679,7 @@ module StopTime::Controllers
                  else
                    CompanyInfo.last
                  end
+      @company_last = @company == CompanyInfo.last
       @input = @company.attributes
       @history_warn = true if @company != CompanyInfo.last
       render :company_form
@@ -2745,11 +2746,25 @@ module StopTime::Views
     div.alert.alert_info do
       text! " Viewing revision #{@company.revision}, " +
             " last update at #{@company.updated_at}."
-      if @company.original.present?
-        a.btn.btn_default role: "button",
-          href: R(Company, revision: @company.original.revision) do
-          _icon("backward")
-          span "View previous revision"
+      div.btn_group do
+        if @company.original.present?
+          a.btn.btn_default role: "button",
+            href: R(Company, revision: @company.original.revision) do
+            _icon("backward")
+            span "View previous revision"
+          end
+        end
+        unless @company_last
+          a.btn.btn_default role: "button",
+            href: R(Company, revision: @company.revision.succ) do
+            _icon("forward")
+            span "View next revision"
+          end
+          a.btn.btn_default role: "button",
+            href: R(Company) do
+            _icon("fast-forward")
+            span "Most recent revision"
+          end
         end
       end
     end
