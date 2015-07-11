@@ -2413,6 +2413,7 @@ module StopTime::Views
       h1 do
         text! "Invoice for "
         a @customer.name, href: R(CustomersN, @customer.id)
+        small @invoice.number
       end
     end
     div.row do
