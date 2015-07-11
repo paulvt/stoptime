@@ -1488,7 +1488,7 @@ module StopTime::Controllers
     # Retrieves all registered time in descending order to present
     # the timeline using {Views#timeline}.
     def get
-      if @input["show"] == "all"
+      if @input["time_entries"] == "all"
         @time_entries = TimeEntry.order("start DESC")
       else
         @time_entries = TimeEntry.joins(:task)\
@@ -1905,12 +1905,12 @@ module StopTime::Views
           a.btn.btn_default.btn_sm.dropdown_toggle role: "button", href: "#",
             data_toggle: "dropdown" do
             _icon("filter")
-            text! @input["show"] == "all" ? "All" : "Unbilled"
+            text! @input["time_entries"] == "all" ? "All" : "Unbilled"
             span.caret
           end
           ul.dropdown_menu role: "menu", aria_labelledby: "dLabel" do
-            li { a "All", href: R(Timeline, show: "all") }
-            li { a "Unbilled", href: R(Timeline, show: "unbilled") }
+            li { a "All", href: R(Timeline, time_entries: "all") }
+            li { a "Unbilled", href: R(Timeline, time_entries: "unbilled") }
           end
         end
       end
