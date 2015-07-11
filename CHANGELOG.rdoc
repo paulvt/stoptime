@@ -1,5 +1,14 @@
 = Stop… Camping Time! release news
 
+== 1.16.1
+
+Features:
+
+* Allow back/forth navigation through company info version
+* Only show unbilled time in the customer from (load time improvement!)
+* Tweaked some form input sizes
+* Add missing view subtitles
+
 == 1.16.0
 
 Features:
