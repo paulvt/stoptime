@@ -1025,7 +1025,8 @@ module StopTime::Controllers
         end
       end
 
-      @time_entries = @customer.time_entries.order("start DESC")
+      @time_entries = @customer.time_entries.order("start DESC")\
+                               .reject { |te| te.task.billed? }
       @invoices = @customer.invoices
       @invoices.each do |i|
         @input["paid_#{i.number}"] = true if i.paid?
