@@ -905,6 +905,7 @@ module StopTime::Controllers
       @tasks = {}
       @task_count = 0
       @active_tasks = {}
+      @active_task_count = 0
       @active_tasks_summary = {}
       @totals = [0.0, 0,0]
       Customer.all.each do |customer|
@@ -913,6 +914,7 @@ module StopTime::Controllers
         @task_count += tasks.count
         active_tasks = customer.active_tasks
         @active_tasks[customer] = active_tasks
+        @active_task_count += active_tasks.count
         @active_tasks_summary[customer] =
           active_tasks.inject([0.0, 0.0]) do |summ, task|
             task_summ = task.summary
@@ -1800,7 +1802,8 @@ module StopTime::Views
     header.page_header do
       h1 do
         text! "Overview"
-        small "#{@tasks.count} customers, #{@task_count} active projects/tasks"
+        small "#{@tasks.count} customers, " +
+              "#{@active_task_count} active projects/tasks"
       end
     end
     if @tasks.empty?
