@@ -2130,10 +2130,10 @@ module StopTime::Views
           _form_input_with_label("Financial contact", "financial_contact", :text,
                                  control_class: "col-sm-6 col-xs-8")
           _form_input_with_label("Default hourly rate", "hourly_rate", :text,
-                                 control_class: "col-sm-3 col-xs-4",
+                                 control_class: "col-sm-4 col-xs-5",
                                  input_addon: "€ / h")
           div.form_group do
-            label.control_label.col_sm_4.col_xs_4 "Time specifications?"
+            label.control_label.col_sm_3.col_xs_4 "Time specifications?"
             div.col_sm_6.col_xs_8 do
               div.checkbox do
                 _form_input_checkbox("time_specification")
@@ -2141,7 +2141,7 @@ module StopTime::Views
             end
           end
           div.form_group do
-            div.col_sm_offset_4.col_sm_6.col_xs_offset_4.col_xs_8 do
+            div.col_sm_offset_3.col_sm_6.col_xs_offset_4.col_xs_8 do
               button.btn.btn_primary @button.capitalize, type: "submit",
                 name: @button, value: @button.capitalize
               button.btn.btn_default "Cancel", type: "submit",
@@ -2301,7 +2301,7 @@ module StopTime::Views
           _form_input_with_label("Name", "name", :text)
           div.form_group do
             label.control_label.col_sm_3.col_xs_4 "Project/Task type"
-            div.col_sm_4.col_xs_8 do
+            div.col_sm_5.col_xs_8 do
               div.radio do
                 label do
                   _form_input_radio("type", "hourly_rate", true)
@@ -2325,7 +2325,7 @@ module StopTime::Views
             end
           end
           _form_input_with_label("VAT rate", "vat_rate", :number,
-                                 control_class: "col-sm-3 col-xs-6",
+                                 control_class: "col-lg-3 col-sm-4 col-xs-6",
                                  input_addon: "%")
           if @task.billed?
             div.form_group do
@@ -2450,7 +2450,7 @@ module StopTime::Views
             end
           end
           div.form_group do
-            div.col_sm_offset_3.col_sm_4.col_xs_offset_4.col_xs_8 do
+            div.col_sm_offset_3.col_sm_6.col_xs_offset_4.col_xs_8 do
               button.btn.btn_primary "Update", type: :submit,
                 name: "update", value: "Update"
               button.btn.btn_default "Reset", type: :reset,
