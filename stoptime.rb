@@ -2016,6 +2016,7 @@ module StopTime::Views
     header.page_header do
       h1 do
         text! "Customers"
+        small "#{@customers.count} customers"
         div.btn_group.navbar_right do
           a.btn.btn_default.btn_sm role: "button", href: R(CustomersNew) do
             _icon("plus")
