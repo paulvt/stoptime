@@ -2019,7 +2019,7 @@ module StopTime::Views
         div.btn_group.navbar_right do
           a.btn.btn_default.btn_sm role: "button", href: R(CustomersNew) do
             _icon("plus")
-            span "Add new customer"
+            span "Add customer"
           end
         end
       end
@@ -2159,7 +2159,7 @@ module StopTime::Views
               a.btn.btn_default.btn_sm role: "button",
                 href: R(CustomersNTasksNew, @customer.id) do
                 _icon("plus")
-                span "Add new project/task"
+                span "Add project/task"
               end
             end
           end
@@ -2249,7 +2249,7 @@ module StopTime::Views
               a.btn.btn_default.btn_sm role: "button",
                 href: R(CustomersNInvoicesNew, @customer.id) do
                 _icon("plus")
-                span "Create new invoice"
+                span "Create invoice"
               end
             end
           end
@@ -2388,7 +2388,7 @@ module StopTime::Views
                 a.btn.btn_default.btn_sm role: "button",
                   href: R(CustomersNInvoicesNew, customer.id) do
                   _icon("plus")
-                  span "Create new invoice"
+                  span "Create invoice"
                 end
               end
             end
@@ -2551,7 +2551,7 @@ module StopTime::Views
             href: R(CustomersNInvoicesX,
                     @customer.id, "#{@invoice.number}.tex") do
             _icon("download")
-            span "Download LaTeX source"
+            span "Download LaTeX"
           end
           a.btn.btn_default role: "button",
             href: R(Company, revision: @company.revision) do
