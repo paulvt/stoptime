@@ -55,7 +55,7 @@ end
 module StopTime
 
   # The version of the application
-  VERSION = '1.16.0'
+  VERSION = '1.16.1'
   puts "Starting Stop… Camping Time! version #{VERSION}"
 
   # @return [Hash{String=>Object}] The parsed configuration.
@@ -905,6 +905,7 @@ module StopTime::Controllers
       @tasks = {}
       @task_count = 0
       @active_tasks = {}
+      @active_task_count = 0
       @active_tasks_summary = {}
       @totals = [0.0, 0,0]
       Customer.all.each do |customer|
@@ -913,6 +914,7 @@ module StopTime::Controllers
         @task_count += tasks.count
         active_tasks = customer.active_tasks
         @active_tasks[customer] = active_tasks
+        @active_task_count += active_tasks.count
         @active_tasks_summary[customer] =
           active_tasks.inject([0.0, 0.0]) do |summ, task|
             task_summ = task.summary
@@ -1025,7 +1027,8 @@ module StopTime::Controllers
         end
       end
 
-      @time_entries = @customer.time_entries.order("start DESC")
+      @time_entries = @customer.time_entries.order("start DESC")\
+                               .reject { |te| te.task.billed? }
       @invoices = @customer.invoices
       @invoices.each do |i|
         @input["paid_#{i.number}"] = true if i.paid?
@@ -1485,7 +1488,7 @@ module StopTime::Controllers
     # Retrieves all registered time in descending order to present
     # the timeline using {Views#timeline}.
     def get
-      if @input["show"] == "all"
+      if @input["time_entries"] == "all"
         @time_entries = TimeEntry.order("start DESC")
       else
         @time_entries = TimeEntry.joins(:task)\
@@ -1679,6 +1682,7 @@ module StopTime::Controllers
                  else
                    CompanyInfo.last
                  end
+      @company_last = @company == CompanyInfo.last
       @input = @company.attributes
       @history_warn = true if @company != CompanyInfo.last
       render :company_form
@@ -1798,7 +1802,8 @@ module StopTime::Views
     header.page_header do
       h1 do
         text! "Overview"
-        small "#{@tasks.count} customers, #{@task_count} active projects/tasks"
+        small "#{@tasks.count} customers, " +
+              "#{@active_task_count} active projects/tasks"
       end
     end
     if @tasks.empty?
@@ -1900,12 +1905,12 @@ module StopTime::Views
           a.btn.btn_default.btn_sm.dropdown_toggle role: "button", href: "#",
             data_toggle: "dropdown" do
             _icon("filter")
-            text! @input["show"] == "all" ? "All" : "Unbilled"
+            text! @input["time_entries"] == "all" ? "All" : "Unbilled"
             span.caret
           end
           ul.dropdown_menu role: "menu", aria_labelledby: "dLabel" do
-            li { a "All", href: R(Timeline, show: "all") }
-            li { a "Unbilled", href: R(Timeline, show: "unbilled") }
+            li { a "All", href: R(Timeline, time_entries: "all") }
+            li { a "Unbilled", href: R(Timeline, time_entries: "unbilled") }
           end
         end
       end
@@ -2014,10 +2019,11 @@ module StopTime::Views
     header.page_header do
       h1 do
         text! "Customers"
+        small "#{@customers.count} customers"
         div.btn_group.navbar_right do
           a.btn.btn_default.btn_sm role: "button", href: R(CustomersNew) do
             _icon("plus")
-            span "Add new customer"
+            span "Add customer"
           end
         end
       end
@@ -2028,59 +2034,63 @@ module StopTime::Views
               "#{a "here", href: R(CustomersNew)}."
       end
     else
-      table.table.table_striped.table_condensed do
-        thead do
-          tr do
-            th.col_md_2.col_xs_5 "Name"
-            th.col_md_1.hidden_xs "Short name"
-            th.col_md_4.col_xs_5 "Address"
-            th.col_md_2.hidden_xs "Email"
-            th.col_md_2.hidden_xs "Phone"
-            th.col_md_1.col_xs_2 {}
-          end
-        end
-        tbody do
-          @customers.each do |customer|
-            tr do
-              td { a customer.name, href: R(CustomersN, customer.id) }
-              td.hidden_xs { customer.short_name  || "–"}
-              td do
-                if customer.address_street.present?
-                  text! customer.address_street
-                  br
-                  text! customer.address_postal_code + "&nbsp;" +
-                        customer.address_city
-                  if customer.email.present?
-                    a.visible_xs customer.email,
-                                 href: "mailto:#{customer.email}"
+      div.row do
+        div.col_md_9.col_xs_12 do
+          table.table.table_striped.table_condensed do
+            thead do
+              tr do
+                th.col_md_2.col_xs_5 "Name"
+                th.col_md_2.hidden_xs "Short name"
+                th.col_md_3.col_xs_5 "Address"
+                th.col_md_2.hidden_xs "Email"
+                th.col_md_2.hidden_xs "Phone"
+                th.col_md_1.col_xs_2 {}
+              end
+            end
+            tbody do
+              @customers.each do |customer|
+                tr do
+                  td { a customer.name, href: R(CustomersN, customer.id) }
+                  td.hidden_xs { customer.short_name  || "–"}
+                  td do
+                    if customer.address_street.present?
+                      text! customer.address_street
+                      br
+                      text! customer.address_postal_code + "&nbsp;" +
+                            customer.address_city
+                      if customer.email.present?
+                        a.visible_xs customer.email,
+                                     href: "mailto:#{customer.email}"
+                      end
+                      if customer.phone.present?
+                        # FIXME: hardcoded prefix!
+                        span.visible_xs "0#{customer.phone}"
+                      end
+                    else
+                      "–"
+                    end
                   end
-                  if customer.phone.present?
-                    # FIXME: hardcoded prefix!
-                    span.visible_xs "0#{customer.phone}"
+                  td.hidden_xs do
+                    if customer.email.present?
+                      a customer.email, href: "mailto:#{customer.email}"
+                    else
+                      "–"
+                    end
                   end
-                else
-                  "–"
-                end
-              end
-              td.hidden_xs do
-                if customer.email.present?
-                  a customer.email, href: "mailto:#{customer.email}"
-                else
-                  "–"
-                end
-              end
-              td.hidden_xs do
-                if customer.phone.present?
-                  # FIXME: hardcoded prefix!
-                  "0#{customer.phone}"
-                else
-                  "–"
-                end
-              end
-              td do
-                form action: R(CustomersN, customer.id), method: :post do
-                  button.btn.btn_xs.btn_danger "Delete", type: :submit,
-                    name: "delete", value: "Delete"
+                  td.hidden_xs do
+                    if customer.phone.present?
+                      # FIXME: hardcoded prefix!
+                      "0#{customer.phone}"
+                    else
+                      "–"
+                    end
+                  end
+                  td do
+                    form action: R(CustomersN, customer.id), method: :post do
+                      button.btn.btn_xs.btn_danger "Delete", type: :submit,
+                        name: "delete", value: "Delete"
+                    end
+                  end
                 end
               end
             end
@@ -2124,10 +2134,10 @@ module StopTime::Views
           _form_input_with_label("Financial contact", "financial_contact", :text,
                                  control_class: "col-sm-6 col-xs-8")
           _form_input_with_label("Default hourly rate", "hourly_rate", :text,
-                                 control_class: "col-sm-3 col-xs-4",
+                                 control_class: "col-sm-4 col-xs-5",
                                  input_addon: "€ / h")
           div.form_group do
-            label.control_label.col_sm_4.col_xs_4 "Time specifications?"
+            label.control_label.col_sm_3.col_xs_4 "Time specifications?"
             div.col_sm_6.col_xs_8 do
               div.checkbox do
                 _form_input_checkbox("time_specification")
@@ -2135,7 +2145,7 @@ module StopTime::Views
             end
           end
           div.form_group do
-            div.col_sm_offset_4.col_sm_6.col_xs_offset_4.col_xs_8 do
+            div.col_sm_offset_3.col_sm_6.col_xs_offset_4.col_xs_8 do
               button.btn.btn_primary @button.capitalize, type: "submit",
                 name: @button, value: @button.capitalize
               button.btn.btn_default "Cancel", type: "submit",
@@ -2153,7 +2163,7 @@ module StopTime::Views
               a.btn.btn_default.btn_sm role: "button",
                 href: R(CustomersNTasksNew, @customer.id) do
                 _icon("plus")
-                span "Add new project/task"
+                span "Add project/task"
               end
             end
           end
@@ -2243,7 +2253,7 @@ module StopTime::Views
               a.btn.btn_default.btn_sm role: "button",
                 href: R(CustomersNInvoicesNew, @customer.id) do
                 _icon("plus")
-                span "Create new invoice"
+                span "Create invoice"
               end
             end
           end
@@ -2254,8 +2264,8 @@ module StopTime::Views
 
     # Show registered time using the time_entries view as partial view.
     div.row do
-      div.col_md_10.col_xs_12 do
-        h2 "Registered time"
+      div.col_xs_12 do
+        h2.timeline! "Registered unbilled time"
         _time_entries(@customer)
       end
     end unless @button == "create"
@@ -2295,7 +2305,7 @@ module StopTime::Views
           _form_input_with_label("Name", "name", :text)
           div.form_group do
             label.control_label.col_sm_3.col_xs_4 "Project/Task type"
-            div.col_sm_4.col_xs_8 do
+            div.col_sm_5.col_xs_8 do
               div.radio do
                 label do
                   _form_input_radio("type", "hourly_rate", true)
@@ -2319,7 +2329,7 @@ module StopTime::Views
             end
           end
           _form_input_with_label("VAT rate", "vat_rate", :number,
-                                 control_class: "col-sm-3 col-xs-6",
+                                 control_class: "col-lg-3 col-sm-4 col-xs-6",
                                  input_addon: "%")
           if @task.billed?
             div.form_group do
@@ -2350,7 +2360,7 @@ module StopTime::Views
     # Show registered time (ab)using the time_entries view as partial view.
     div.row do
       div.col_md_8.col_xs_12 do
-        h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
+        h2.timeline! "Registered #{@task.billed? ? "billed" : "unbilled"} time"
         _time_entries(@customer, @task)
       end
     end unless @method == "create"
@@ -2382,7 +2392,7 @@ module StopTime::Views
                 a.btn.btn_default.btn_sm role: "button",
                   href: R(CustomersNInvoicesNew, customer.id) do
                   _icon("plus")
-                  span "Create new invoice"
+                  span "Create invoice"
                 end
               end
             end
@@ -2403,6 +2413,7 @@ module StopTime::Views
       h1 do
         text! "Invoice for "
         a @customer.name, href: R(CustomersN, @customer.id)
+        small @invoice.number
       end
     end
     div.row do
@@ -2444,7 +2455,7 @@ module StopTime::Views
             end
           end
           div.form_group do
-            div.col_sm_offset_3.col_sm_4.col_xs_offset_4.col_xs_8 do
+            div.col_sm_offset_3.col_sm_6.col_xs_offset_4.col_xs_8 do
               button.btn.btn_primary "Update", type: :submit,
                 name: "update", value: "Update"
               button.btn.btn_default "Reset", type: :reset,
@@ -2545,7 +2556,7 @@ module StopTime::Views
             href: R(CustomersNInvoicesX,
                     @customer.id, "#{@invoice.number}.tex") do
             _icon("download")
-            span "Download LaTeX source"
+            span "Download LaTeX"
           end
           a.btn.btn_default role: "button",
             href: R(Company, revision: @company.revision) do
@@ -2745,11 +2756,25 @@ module StopTime::Views
     div.alert.alert_info do
       text! " Viewing revision #{@company.revision}, " +
             " last update at #{@company.updated_at}."
-      if @company.original.present?
-        a.btn.btn_default role: "button",
-          href: R(Company, revision: @company.original.revision) do
-          _icon("backward")
-          span "View previous revision"
+      div.btn_group do
+        if @company.original.present?
+          a.btn.btn_default role: "button",
+            href: R(Company, revision: @company.original.revision) do
+            _icon("backward")
+            span "View previous revision"
+          end
+        end
+        unless @company_last
+          a.btn.btn_default role: "button",
+            href: R(Company, revision: @company.revision.succ) do
+            _icon("forward")
+            span "View next revision"
+          end
+          a.btn.btn_default role: "button",
+            href: R(Company) do
+            _icon("fast-forward")
+            span "Most recent revision"
+          end
         end
       end
     end
@@ -2761,7 +2786,7 @@ module StopTime::Views
       text! "Only make changes if you know what you are doing!"
     end if @history_warn
     div.row do
-      div.col_md_6.col_xs_12 do
+      div.col_md_8.col_xs_12 do
         form.form_horizontal.form_condensed \
           action: R(Company, revision: @company.revision),
           method: :post do
