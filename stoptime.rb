@@ -2260,8 +2260,8 @@ module StopTime::Views
 
     # Show registered time using the time_entries view as partial view.
     div.row do
-      div.col_md_10.col_xs_12 do
-        h2 "Registered time"
+      div.col_xs_12 do
+        h2.timeline! "Registered unbilled time"
         _time_entries(@customer)
       end
     end unless @button == "create"
@@ -2356,7 +2356,7 @@ module StopTime::Views
     # Show registered time (ab)using the time_entries view as partial view.
     div.row do
       div.col_md_8.col_xs_12 do
-        h2 "Registered #{@task.billed? ? "billed" : "unbilled"} time"
+        h2.timeline! "Registered #{@task.billed? ? "billed" : "unbilled"} time"
         _time_entries(@customer, @task)
       end
     end unless @method == "create"
