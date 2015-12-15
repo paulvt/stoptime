@@ -1834,7 +1834,7 @@ module StopTime::Views
             elsif @active_tasks[customer].empty?
               p do
                 em "No active projects/tasks found! " +
-                   "Register time on one of these tasks: "
+                   "Register time on one of these projects/tasks: "
                 br
                 @tasks[customer].each do |task|
                    a task.name, href: R(CustomersNTasksN, customer.id, task.id)
