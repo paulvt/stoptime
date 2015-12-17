@@ -2919,7 +2919,7 @@ module StopTime::Views
         tbody do
           invoices.each do |invoice|
             due_class = invoice.past_due? ? "warning" : ""
-            due_class = "error" if invoice.way_past_due?
+            due_class = "danger" if invoice.way_past_due?
             tr(class: due_class) do
               td do
                 a invoice.number,
