@@ -166,6 +166,7 @@ module StopTime::Models
                       "invoice_template" => "invoice",
                       "hourly_rate"      => 20.0,
                       "time_resolution"  => 1,
+                      "date_new_entry"   => "today",
                       "vat_rate"         => 21.0 }
 
     # Creates a new configuration object and loads the configuation.
@@ -888,6 +889,22 @@ module StopTime::Models
 
 end # StopTime::Models
 
+# = The Stop… Camping Time! helpers
+module StopTime::Helpers
+
+  def date_time_new_entry(last_entry = nil)
+    case @config["date_new_entry"]
+    when "previous"
+      TimeEntry.last.end
+    when "today"
+      DateTime.now
+    when "none"
+      nil
+    end
+  end
+
+end
+
 # = The Stop… Camping Time! controllers
 module StopTime::Controllers
 
@@ -1550,9 +1567,11 @@ module StopTime::Controllers
         @task_list[t.customer.shortest_name] << [t.id, t.name]
       end
       @input["bill"] = true
-      @input["date"] = DateTime.now.to_date
-      @input["start"] = Time.now.to_formatted_s(:time_only)
-
+      date_time_new = date_time_new_entry(TimeEntry.last)
+      if date_time_new
+        @input["date"] = date_time_new.to_date.to_formatted_s
+        @input["start"] = date_time_new.to_formatted_s(:time_only)
+      end
       @target = [Timeline]
       @button = "enter"
       render :time_entry_form
@@ -3123,6 +3142,7 @@ module StopTime::Views
   # @param [Customer, nil] task a task to show time entries for
   # @return [Mab::Mixin::Tag] the main menu
   def _time_entries(customer=nil, task=nil)
+    date_time_new = date_time_new_entry(@time_entries.first)
     form.form_inline action: R(Timeline), method: :post do
       table.table.table_condensed.table_striped.table_hover do
         thead do
@@ -3156,11 +3176,11 @@ module StopTime::Views
             end
             td.col_md_1 do
               input.form_control type: :text, name: "date",
-                value: DateTime.now.to_date.to_formatted_s
+                value: date_time_new && date_time_new.to_date.to_formatted_s
             end
             td.col_md_1 do
               input.form_control type: :text, name: "start",
-                value: DateTime.now.to_time.to_formatted_s(:time_only)
+                value: date_time_new && date_time_new.to_formatted_s(:time_only)
             end
             td.col_md_1 do
               input.form_control type: :text, name: "end"
