@@ -1306,7 +1306,7 @@ module StopTime::Controllers
       tasks.each_key do |task|
         # Create a new (billed) task clone that contains the selected time
         # entries, leave the rest unbilled and associated with their task.
-        bill_task = task.dup # FIXME: depends on rails version!
+        bill_task = task.dup
         task.time_entries = task.time_entries - tasks[task]
         task.save
         bill_task.time_entries = tasks[task]
@@ -1729,7 +1729,7 @@ module StopTime::Controllers
       @history_warn = true if @company != CompanyInfo.last
       if @company == CompanyInfo.last and @company.invoices.length > 0
         old_company = @company
-        @company = old_company.clone # FIXME: depends on rails version!
+        @company = old_company.dup
         @company.original = old_company
       end
 
