@@ -892,6 +892,14 @@ end # StopTime::Models
 # = The Stop… Camping Time! helpers
 module StopTime::Helpers
 
+  # Returns the date/time to use for new time entry defaults, or +nil+ if
+  # none is to be used.  This method can use the last time entry (if any
+  # and if so configured).  The result is based on the +date_new_entry+
+  # configuration option.
+  #
+  # @param last_entry [DateTime] the last time entry to use if configured
+  #   for "previous"
+  # @return [DateTime, nil] the date/time to be used for new entry defaults
   def date_time_new_entry(last_entry = nil)
     case @config["date_new_entry"]
     when "previous"
