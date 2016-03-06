@@ -1727,7 +1727,7 @@ module StopTime::Controllers
       # If we are editing the current info and it is already associated
       # with some invoices, create a new revision.
       @history_warn = true if @company != CompanyInfo.last
-      if @company == CompanyInfo.last and @company.invoices.length > 0
+      if @company.id == CompanyInfo.last.id and @company.invoices.length > 0
         old_company = @company
         @company = old_company.dup
         @company.original = old_company
