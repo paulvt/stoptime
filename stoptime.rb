@@ -1520,6 +1520,7 @@ module StopTime::Controllers
                                  .where("stoptime_tasks.invoice_id" => nil)\
                                  .order("start DESC")
       end
+      @time_entries = @time_entries.where.not(task_id: nil)
       @time_entries.each do |te|
         @input["bill_#{te.id}"] = true if te.bill?
       end
