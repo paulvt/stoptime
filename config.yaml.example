@@ -3,6 +3,10 @@
 # Time resolution in minutes
 #time_resolution: 1
 
+# Which date to use for new entries
+# Supported values are: previous, today, none
+#date_new_entry: today
+
 # The default hourly rate
 #hourly_rate: 20.0
 
