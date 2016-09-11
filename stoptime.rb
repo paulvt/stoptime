@@ -55,7 +55,7 @@ end
 module StopTime
 
   # The version of the application
-  VERSION = '1.16.1'
+  VERSION = '1.17.0'
   puts "Starting Stop… Camping Time! version #{VERSION}"
 
   # @return [Hash{String=>Object}] The parsed configuration.
