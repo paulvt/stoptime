@@ -1,5 +1,11 @@
 = Stop… Camping Time! release news
 
+== 1.17.1
+
+Bugfixes:
+
+* Fix the number/currency input to allow for all values ≥ 0.00
+
 == 1.17.0
 
 Features:
