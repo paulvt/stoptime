@@ -1097,7 +1097,7 @@ module StopTime::Controllers
           return render :customer_form
         end
       end
-      redirect R(Customers)
+      redirect R(CustomersN, customer_id)
     end
   end # class StopTime::Controllers::CustomersN
 
