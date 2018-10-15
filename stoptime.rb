@@ -2161,9 +2161,11 @@ module StopTime::Views
                                  control_class: "col-sm-3 col-xs-4")
           _form_input_with_label("Financial contact", "financial_contact", :text,
                                  control_class: "col-sm-6 col-xs-8")
-          _form_input_with_label("Default hourly rate", "hourly_rate", :text,
+          _form_input_with_label("Default hourly rate", "hourly_rate", :number,
                                  control_class: "col-sm-4 col-xs-5",
-                                 input_addon: "€ / h")
+                                 input_addon: "€ / h",
+                                 min: "0.00",
+                                 step: "0.01")
           div.form_group do
             label.control_label.col_sm_3.col_xs_4 "Time specifications?"
             div.col_sm_6.col_xs_8 do
