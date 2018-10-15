@@ -2339,7 +2339,7 @@ module StopTime::Views
                   _form_input_radio("type", "hourly_rate", true)
                   text!("Hourly rate: ")
                   div.input_group do
-                    _form_input("hourly_rate", :number, "Hourly rate")
+                    _form_input("hourly_rate", :number, "Hourly rate", min: "0.00", step: "0.01")
                     span.input_group_addon "€ / h"
                   end
                 end
@@ -2349,7 +2349,7 @@ module StopTime::Views
                   _form_input_radio("type", "fixed_cost")
                   text!("Fixed cost: ")
                   div.input_group do
-                    _form_input("fixed_cost", :number, "Fixed cost")
+                    _form_input("fixed_cost", :number, "Fixed cost", min: "0.00", step: "0.01")
                     span.input_group_addon "€"
                   end
                 end
