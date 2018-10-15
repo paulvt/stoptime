@@ -1,5 +1,24 @@
 = Stop… Camping Time! release news
 
+== 1.17.1
+
+Bugfixes:
+
+* Fix the number/currency input to allow for all values ≥ 0.00
+
+== 1.17.0
+
+Features:
+
+* Add support for choosing what date/time is used for new entries
+* Some textual and style tweaks
+
+Bugfixes:
+* Fix crash when showing all entries in the timeline [#89c2a1]
+
+Other bugfixes:
+* Fix check that determines if last company info is used
+
 == 1.16.1
 
 Features:
