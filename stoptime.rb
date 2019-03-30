@@ -2319,14 +2319,16 @@ module StopTime::Views
     end if @task.billed?
     div.row do
       div.col_md_6.col_xs_12 do
-        form.form_horizontal.form_condensed action: R(*@target), method: :post do
+        form.form_horizontal.form_condensed action: R(*@target),
+                                            method: :post do
           div.form_group do
             label.control_label.col_sm_3.col_xs_4 "Customer", for: "customer"
             div.col_sm_4.col_xs_8 do
               _form_select("customer", @customer_list)
             end
             div.col_sm_offset_2.col_sm_3.hidden_xs do
-              a.btn.btn_default role: "button", href: R(CustomersN, @customer.id) do
+              a.btn.btn_default role: "button",
+                                href: R(CustomersN, @customer.id) do
                 _icon("user")
                 span "Show customer"
               end
@@ -2341,7 +2343,8 @@ module StopTime::Views
                   _form_input_radio("type", "hourly_rate", true)
                   text!("Hourly rate: ")
                   div.input_group do
-                    _form_input("hourly_rate", :number, "Hourly rate", min: "0.00", step: "0.01")
+                    _form_input("hourly_rate", :number, "Hourly rate",
+                                min: "0.00", step: "0.01")
                     span.input_group_addon "€ / h"
                   end
                 end
@@ -2351,7 +2354,8 @@ module StopTime::Views
                   _form_input_radio("type", "fixed_cost")
                   text!("Fixed cost: ")
                   div.input_group do
-                    _form_input("fixed_cost", :number, "Fixed cost", min: "0.00", step: "0.01")
+                    _form_input("fixed_cost", :number, "Fixed cost",
+                                min: "0.00", step: "0.01")
                     span.input_group_addon "€"
                   end
                 end
@@ -2755,7 +2759,7 @@ module StopTime::Views
               button.btn.btn_primary "Create invoice", type: :submit,
                 name: "create", value: "Create invoice",
                 disabled: @none_found
-              button.btn.btn_default "Cancel", type: :submit, name: "cancel", 
+              button.btn.btn_default "Cancel", type: :submit, name: "cancel",
                 value: "Cancel"
             end
           end
