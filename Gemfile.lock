@@ -1,0 +1,72 @@
+GIT
+  remote: https://github.com/camping/camping.git
+  revision: f2820bbb103f9cfe225647339a4b939560314eec
+  branch: master
+  specs:
+    camping (2.1.601)
+      mab (>= 0.0.3)
+      rack (>= 1.0)
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    actionview (4.2.11.1)
+      activesupport (= 4.2.11.1)
+      builder (~> 3.1)
+      erubis (~> 2.7.0)
+      rails-dom-testing (~> 1.0, >= 1.0.5)
+      rails-html-sanitizer (~> 1.0, >= 1.0.3)
+    activemodel (4.2.11.1)
+      activesupport (= 4.2.11.1)
+      builder (~> 3.1)
+    activerecord (4.2.11.1)
+      activemodel (= 4.2.11.1)
+      activesupport (= 4.2.11.1)
+      arel (~> 6.0)
+    activesupport (4.2.11.1)
+      i18n (~> 0.7)
+      minitest (~> 5.1)
+      thread_safe (~> 0.3, >= 0.3.4)
+      tzinfo (~> 1.1)
+    arel (6.0.4)
+    builder (3.2.3)
+    concurrent-ruby (1.1.5)
+    crass (1.0.4)
+    erubis (2.7.0)
+    i18n (0.9.5)
+      concurrent-ruby (~> 1.0)
+    loofah (2.2.3)
+      crass (~> 1.0.2)
+      nokogiri (>= 1.5.9)
+    mab (0.0.3)
+    mini_portile2 (2.4.0)
+    minitest (5.11.3)
+    nokogiri (1.10.3)
+      mini_portile2 (~> 2.4.0)
+    rack (2.0.7)
+    rails-deprecated_sanitizer (1.0.3)
+      activesupport (>= 4.2.0.alpha)
+    rails-dom-testing (1.0.9)
+      activesupport (>= 4.2.0, < 5.0)
+      nokogiri (~> 1.6)
+      rails-deprecated_sanitizer (>= 1.0.1)
+    rails-html-sanitizer (1.0.4)
+      loofah (~> 2.2, >= 2.2.2)
+    sass (3.4.25)
+    sqlite3 (1.3.13)
+    thread_safe (0.3.6)
+    tzinfo (1.2.5)
+      thread_safe (~> 0.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  actionview (~> 4.2.10)
+  activerecord (~> 4.2.10)
+  camping!
+  sass (~> 3.4.6)
+  sqlite3 (~> 1.3.9)
+
+BUNDLED WITH
+   1.17.3
