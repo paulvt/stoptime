@@ -1,11 +1,26 @@
+# Ignore SASS and YARD cache
 .sass-cache
 .yardoc
+
+# Ignore the local configuration
 config.yaml
 htpasswd
+
+# Ignore the SQLite databases
 db/*
+
+# Ignore generated documentation
 doc/*
+
+# Ignore generated invoice assets
 public/invoices/*
+
+# Ignore compiled asssets
 public/stylesheets/style.css
 public/stylesheets/style.css.map
+
+# Ignore custom invoice templates
 templates/*_invoice.tex.erb
+
+# Ignore temporary files
 tmp/*
