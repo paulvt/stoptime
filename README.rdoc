@@ -39,6 +39,9 @@ and the following LaTeX programs:
   * isodoc package (>= 1.00)
 * rubber
 
+It is also possible to use Bundler (which is the default when using
+@config.ru@), in this you only need Ruby and Bundler installed.
+
 == Installation
 
 For now, Stop… Camping Time! is in a developing state and not ready for
