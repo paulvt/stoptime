@@ -2,8 +2,8 @@ source "http://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 
-# This application is build on Camping, use it from Git master
-gem "camping", github: "camping/camping", branch: "master"
+# This application is build on Camping, use it from our own Git master
+gem "camping", github: "paulvt/camping", branch: "master"
 
 # Use ActionView for the templates.
 gem "actionview", "~> 4.2.10"
